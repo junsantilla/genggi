@@ -6,6 +6,7 @@ const FEATURES = [
   ["⭐", "Testimonials", "Write & approve"],
   ["🎨", "Customize", "Colors & profile"],
   ["👉", "Pokes", "Get their attention"],
+  ["📌", "Bulletin Board", "Public posts & friends"],
 ];
 
 export default function Landing() {

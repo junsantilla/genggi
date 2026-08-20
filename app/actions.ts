@@ -14,7 +14,7 @@ import {
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
-import type { User } from "@/lib/types";
+import type { BulletinVisibility, User } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string };
 
@@ -438,6 +438,47 @@ export async function deleteTestimonialAction(testimonialId: string): Promise<Ac
   return { ok: true };
 }
 
+// ---------------------------------------------------------------- Bulletin Board
+
+const BULLETIN_VISIBILITIES: BulletinVisibility[] = ["public", "friends", "private"];
+
+export async function createBulletinPostAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const body = String(formData.get("body") || "").trim();
+  const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
+  if (!body) return { error: "Your post cannot be empty." };
+  if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
+  if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
+
+  await getDb().collection("bulletinPosts").insertOne({
+    authorId: user._id,
+    body,
+    visibility: visibilityValue,
+    createdAt: new Date(),
+  });
+  revalidatePath("/");
+  revalidatePath(`/u/${user.username}`);
+  return { ok: true };
+}
+
+export async function deleteBulletinPostAction(postId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const db = getDb();
+  const post = await db.collection("bulletinPosts").findOne({
+    _id: new ObjectId(postId),
+    authorId: user._id,
+  });
+  if (!post) return { error: "Post not found." };
+
+  await db.collection("bulletinPosts").deleteOne({ _id: post._id });
+  revalidatePath("/");
+  revalidatePath(`/u/${user.username}`);
+  return { ok: true };
+}
+
 // ---------------------------------------------------------------- Interactions
 
 export async function pokeAction(targetId: string): Promise<ActionResult> {
@@ -552,6 +593,7 @@ export async function adminDeleteUserAction(targetId: string): Promise<ActionRes
       .collection("friendships")
       .deleteMany({ $or: [{ requesterId: oid }, { addresseeId: oid }] }),
     db.collection("messages").deleteMany({ $or: [{ senderId: oid }, { recipientId: oid }] }),
+    db.collection("bulletinPosts").deleteMany({ authorId: oid }),
     db
       .collection("testimonials")
       .deleteMany({ $or: [{ authorId: oid }, { profileId: oid }] }),

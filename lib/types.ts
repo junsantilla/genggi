@@ -46,6 +46,20 @@ export interface User {
   whoCanFriendRequest: "everyone" | "nobody";
 }
 
+export type BulletinVisibility = "public" | "friends" | "private";
+
+export interface BulletinPost {
+  _id: ObjectId;
+  authorId: ObjectId;
+  body: string;
+  visibility: BulletinVisibility;
+  createdAt: Date;
+}
+
+export interface BulletinPostWithAuthor extends BulletinPost {
+  author: Pick<User, "_id" | "username" | "displayName">;
+}
+
 export interface Session {
   _id: ObjectId;
   userId: ObjectId;
