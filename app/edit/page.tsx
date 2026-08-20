@@ -25,14 +25,6 @@ export default async function EditPage() {
         <Box title="🎨 Profile Theme">
           <form action={updateThemeAction} className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="label">Top bar - from</label>
-              <input type="color" name="barFrom" defaultValue={user.theme.barFrom} className="input h-8 p-0.5" />
-            </div>
-            <div>
-              <label className="label">Top bar - to</label>
-              <input type="color" name="barTo" defaultValue={user.theme.barTo} className="input h-8 p-0.5" />
-            </div>
-            <div>
               <label className="label">Background tint</label>
               <input type="color" name="bgTint" defaultValue={user.theme.bgTint} className="input h-8 p-0.5" />
             </div>
