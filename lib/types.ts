@@ -33,6 +33,7 @@ export interface User {
   mood: string;
   awayMessage: string;
   photo: string | null;
+  photoPublicId?: string | null;
 
   theme: Theme;
   profileViews: number;

@@ -13,6 +13,7 @@ import {
   requireAdmin,
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
+import { uploadImage, destroyImage } from "@/lib/cloudinary";
 import type { User } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string };
@@ -152,10 +153,30 @@ export async function uploadPhotoAction(formData: FormData): Promise<ActionResul
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) return { error: "No file selected." };
   if (file.size > 3 * 1024 * 1024) return { error: "Image must be under 3MB." };
+  if (!file.type.startsWith("image/")) return { error: "Please upload an image file." };
   const buf = Buffer.from(await file.arrayBuffer());
-  const mime = file.type || "image/jpeg";
-  const dataUrl = `data:${mime};base64,${buf.toString("base64")}`;
-  await getDb().collection("users").updateOne({ _id: user._id }, { $set: { photo: dataUrl } });
+  let uploaded;
+  try {
+    uploaded = await uploadImage(buf, `profiles/${user.username}`);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Unknown Cloudinary error.";
+    console.error("Profile image upload failed:", message);
+    return {
+      error:
+        process.env.NODE_ENV === "development"
+          ? `Image upload failed: ${message}`
+          : "Image upload failed. Please try again.",
+    };
+  }
+  await getDb().collection("users").updateOne(
+    { _id: user._id },
+    { $set: { photo: uploaded.secure_url, photoPublicId: uploaded.public_id } }
+  );
   revalidatePath(`/u/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };
@@ -163,7 +184,13 @@ export async function uploadPhotoAction(formData: FormData): Promise<ActionResul
 
 export async function removePhotoAction(): Promise<ActionResult> {
   const user = await requireUser();
-  await getDb().collection("users").updateOne({ _id: user._id }, { $set: { photo: null } });
+  if (user.photoPublicId) {
+    await destroyImage(user.photoPublicId).catch(() => {});
+  }
+  await getDb().collection("users").updateOne(
+    { _id: user._id },
+    { $set: { photo: null, photoPublicId: null } }
+  );
   revalidatePath(`/u/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };

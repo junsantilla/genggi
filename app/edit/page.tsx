@@ -1,11 +1,29 @@
 import { requireUser } from "@/lib/auth";
 import { updateProfileAction, updateThemeAction, updatePrivacyAction } from "@/app/actions";
-import EditForm from "@/app/components/EditForm";
+import EditForm, { type EditableUser } from "@/app/components/EditForm";
 import PhotoUpload from "@/app/components/PhotoUpload";
 import Box from "@/app/components/Box";
 
 export default async function EditPage() {
   const user = await requireUser();
+  const editableUser: EditableUser = {
+    displayName: user.displayName,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    gender: user.gender,
+    location: user.location,
+    relationshipStatus: user.relationshipStatus,
+    orientation: user.orientation,
+    zodiac: user.zodiac,
+    bodyType: user.bodyType,
+    occupation: user.occupation,
+    mood: user.mood,
+    awayMessage: user.awayMessage,
+    favoriteSong: user.favoriteSong,
+    interests: user.interests,
+    aboutMe: user.aboutMe,
+    whoIdLikeToMeet: user.whoIdLikeToMeet,
+  };
 
   return (
     <div className="max-w-[760px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
@@ -19,7 +37,7 @@ export default async function EditPage() {
         </Box>
 
         <Box title="Basic Info">
-          <EditForm action={updateProfileAction} user={user} />
+          <EditForm action={updateProfileAction} user={editableUser} />
         </Box>
 
         <Box title="🎨 Profile Theme">
