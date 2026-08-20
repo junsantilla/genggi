@@ -10,12 +10,32 @@ import {
 } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
+export type EditableUser = Pick<
+  User,
+  | "displayName"
+  | "firstName"
+  | "lastName"
+  | "gender"
+  | "location"
+  | "relationshipStatus"
+  | "orientation"
+  | "zodiac"
+  | "bodyType"
+  | "occupation"
+  | "mood"
+  | "awayMessage"
+  | "favoriteSong"
+  | "interests"
+  | "aboutMe"
+  | "whoIdLikeToMeet"
+>;
+
 export default function EditForm({
   action,
   user,
 }: {
   action: (prev: { ok?: boolean; error?: string }, formData: FormData) => Promise<{ ok?: boolean; error?: string }>;
-  user: User;
+  user: EditableUser;
 }) {
   const [state, formAction, pending] = useActionState(action, { error: "" });
 

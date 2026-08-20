@@ -25,18 +25,19 @@ export default function PhotoUpload({ hasPhoto }: { hasPhoto: boolean }) {
           }
         }}
       >
-        {preview ? (
+        <input type="file" name="photo" accept="image/*" className="text-[11px]" onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) {
+            const reader = new FileReader();
+            reader.onload = () => setPreview(reader.result as string);
+            reader.readAsDataURL(f);
+          } else {
+            setPreview(null);
+          }
+        }} />
+        {preview && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="preview" className="w-[120px] h-[120px] object-cover border border-[#6699cc] mb-1" />
-        ) : (
-          <input type="file" name="photo" accept="image/*" className="text-[11px]" onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) {
-              const reader = new FileReader();
-              reader.onload = () => setPreview(reader.result as string);
-              reader.readAsDataURL(f);
-            }
-          }} />
+          <img src={preview} alt="preview" className="w-[120px] h-[120px] object-cover border border-[#6699cc] mt-1 mb-1" />
         )}
         {error && <div className="text-red-600 text-[10px]">{error}</div>}
         <div className="mt-1 flex gap-1.5">

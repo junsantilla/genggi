@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { GENDERS, STATUSES } from "@/lib/utils";
 import { getFriendshipStatus } from "@/lib/queries";
+import { sendFriendRequestAction } from "@/app/actions";
+import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
 
 export default async function SearchPage({
@@ -94,14 +96,23 @@ export default async function SearchPage({
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] text-gray-500 shrink-0">
-                  {statuses[i] === "friends"
-                    ? "✓ friends"
-                    : statuses[i] === "pending_out"
-                      ? "requested"
-                      : statuses[i] === "pending_in"
-                        ? "requested you"
-                        : ""}
+                <span className="shrink-0 text-right">
+                  {statuses[i] === "friends" ? (
+                    <span className="text-[10px] text-gray-500">✓ friends</span>
+                  ) : statuses[i] === "pending_out" ? (
+                    <span className="text-[10px] text-gray-500">requested</span>
+                  ) : statuses[i] === "pending_in" ? (
+                    <span className="text-[10px] text-gray-500">requested you</span>
+                  ) : r.whoCanFriendRequest !== "nobody" ? (
+                    <ActionButton
+                      action={sendFriendRequestAction.bind(null, r._id.toString())}
+                      className="btn"
+                    >
+                      + Add as Friend
+                    </ActionButton>
+                  ) : (
+                    <span className="text-[10px] text-gray-500">not accepting</span>
+                  )}
                 </span>
               </div>
             ))
