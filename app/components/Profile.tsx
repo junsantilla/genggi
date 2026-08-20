@@ -128,7 +128,7 @@ export default async function Profile({
 
     return (
         <div
-            className="profile-page w-full"
+            className="profile-page w-full py-2"
             style={
                 {
                     "--profile-border": theme.border || "#6699cc",
