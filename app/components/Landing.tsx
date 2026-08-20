@@ -1,4 +1,4 @@
-import Link from "next/link";
+import NewMembers from "./NewMembers";
 
 const FEATURES = [
   ["👥", "Friends", "Requests, Top 8, activity"],
@@ -32,20 +32,7 @@ export default function Landing() {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
-          <Link
-            href="/signup"
-            className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white font-bold text-sm px-6 py-2.5 text-center no-underline border border-[#2c4d80]"
-          >
-            Create Your Account
-          </Link>
-          <Link
-            href="/login"
-            className="bg-[#dbe9f7] text-[#003399] font-bold text-sm px-6 py-2.5 text-center no-underline border border-[#6699cc]"
-          >
-            Login
-          </Link>
-        </div>
+        <NewMembers />
 
         <p className="text-center text-gray-500 text-[10px] mt-6">
           genggeng.pro — made for nostalgic fun.
