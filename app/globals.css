@@ -112,3 +112,19 @@ main:has(.profile-page) {
 summary::-webkit-details-marker {
   display: none;
 }
+
+/* Profile theme: form controls inside a profile page follow the user's theme */
+.profile-page .input {
+  border-color: var(--profile-border, #6699cc);
+  background: var(--profile-bg, #f5f9ff);
+}
+.profile-page .input:focus {
+  outline-color: var(--profile-border, #6699cc);
+}
+.profile-page .btn:not(.btn-danger):not(.btn-ghost) {
+  background: var(--profile-border, #6699cc);
+  border-color: color-mix(in srgb, var(--profile-border, #6699cc) 60%, #000);
+}
+.profile-page .btn:not(.btn-danger):not(.btn-ghost):hover {
+  background: color-mix(in srgb, var(--profile-border, #6699cc) 85%, #000);
+}

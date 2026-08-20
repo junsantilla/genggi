@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
@@ -126,7 +127,15 @@ export default async function Profile({
     }
 
     return (
-        <div className="profile-page w-full">
+        <div
+            className="profile-page w-full"
+            style={
+                {
+                    "--profile-border": theme.border || "#6699cc",
+                    "--profile-bg": theme.bgTint || "#f5f9ff",
+                } as CSSProperties
+            }
+        >
             {safeCustomCss && (
                 <style dangerouslySetInnerHTML={{ __html: safeCustomCss }} />
             )}
@@ -413,6 +422,7 @@ export default async function Profile({
                                 currentUserId={me}
                                 currentUsername={currentUser?.username}
                                 title={`Bulletin Board`}
+                                border={theme.border}
                             />
 
                             {/* Testimonials */}
