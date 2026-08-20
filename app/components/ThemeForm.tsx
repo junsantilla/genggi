@@ -55,7 +55,7 @@ export default function ThemeForm({
         <p className="text-gray-500 text-[11px] mt-1">
           Hooks: .profile-page, .profile-content, .profile-intro, .profile-photo, .profile-actions, .profile-details,
           .profile-views, .profile-interests, .profile-music, .profile-about, .profile-meet,
-          .profile-testimonials, .profile-sidebar, .profile-friends, .profile-friends-grid,
+          .profile-testimonials, .bulletin-board, .profile-sidebar, .profile-friends, .profile-friends-grid,
           .profile-friend-card, .profile-friend-photo, .profile-footer
         </p>
       </div>

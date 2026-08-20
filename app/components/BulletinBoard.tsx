@@ -19,15 +19,19 @@ export default function BulletinBoard({
   currentUsername,
   showComposer = false,
   title = "📌 Bulletin Board",
+  border,
+  bg,
 }: {
   posts: BulletinPostWithComments[];
   currentUserId?: string;
   currentUsername?: string;
   showComposer?: boolean;
   title?: string;
+  border?: string;
+  bg?: string;
 }) {
   return (
-    <Box title={title} className="bulletin-board">
+    <Box title={title} className="bulletin-board" border={border} bg={bg}>
       {showComposer && <BulletinPostForm />}
       {posts.length === 0 ? (
         <p className="text-gray-500 italic text-[12px]">
