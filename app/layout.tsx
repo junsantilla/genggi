@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 
+import { Analytics } from "@vercel/analytics/next"
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="m-0 p-0 font-sans text-[12px] text-black">
         <NavBar />
         <main className="py-2">{children}</main>
+        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );
