@@ -38,6 +38,8 @@ export default async function Profile({
   ]);
 
   const theme = user.theme || { bgTint: "#eef3fb", border: "#6699cc" };
+  const customCss = user.theme?.customCss?.trim();
+  const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
   const canView = isOwner || !user.isPrivate || isFriend;
 
   // Six most recent friends
@@ -105,11 +107,13 @@ export default async function Profile({
   }
 
   return (
-    <div
-      id="wrap"
-      className="max-w-[960px] w-full mx-auto bg-white border sm:border-x"
-      style={{ borderColor: theme.border }}
-    >
+    <div className="profile-page w-full">
+      {safeCustomCss && <style dangerouslySetInnerHTML={{ __html: safeCustomCss }} />}
+      <div
+        id="wrap"
+        className="profile-content max-w-[960px] w-full mx-auto bg-white border sm:border-x"
+        style={{ borderColor: theme.border }}
+      >
       {!canView ? (
         <div className="p-6 text-center">
           <p className="font-bold text-[#2c4d80] text-lg mb-1">🔒 This profile is private</p>
@@ -120,8 +124,13 @@ export default async function Profile({
       ) : (
         <div className="flex flex-wrap w-full">
           {/* ---------------- Left column ---------------- */}
-          <div className="w-full sm:w-3/4 p-2.5 pb-0 sm:pb-2.5">
-            <Box title={`${user.displayName} (@${user.username})`} border={theme.border} bg="#f5f9ff">
+          <div className="profile-main-column w-full sm:w-3/4 p-2.5 pb-0 sm:pb-2.5">
+            <Box
+              title={`${user.displayName} (@${user.username})`}
+              border={theme.border}
+              bg="#f5f9ff"
+              className="profile-intro"
+            >
               <div className="flex flex-wrap">
                 {/* Left: photo, name, username, buttons */}
                 <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
@@ -130,12 +139,12 @@ export default async function Profile({
                     <img
                       src={user.photo}
                       alt={`${user.displayName}'s photo`}
-                      className="w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] object-cover border mx-auto mb-2"
+                      className="profile-photo w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] object-cover border mx-auto mb-2"
                       style={{ borderColor: theme.border }}
                     />
                   ) : (
                     <div
-                      className="pic-bg w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] border flex items-center justify-center text-[#4a76b8] italic text-[11px] mx-auto mb-2"
+                      className="profile-photo pic-bg w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] border flex items-center justify-center text-[#4a76b8] italic text-[11px] mx-auto mb-2"
                       style={{ borderColor: theme.border }}
                     >
                       {initials(user.displayName)}
@@ -145,7 +154,7 @@ export default async function Profile({
 
                   {/* Actions */}
                   {!isOwner && me && (
-                    <div className="flex flex-col gap-1 max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                    <div className="profile-actions flex flex-col gap-1 max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
                       {friendshipStatus === "none" && (
                         <ActionButton
                           action={sendFriendRequestAction.bind(null, uid)}
@@ -218,7 +227,7 @@ export default async function Profile({
                   )}
 
                   {isOwner && (
-                    <div className="max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                    <div className="profile-actions max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
                       <Link href="/edit" className="btn w-full text-center no-underline block">
                         ✏️ Edit Profile
                       </Link>
@@ -227,7 +236,7 @@ export default async function Profile({
                 </div>
 
                 {/* Right: brief table */}
-                <div className="w-full sm:flex-1 sm:min-w-0">
+                <div className="profile-details w-full sm:flex-1 sm:min-w-0">
                   <table className="w-full">
                     <tbody>
                       {brief.map(([k, v]) => (
@@ -242,7 +251,7 @@ export default async function Profile({
               </div>
             </Box>
 
-            <Box title="Profile Views" border={theme.border} bg="#f5f9ff">
+            <Box title="Profile Views" border={theme.border} bg="#f5f9ff" className="profile-views">
               <div className="text-center">
                 <span className="bg-black text-[#0f0] font-mono text-[11px] px-1.5 py-0.5 inline-block border border-[#333]">
                   {padViews(user.profileViews)}
@@ -250,7 +259,7 @@ export default async function Profile({
               </div>
             </Box>
 
-            <Box title="My Interests" border={theme.border} bg="#f5f9ff">
+            <Box title="My Interests" border={theme.border} bg="#f5f9ff" className="profile-interests">
               {user.interests.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                   {user.interests.map((i) => (
@@ -267,7 +276,7 @@ export default async function Profile({
               )}
             </Box>
 
-            <Box title="🎵 Music" border={theme.border} bg="#f5f9ff">
+            <Box title="🎵 Music" border={theme.border} bg="#f5f9ff" className="profile-music">
               {user.favoriteSong ? (
                 <p className="text-[11px]">
                   <b>Favorite song:</b> “{user.favoriteSong}”
@@ -277,7 +286,7 @@ export default async function Profile({
               )}
             </Box>
 
-            <Box title="About Me" border={theme.border} bg="#f5f9ff">
+            <Box title="About Me" border={theme.border} bg="#f5f9ff" className="profile-about">
               {user.aboutMe ? (
                 <p className="whitespace-pre-wrap">{user.aboutMe}</p>
               ) : (
@@ -287,7 +296,7 @@ export default async function Profile({
               )}
             </Box>
 
-            <Box title="Who I'd Like to Meet" border={theme.border} bg="#f5f9ff">
+            <Box title="Who I'd Like to Meet" border={theme.border} bg="#f5f9ff" className="profile-meet">
               {user.whoIdLikeToMeet ? (
                 <p className="whitespace-pre-wrap">{user.whoIdLikeToMeet}</p>
               ) : (
@@ -298,7 +307,12 @@ export default async function Profile({
             </Box>
 
             {/* Testimonials */}
-            <Box title={`Testimonials (${testimonials.length})`} border={theme.border} bg="#f5f9ff">
+            <Box
+              title={`Testimonials (${testimonials.length})`}
+              border={theme.border}
+              bg="#f5f9ff"
+              className="profile-testimonials"
+            >
               {pendingTestimonials.length > 0 && (
                 <div className="mb-2 border border-dashed border-[#cc99cc] p-1.5">
                   <p className="font-bold text-[10px] text-[#cc3399] mb-1">
@@ -369,30 +383,31 @@ export default async function Profile({
           </div>
 
           {/* ---------------- Right column ---------------- */}
-          <div className="w-full sm:w-1/4 p-2.5 pt-0 sm:pt-2.5">
-            {/* Top 8 friends */}
+          <div className="profile-sidebar w-full sm:w-1/4 p-2.5 pt-0 sm:pt-2.5">
+            {/* Six most recent friends */}
             <Box
               title={`${user.displayName.split(" ")[0]}'s Friends (recent ${topFriends.length})`}
               border={theme.border}
               bg="#f5f9ff"
+              className="profile-friends"
             >
               {topFriends.length === 0 ? (
                 <span className="text-gray-500 italic text-[11px]">No friends yet.</span>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                  <div className="profile-friends-grid grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
                     {topFriends.map((f) => (
-                      <div key={f._id.toString()} className="min-w-0 text-center text-[10px]">
+                      <div key={f._id.toString()} className="profile-friend-card min-w-0 text-center text-[10px]">
                         <Link href={`/u/${f.username}`} className="block">
                           {f.photo ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={f.photo}
                               alt={f.displayName}
-                              className="w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
+                              className="profile-friend-photo w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
                             />
                           ) : (
-                            <div className="friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
+                            <div className="profile-friend-photo friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
                           )}
                         </Link>
                         <Link href={`/u/${f.username}`} className="text-[#003399] no-underline font-bold">
@@ -417,10 +432,11 @@ export default async function Profile({
 
       {/* Footer */}
       <div
-        className="text-center text-[10px] text-[#6699cc] p-2 border-t"
+        className="profile-footer text-center text-[10px] text-[#6699cc] p-2 border-t"
         style={{ background: theme.bgTint, borderColor: theme.border }}
       >
         genggeng.pro — made for nostalgic fun. · @{user.username} joined {timeAgo(user.createdAt)}
+      </div>
       </div>
     </div>
   );

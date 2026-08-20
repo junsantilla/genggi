@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { updateProfileAction, updateThemeAction, updatePrivacyAction } from "@/app/actions";
 import EditForm, { type EditableUser } from "@/app/components/EditForm";
 import PhotoUpload from "@/app/components/PhotoUpload";
+import ThemeForm from "@/app/components/ThemeForm";
 import Box from "@/app/components/Box";
 
 export default async function EditPage() {
@@ -41,21 +42,12 @@ export default async function EditPage() {
         </Box>
 
         <Box title="🎨 Profile Theme">
-          <form action={updateThemeAction} className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="label">Background tint</label>
-              <input type="color" name="bgTint" defaultValue={user.theme.bgTint} className="input h-8 p-0.5" />
-            </div>
-            <div>
-              <label className="label">Border color</label>
-              <input type="color" name="border" defaultValue={user.theme.border} className="input h-8 p-0.5" />
-            </div>
-            <div className="col-span-2">
-              <button type="submit" className="btn">
-                Save Theme
-              </button>
-            </div>
-          </form>
+          <ThemeForm
+            action={updateThemeAction}
+            bgTint={user.theme.bgTint}
+            border={user.theme.border}
+            customCss={user.theme.customCss}
+          />
         </Box>
 
         <Box title="🔒 Privacy & Safety">
