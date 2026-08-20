@@ -411,6 +411,7 @@ export default async function Profile({
                             <BulletinBoard
                                 posts={bulletinPosts}
                                 currentUserId={me}
+                                currentUsername={currentUser?.username}
                                 title={`Bulletin Board`}
                             />
 

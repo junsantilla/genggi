@@ -16,6 +16,7 @@ export default async function Home() {
                 <BulletinBoard
                     posts={posts}
                     currentUserId={user._id.toString()}
+                    currentUsername={user.username}
                     showComposer
                 />
                 <NewMembers excludeId={user._id.toString()} />

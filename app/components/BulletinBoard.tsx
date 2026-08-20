@@ -16,11 +16,13 @@ const visibilityLabels = {
 export default function BulletinBoard({
   posts,
   currentUserId,
+  currentUsername,
   showComposer = false,
   title = "📌 Bulletin Board",
 }: {
   posts: BulletinPostWithComments[];
   currentUserId?: string;
+  currentUsername?: string;
   showComposer?: boolean;
   title?: string;
 }) {
@@ -35,6 +37,7 @@ export default function BulletinBoard({
         <div>
           {posts.map((post) => {
             const isOwnPost = currentUserId === post.author._id.toString();
+            const canModerate = isOwnPost || currentUsername === "genggengpro";
             return (
               <article key={post._id.toString()} className="bulletin-post border-b border-dotted border-[#99bbdd] py-2 last:border-0">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-2">
@@ -46,7 +49,7 @@ export default function BulletinBoard({
                   </span>
                 </div>
                 <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
-                {isOwnPost && (
+                {canModerate && (
                   <div className="mt-1">
                     <ActionButton
                       action={deleteBulletinPostAction.bind(null, post._id.toString())}
