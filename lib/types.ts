@@ -57,7 +57,7 @@ export interface BulletinPost {
 }
 
 export interface BulletinPostWithAuthor extends BulletinPost {
-  author: Pick<User, "_id" | "username" | "displayName">;
+  author: Pick<User, "_id" | "username" | "displayName" | "photo">;
 }
 
 export interface BulletinComment {
@@ -69,7 +69,7 @@ export interface BulletinComment {
 }
 
 export interface BulletinCommentWithAuthor extends BulletinComment {
-  author: Pick<User, "_id" | "username" | "displayName">;
+  author: Pick<User, "_id" | "username" | "displayName" | "photo">;
 }
 
 export interface BulletinPostWithComments extends BulletinPostWithAuthor {

@@ -40,15 +40,29 @@ export default function BulletinBoard({
             const canModerate = isOwnPost || currentUsername === "genggengpro";
             return (
               <article key={post._id.toString()} className="bulletin-post border-b border-dotted border-[#99bbdd] py-2 last:border-0">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                  <Link href={`/u/${post.author.username}`} className="text-[#003399] font-bold no-underline">
-                    {post.author.displayName}
+                <div className="flex gap-2">
+                  <Link href={`/u/${post.author.username}`} className="shrink-0 block">
+                    {post.author.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={post.author.photo}
+                        alt={post.author.displayName}
+                        className="w-[44px] h-[44px] object-cover border border-[#cc99cc]"
+                      />
+                    ) : (
+                      <div className="friend-thumb-bg w-[44px] h-[44px] border border-[#cc99cc]"></div>
+                    )}
                   </Link>
-                  <span className="text-gray-500 text-[11px]">
-                    {timeAgo(post.createdAt)} · {visibilityLabels[post.visibility]}
-                  </span>
-                </div>
-                <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                      <Link href={`/u/${post.author.username}`} className="text-[#003399] font-bold no-underline">
+                        {post.author.displayName}
+                      </Link>
+                      <span className="text-gray-500 text-[11px]">
+                        {timeAgo(post.createdAt)} · {visibilityLabels[post.visibility]}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
                 {canModerate && (
                   <div className="mt-1">
                     <ActionButton
@@ -92,7 +106,9 @@ export default function BulletinBoard({
                     })}
                   </div>
                 )}
-                {currentUserId && <BulletinCommentForm postId={post._id.toString()} />}
+                    {currentUserId && <BulletinCommentForm postId={post._id.toString()} />}
+                  </div>
+                </div>
               </article>
             );
           })}
