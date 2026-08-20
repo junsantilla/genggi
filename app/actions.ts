@@ -467,16 +467,20 @@ export async function createBulletinPostAction(
 export async function deleteBulletinPostAction(postId: string): Promise<ActionResult> {
   const user = await requireUser();
   const db = getDb();
-  const post = await db.collection("bulletinPosts").findOne({
-    _id: new ObjectId(postId),
-    authorId: user._id,
-  });
+  const post = await db
+    .collection("bulletinPosts")
+    .findOne({ _id: new ObjectId(postId) });
   if (!post) return { error: "Post not found." };
+
+  const isAuthor = post.authorId.toString() === user._id.toString();
+  if (!isAuthor && user.username !== "genggengpro")
+    return { error: "Not allowed." };
 
   await db.collection("bulletinPosts").deleteOne({ _id: post._id });
   await db.collection("bulletinComments").deleteMany({ postId: post._id });
   revalidatePath("/");
-  revalidatePath(`/u/${user.username}`);
+  const author = await db.collection("users").findOne({ _id: post.authorId });
+  if (author) revalidatePath(`/u/${author.username}`);
   return { ok: true };
 }
 
