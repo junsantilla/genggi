@@ -57,7 +57,7 @@ main:has(.profile-page) {
   border: 1px solid #6699cc;
   background: #f5f9ff;
   padding: 0.3rem 0.5rem;
-  font-size: 12px;
+  font-size: 13px;
   color: #000;
   border-radius: 0;
 }
@@ -71,7 +71,7 @@ main:has(.profile-page) {
   background: #6699cc;
   color: #fff;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
   padding: 0.3rem 0.75rem;
   border: 1px solid #2c4d80;
   cursor: pointer;
@@ -103,7 +103,7 @@ main:has(.profile-page) {
 
 .label {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #2c4d80;
   margin-bottom: 2px;

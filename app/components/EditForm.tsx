@@ -127,12 +127,12 @@ export default function EditForm({
       </div>
       <div className="col-span-2">
         {state.error && (
-          <div className="text-red-600 text-[11px] font-bold bg-red-50 border border-red-200 px-2 py-1 mb-2">
+          <div className="text-red-600 text-[12px] font-bold bg-red-50 border border-red-200 px-2 py-1 mb-2">
             {state.error}
           </div>
         )}
         {state.ok && (
-          <div className="text-green-700 text-[11px] font-bold bg-green-50 border border-green-200 px-2 py-1 mb-2">
+          <div className="text-green-700 text-[12px] font-bold bg-green-50 border border-green-200 px-2 py-1 mb-2">
             Saved!
           </div>
         )}

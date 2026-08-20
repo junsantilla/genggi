@@ -27,9 +27,9 @@ export default function BulletinPostForm() {
           {pending ? "Posting..." : "Post Bulletin"}
         </button>
       </div>
-      {state.error && <div className="text-red-600 text-[10px] mt-1">{state.error}</div>}
+      {state.error && <div className="text-red-600 text-[11px] mt-1">{state.error}</div>}
       {state.ok && (
-        <div className="text-green-700 text-[10px] font-bold mt-1" role="status">
+        <div className="text-green-700 text-[11px] font-bold mt-1" role="status">
           Posted!
         </div>
       )}

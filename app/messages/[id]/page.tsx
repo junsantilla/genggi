@@ -55,17 +55,17 @@ export default async function ThreadPage({
       <div className="p-4 flex flex-col gap-4">
         <Box title={`Conversation with ${other.displayName}`}>
           {messages.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No messages in this conversation yet.</p>
+            <p className="text-gray-500 italic text-[12px]">No messages in this conversation yet.</p>
           ) : (
             messages.map((m) => {
               const mine = m.senderId.toString() === uid;
               return (
                 <div key={m._id.toString()} className="py-1.5 border-b border-dotted border-[#99bbdd] last:border-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`font-bold text-[11px] ${mine ? "text-[#cc3399]" : "text-[#003399]"}`}>
+                    <span className={`font-bold text-[12px] ${mine ? "text-[#cc3399]" : "text-[#003399]"}`}>
                       {mine ? "You" : other.displayName}
                     </span>
-                    <span className="text-gray-500 text-[10px]">{timeAgo(m.createdAt)}</span>
+                    <span className="text-gray-500 text-[11px]">{timeAgo(m.createdAt)}</span>
                   </div>
                   <p className="whitespace-pre-wrap mt-0.5">{m.body}</p>
                   {mine && (
@@ -97,7 +97,7 @@ export default async function ThreadPage({
         </Box>
 
         <div className="text-center">
-          <Link href="/messages" className="text-[#003399] text-[11px]">
+          <Link href="/messages" className="text-[#003399] text-[12px]">
             ← Back to Inbox
           </Link>
         </div>

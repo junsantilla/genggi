@@ -51,7 +51,7 @@ export default async function EditPage() {
         </Box>
 
         <Box title="🔒 Privacy & Safety">
-          <form action={updatePrivacyAction} className="flex flex-col gap-2 text-[11px]">
+          <form action={updatePrivacyAction} className="flex flex-col gap-2 text-[12px]">
             <label className="flex items-center gap-2">
               <input type="checkbox" name="isPrivate" defaultChecked={user.isPrivate} />
               Private profile (only friends can view)

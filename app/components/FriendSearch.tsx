@@ -15,7 +15,7 @@ export default function FriendSearch({
   );
 
   return (
-    <div className="text-[11px]">
+    <div className="text-[12px]">
       <input
         type="text"
         value={q}

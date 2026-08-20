@@ -114,7 +114,7 @@ export default async function Profile({
 
     if (blockedByProfile) {
         return (
-            <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x p-6 text-center text-[12px]">
+            <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x p-6 text-center text-[13px]">
                 <p className="font-bold text-[#cc3399] text-lg mb-1">
                     {user.displayName} has blocked you.
                 </p>
@@ -140,7 +140,7 @@ export default async function Profile({
                         <p className="font-bold text-[#2c4d80] text-lg mb-1">
                             🔒 This profile is private
                         </p>
-                        <p className="text-gray-500 text-[12px]">
+                        <p className="text-gray-500 text-[13px]">
                             {user.displayName} only shares their profile with
                             friends. Add them as a friend to view it.
                         </p>
@@ -170,7 +170,7 @@ export default async function Profile({
                                             />
                                         ) : (
                                             <div
-                                                className="profile-photo pic-bg w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] border flex items-center justify-center text-[#4a76b8] italic text-[11px] mx-auto mb-2"
+                                                className="profile-photo pic-bg w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] border flex items-center justify-center text-[#4a76b8] italic text-[12px] mx-auto mb-2"
                                                 style={{
                                                     borderColor: theme.border,
                                                 }}
@@ -324,7 +324,7 @@ export default async function Profile({
                                 className="profile-views"
                             >
                                 <div className="text-center">
-                                    <span className="bg-black text-[#0f0] font-mono text-[11px] px-1.5 py-0.5 inline-block border border-[#333]">
+                                    <span className="bg-black text-[#0f0] font-mono text-[12px] px-1.5 py-0.5 inline-block border border-[#333]">
                                         {padViews(user.profileViews)}
                                     </span>
                                 </div>
@@ -341,14 +341,14 @@ export default async function Profile({
                                         {user.interests.map((i) => (
                                             <span
                                                 key={i}
-                                                className="bg-[#dbe9f7] border border-[#6699cc] px-1.5 py-0.5 text-[10px] rounded"
+                                                className="bg-[#dbe9f7] border border-[#6699cc] px-1.5 py-0.5 text-[11px] rounded"
                                             >
                                                 {i}
                                             </span>
                                         ))}
                                     </div>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         No interests added yet.
                                     </span>
                                 )}
@@ -361,12 +361,12 @@ export default async function Profile({
                                 className="profile-music"
                             >
                                 {user.favoriteSong ? (
-                                    <p className="text-[11px]">
+                                    <p className="text-[12px]">
                                         <b>Favorite song:</b> “
                                         {user.favoriteSong}”
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         No favorite song set.
                                     </span>
                                 )}
@@ -383,7 +383,7 @@ export default async function Profile({
                                         {user.aboutMe}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         Hey everyone!! welcome to my profile
                                         lol. (edit your About Me!)
                                     </span>
@@ -401,7 +401,7 @@ export default async function Profile({
                                         {user.whoIdLikeToMeet}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         People who don&apos;t take life too
                                         seriously.
                                     </span>
@@ -423,7 +423,7 @@ export default async function Profile({
                             >
                                 {pendingTestimonials.length > 0 && (
                                     <div className="mb-2 border border-dashed border-[#cc99cc] p-1.5">
-                                        <p className="font-bold text-[10px] text-[#cc3399] mb-1">
+                                        <p className="font-bold text-[11px] text-[#cc3399] mb-1">
                                             Pending approval (
                                             {pendingTestimonials.length})
                                         </p>
@@ -435,7 +435,7 @@ export default async function Profile({
                                                 <span className="text-[#cc3399] font-bold">
                                                     {authorName(t.authorId)}
                                                 </span>{" "}
-                                                <span className="text-gray-500 text-[10px]">
+                                                <span className="text-gray-500 text-[11px]">
                                                     {timeAgo(t.createdAt)}
                                                 </span>
                                                 <br />
@@ -467,7 +467,7 @@ export default async function Profile({
 
                                 {testimonials.length === 0 &&
                                 pendingTestimonials.length === 0 ? (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         No testimonials yet.
                                     </span>
                                 ) : (
@@ -479,7 +479,7 @@ export default async function Profile({
                                             <span className="text-[#cc3399] font-bold">
                                                 {authorName(t.authorId)}
                                             </span>{" "}
-                                            <span className="text-gray-500 text-[10px]">
+                                            <span className="text-gray-500 text-[11px]">
                                                 wrote {timeAgo(t.createdAt)}
                                             </span>
                                             <br />
@@ -503,7 +503,7 @@ export default async function Profile({
 
                                 {!isOwner && me && (
                                     <div className="mt-2 border-t border-[#99bbdd] pt-2">
-                                        <p className="font-bold text-[10px] text-[#2c4d80] mb-1">
+                                        <p className="font-bold text-[11px] text-[#2c4d80] mb-1">
                                             Leave a testimonial:
                                         </p>
                                         <BoundForm
@@ -532,7 +532,7 @@ export default async function Profile({
                                 className="profile-friends"
                             >
                                 {topFriends.length === 0 ? (
-                                    <span className="text-gray-500 italic text-[11px]">
+                                    <span className="text-gray-500 italic text-[12px]">
                                         No friends yet.
                                     </span>
                                 ) : (
@@ -541,7 +541,7 @@ export default async function Profile({
                                             {topFriends.map((f) => (
                                                 <div
                                                     key={f._id.toString()}
-                                                    className="profile-friend-card min-w-0 text-center text-[10px]"
+                                                    className="profile-friend-card min-w-0 text-center text-[11px]"
                                                 >
                                                     <Link
                                                         href={`/u/${f.username}`}
@@ -588,7 +588,7 @@ export default async function Profile({
 
                 {/* Footer */}
                 <div
-                    className="profile-footer text-center text-[10px] text-[#6699cc] p-2 border-t"
+                    className="profile-footer text-center text-[11px] text-[#6699cc] p-2 border-t"
                     style={{
                         background: theme.bgTint,
                         borderColor: theme.border,

@@ -29,7 +29,7 @@ export default async function NewMembers({
     return (
         <Box title="✨ New Members" border={border} bg="#f5f9ff">
             {users.length === 0 ? (
-                <span className="text-gray-500 italic text-[11px]">
+                <span className="text-gray-500 italic text-[12px]">
                     No members yet — be the first to join!
                 </span>
             ) : (
@@ -37,7 +37,7 @@ export default async function NewMembers({
                     {users.map((u) => (
                         <div
                             key={u._id.toString()}
-                            className="text-center text-[10px]"
+                            className="text-center text-[11px]"
                         >
                             <Link href={`/u/${u.username}`} className="block">
                                 {u.photo ? (

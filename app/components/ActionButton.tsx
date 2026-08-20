@@ -37,7 +37,7 @@ export default function ActionButton({
       >
         {pending ? "..." : children}
       </button>
-      {error && <span className="block text-red-600 text-[10px] mt-0.5">{error}</span>}
+      {error && <span className="block text-red-600 text-[11px] mt-0.5">{error}</span>}
     </span>
   );
 }

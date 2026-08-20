@@ -36,7 +36,7 @@ export default async function NotificationsPage() {
       <div className="p-4">
         <Box title={`All Notifications (${notifications.length})`}>
           {notifications.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">You&apos;re all caught up!</p>
+            <p className="text-gray-500 italic text-[12px]">You&apos;re all caught up!</p>
           ) : (
             <>
               <div className="mb-2">
@@ -52,7 +52,7 @@ export default async function NotificationsPage() {
                   <Link href={n.link} className="text-[#003399] no-underline">
                     <span className="font-bold">{n.text}</span>
                   </Link>
-                  <div className="text-gray-500 text-[10px]">
+                  <div className="text-gray-500 text-[11px]">
                     {actorName(n.actorId.toString()) ? `${actorName(n.actorId.toString())} · ` : ""}
                     {timeAgo(n.createdAt)}
                     {!n.read && <span className="text-[#cc3399] font-bold"> · new</span>}
