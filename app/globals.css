@@ -18,6 +18,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+main:has(.profile-page) {
+  padding-block: 0;
+}
+
 .pic-bg {
   background-image: repeating-linear-gradient(
     45deg,
