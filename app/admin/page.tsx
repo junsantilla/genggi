@@ -88,7 +88,7 @@ export default async function AdminPage({
             {stats.map(([label, n]) => (
               <div key={label} className="border border-[#6699cc] p-2 text-center bg-[#f5f9ff]">
                 <div className="text-xl font-bold text-[#2c4d80]">{n}</div>
-                <div className="text-[10px] text-gray-500">{label}</div>
+                <div className="text-[11px] text-gray-500">{label}</div>
               </div>
             ))}
           </div>
@@ -96,14 +96,14 @@ export default async function AdminPage({
 
         <Box title={`Reports (${openReports} open)`}>
           {reports.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No open reports.</p>
+            <p className="text-gray-500 italic text-[12px]">No open reports.</p>
           ) : (
             reports.map((r) => {
               const reported = reportedName(r.reportedId.toString());
               return (
                 <div key={r._id.toString()} className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="text-[11px]">
+                    <div className="text-[12px]">
                       <b>
                         {reported ? (
                           <Link href={`/u/${reported.username}`} className="text-[#003399] no-underline">
@@ -139,11 +139,11 @@ export default async function AdminPage({
 
         <Box title={`Pending Testimonials (${testimonials.length})`}>
           {testimonials.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">Nothing pending.</p>
+            <p className="text-gray-500 italic text-[12px]">Nothing pending.</p>
           ) : (
             testimonials.map((t) => (
               <div key={t._id.toString()} className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
-                <div className="text-[11px]">
+                <div className="text-[12px]">
                   For{" "}
                   <b>
                     {testiProfile(t.profileId.toString()) ? (
@@ -182,20 +182,20 @@ export default async function AdminPage({
             </button>
           </form>
           {users.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No users found.</p>
+            <p className="text-gray-500 italic text-[12px]">No users found.</p>
           ) : (
             users.map((u) => (
               <div key={u._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 flex-wrap">
-                <div className="text-[11px]">
+                <div className="text-[12px]">
                   <Link href={`/u/${u.username}`} className="text-[#003399] font-bold no-underline">
                     {u.displayName}
                   </Link>{" "}
                   <span className="text-gray-500">@{u.username}</span>
-                  <span className={`ml-1 px-1 text-[9px] font-bold ${u.role === "admin" ? "bg-[#cc3399] text-white" : "bg-[#dbe9f7] text-[#2c4d80]"}`}>
+                  <span className={`ml-1 px-1 text-[10px] font-bold ${u.role === "admin" ? "bg-[#cc3399] text-white" : "bg-[#dbe9f7] text-[#2c4d80]"}`}>
                     {u.role}
                   </span>
                   {u.banned && (
-                    <span className="ml-1 px-1 text-[9px] font-bold bg-red-600 text-white">BANNED</span>
+                    <span className="ml-1 px-1 text-[10px] font-bold bg-red-600 text-white">BANNED</span>
                   )}
                   <div className="text-gray-500">{u.email} · joined {formatDate(u.createdAt)}</div>
                 </div>

@@ -61,7 +61,7 @@ export default async function MessagesPage({
               rows={3}
             />
           ) : (
-            <p className="text-gray-500 italic text-[11px]">
+            <p className="text-gray-500 italic text-[12px]">
               Visit someone&apos;s profile and hit “Send Message”, or type a username below:
             </p>
           )}
@@ -77,7 +77,7 @@ export default async function MessagesPage({
 
         <Box title={`Inbox (${threads.size} conversations)`}>
           {threads.size === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No messages yet.</p>
+            <p className="text-gray-500 italic text-[12px]">No messages yet.</p>
           ) : (
             [...threads.entries()].map(([otherId, { messages: msgs }]) => {
               const unread = msgs.filter((m) => m.recipientId.toString() === uid && !m.read).length;
@@ -91,15 +91,15 @@ export default async function MessagesPage({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-[#003399] font-bold shrink-0">{nameOf(otherId)}</span>
-                    <span className="text-gray-500 text-[11px] truncate">
+                    <span className="text-gray-500 text-[12px] truncate">
                       {lastFromMe ? "You: " : ""}
                       {last.body}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-gray-500 text-[10px]">{timeAgo(last.createdAt)}</span>
+                    <span className="text-gray-500 text-[11px]">{timeAgo(last.createdAt)}</span>
                     {unread > 0 && (
-                      <span className="bg-[#cc3399] text-white text-[10px] rounded-full px-1.5">
+                      <span className="bg-[#cc3399] text-white text-[11px] rounded-full px-1.5">
                         {unread} new
                       </span>
                     )}

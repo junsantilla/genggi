@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="m-0 p-0 font-sans text-[12px] text-black">
+      <body className="m-0 p-0 font-sans text-[13px] text-black">
         <NavBar />
         <main className="py-2">{children}</main>
         {process.env.NODE_ENV === "production" && <Analytics />}

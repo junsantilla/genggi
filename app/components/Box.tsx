@@ -14,7 +14,7 @@ export default function Box({
   return (
     <div className={`border mb-3 ${className}`} style={{ borderColor: border }}>
       <div
-        className="box-title text-white font-bold px-1.5 py-0.5 text-xs"
+        className="box-title text-white font-bold px-1.5 py-0.5 text-[13px]"
         style={{ background: border }}
       >
         {title}

@@ -40,7 +40,7 @@ export default function ThemeForm({
       </div>
       <div className="col-span-2">
         <label className="label">Custom CSS</label>
-        <p className="text-gray-500 text-[10px] mb-1">
+        <p className="text-gray-500 text-[11px] mb-1">
           Add CSS for this profile only. Use the profile class names below to target specific sections.
         </p>
         <textarea
@@ -49,10 +49,10 @@ export default function ThemeForm({
           maxLength={12000}
           rows={12}
           spellCheck={false}
-          className="input font-mono text-[11px] leading-relaxed"
+          className="input font-mono text-[12px] leading-relaxed"
           placeholder={`/* Full-width background + centered content */\n.profile-page {\n  background: #fff0f8 url("https://example.com/background.jpg") center top / cover fixed;\n}\n\n.profile-content {\n  background: rgba(255, 255, 255, 0.95);\n}\n\n.profile-page .profile-friends .box-title {\n  background: #cc3399 !important;\n}`}
         />
-        <p className="text-gray-500 text-[10px] mt-1">
+        <p className="text-gray-500 text-[11px] mt-1">
           Hooks: .profile-page, .profile-content, .profile-intro, .profile-photo, .profile-actions, .profile-details,
           .profile-views, .profile-interests, .profile-music, .profile-about, .profile-meet,
           .profile-testimonials, .profile-sidebar, .profile-friends, .profile-friends-grid,
@@ -61,12 +61,12 @@ export default function ThemeForm({
       </div>
       <div className="col-span-2">
         {state.error && (
-          <div className="text-red-600 text-[11px] font-bold bg-red-50 border border-red-200 px-2 py-1 mb-2" role="alert">
+          <div className="text-red-600 text-[12px] font-bold bg-red-50 border border-red-200 px-2 py-1 mb-2" role="alert">
             {state.error}
           </div>
         )}
         {state.ok && (
-          <div className="text-green-700 text-[11px] font-bold bg-green-50 border border-green-200 px-2 py-1 mb-2" role="status">
+          <div className="text-green-700 text-[12px] font-bold bg-green-50 border border-green-200 px-2 py-1 mb-2" role="status">
             Saved!
           </div>
         )}

@@ -19,7 +19,7 @@ function NavLink({
     >
       {children}
       {!!count && (
-        <span className="bg-[#cc3399] text-white text-[9px] rounded-full px-1 leading-tight">
+        <span className="bg-[#cc3399] text-white text-[10px] rounded-full px-1 leading-tight">
           {count}
         </span>
       )}
@@ -39,7 +39,7 @@ export default async function NavBar() {
           🤙 genggeng<span className="text-[#ffde00]">.pro</span>
         </Link>
       </div>
-      <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[11px] sm:text-xs flex flex-wrap gap-x-2.5 gap-y-0.5 sm:justify-center">
+      <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[12px] sm:text-[13px] flex flex-wrap gap-x-2.5 gap-y-0.5 sm:justify-center">
         {user ? (
           <>
             <NavLink href="/">Home</NavLink>

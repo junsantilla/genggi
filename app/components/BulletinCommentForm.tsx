@@ -22,9 +22,9 @@ export default function BulletinCommentForm({ postId }: { postId: string }) {
       <button type="submit" disabled={pending} className="btn">
         {pending ? "..." : "Comment"}
       </button>
-      {state.error && <div className="text-red-600 text-[10px] w-full">{state.error}</div>}
+      {state.error && <div className="text-red-600 text-[11px] w-full">{state.error}</div>}
       {state.ok && (
-        <div className="text-green-700 text-[10px] font-bold w-full" role="status">
+        <div className="text-green-700 text-[11px] font-bold w-full" role="status">
           Posted!
         </div>
       )}

@@ -27,15 +27,15 @@ export default function Landing() {
           {FEATURES.map(([icon, title, desc]) => (
             <div key={title} className="border border-[#6699cc] p-2.5 text-center bg-[#f5f9ff]">
               <div className="text-2xl">{icon}</div>
-              <div className="font-bold text-[#2c4d80] text-[12px]">{title}</div>
-              <div className="text-gray-500 text-[10px]">{desc}</div>
+              <div className="font-bold text-[#2c4d80] text-[13px]">{title}</div>
+              <div className="text-gray-500 text-[11px]">{desc}</div>
             </div>
           ))}
         </div>
 
         <NewMembers />
 
-        <p className="text-center text-gray-500 text-[10px] mt-6">
+        <p className="text-center text-gray-500 text-[11px] mt-6">
           genggeng.pro — made for nostalgic fun.
         </p>
       </div>

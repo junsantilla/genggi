@@ -69,11 +69,11 @@ export default async function FriendsPage() {
       <div className="p-4 flex flex-col gap-4">
         <Box title={`Top 8 (${top8.length})`}>
           {top8.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">You don&apos;t have any friends yet.</p>
+            <p className="text-gray-500 italic text-[12px]">You don&apos;t have any friends yet.</p>
           ) : (
             <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-4 gap-1.5">
               {top8.map((f) => (
-                <div key={f._id.toString()} className="text-center text-[10px]">
+                <div key={f._id.toString()} className="text-center text-[11px]">
                   <Link href={`/u/${f.username}`} className="block">
                     {f.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -93,7 +93,7 @@ export default async function FriendsPage() {
 
         <Box title={`Friend Requests (${incoming.length})`}>
           {incoming.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No pending requests.</p>
+            <p className="text-gray-500 italic text-[12px]">No pending requests.</p>
           ) : (
             incomingUsers.map((f) => {
               const fr = incoming.find((x) => x.requesterId.toString() === f._id.toString());
@@ -112,7 +112,7 @@ export default async function FriendsPage() {
                       <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
                         {f.displayName}
                       </Link>
-                      <div className="text-gray-500 text-[10px]">{timeAgo(fr?.createdAt)}</div>
+                      <div className="text-gray-500 text-[11px]">{timeAgo(fr?.createdAt)}</div>
                     </div>
                   </div>
                   <div className="flex gap-1.5">
@@ -137,14 +137,14 @@ export default async function FriendsPage() {
 
         <Box title={`Requests Sent (${outgoing.length})`}>
           {outgoing.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">None pending.</p>
+            <p className="text-gray-500 italic text-[12px]">None pending.</p>
           ) : (
             outgoingUsers.map((f) => (
               <div key={f._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                 <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
                   {f.displayName}
                 </Link>
-                <span className="text-gray-500 text-[10px] italic">awaiting response…</span>
+                <span className="text-gray-500 text-[11px] italic">awaiting response…</span>
               </div>
             ))
           )}
@@ -152,10 +152,10 @@ export default async function FriendsPage() {
 
         <Box title={`Recent Activity (${recent.length})`}>
           {recent.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">Nothing yet.</p>
+            <p className="text-gray-500 italic text-[12px]">Nothing yet.</p>
           ) : (
             recent.map(({ friend, at }) => (
-              <div key={friend._id.toString()} className="border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[11px]">
+              <div key={friend._id.toString()} className="border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[12px]">
                 <Link href={`/u/${friend.username}`} className="text-[#003399] font-bold no-underline">
                   {friend.displayName}
                 </Link>{" "}
@@ -171,7 +171,7 @@ export default async function FriendsPage() {
           />
           <div className="mt-2">
             {friends.length === 0 ? (
-              <p className="text-gray-500 italic text-[11px]">No friends yet.</p>
+              <p className="text-gray-500 italic text-[12px]">No friends yet.</p>
             ) : (
               friends.map((f) => {
                 const fr = approved.find(

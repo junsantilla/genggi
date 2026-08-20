@@ -75,7 +75,7 @@ export default async function SearchPage({
 
         <Box title={`Results (${results.length})`}>
           {results.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No users found.</p>
+            <p className="text-gray-500 italic text-[12px]">No users found.</p>
           ) : (
             results.map((r, i) => (
               <div key={r._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
@@ -92,7 +92,7 @@ export default async function SearchPage({
                     <Link href={`/u/${r.username}`} className="text-[#003399] font-bold no-underline">
                       {r.displayName}
                     </Link>
-                    <div className="text-gray-500 text-[10px]">
+                    <div className="text-gray-500 text-[11px]">
                       {[r.location, r.gender, r.relationshipStatus].filter(Boolean).join(" · ") || r.username}
                       {r.interests?.length ? ` · ${r.interests.slice(0, 3).join(", ")}` : ""}
                     </div>
@@ -100,11 +100,11 @@ export default async function SearchPage({
                 </div>
                 <span className="shrink-0 text-right">
                   {statuses[i] === "friends" ? (
-                    <span className="text-[10px] text-gray-500">✓ friends</span>
+                    <span className="text-[11px] text-gray-500">✓ friends</span>
                   ) : statuses[i] === "pending_out" ? (
-                    <span className="text-[10px] text-gray-500">requested</span>
+                    <span className="text-[11px] text-gray-500">requested</span>
                   ) : statuses[i] === "pending_in" ? (
-                    <span className="text-[10px] text-gray-500">requested you</span>
+                    <span className="text-[11px] text-gray-500">requested you</span>
                   ) : r.whoCanFriendRequest !== "nobody" ? (
                     <ActionButton
                       action={sendFriendRequestAction.bind(null, r._id.toString())}
@@ -113,7 +113,7 @@ export default async function SearchPage({
                       + Add as Friend
                     </ActionButton>
                   ) : (
-                    <span className="text-[10px] text-gray-500">not accepting</span>
+                    <span className="text-[11px] text-gray-500">not accepting</span>
                   )}
                 </span>
               </div>

@@ -26,7 +26,7 @@ export default function AuthForm({
         </div>
       ))}
       {state.error && (
-        <div className="text-red-600 text-[11px] font-bold bg-red-50 border border-red-200 px-2 py-1">
+        <div className="text-red-600 text-[12px] font-bold bg-red-50 border border-red-200 px-2 py-1">
           {state.error}
         </div>
       )}

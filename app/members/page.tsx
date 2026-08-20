@@ -26,7 +26,7 @@ export default async function MembersPage() {
       <div className="p-4">
         <Box title={`Members (${users.length})`}>
           {users.length === 0 ? (
-            <p className="text-gray-500 italic text-[11px]">No members found.</p>
+            <p className="text-gray-500 italic text-[12px]">No members found.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {users.map((user) => (
@@ -53,12 +53,12 @@ export default async function MembersPage() {
                     >
                       {user.displayName}
                     </Link>
-                    <div className="text-gray-500 text-[10px]">
+                    <div className="text-gray-500 text-[11px]">
                       {[user.location, user.gender, user.relationshipStatus]
                         .filter(Boolean)
                         .join(" · ") || `@${user.username}`}
                     </div>
-                    <div className="text-gray-500 text-[10px]">
+                    <div className="text-gray-500 text-[11px]">
                       joined {timeAgo(user.createdAt)}
                     </div>
                   </div>

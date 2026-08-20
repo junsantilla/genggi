@@ -28,7 +28,7 @@ export default function BulletinBoard({
     <Box title={title} className="bulletin-board">
       {showComposer && <BulletinPostForm />}
       {posts.length === 0 ? (
-        <p className="text-gray-500 italic text-[11px]">
+        <p className="text-gray-500 italic text-[12px]">
           {showComposer ? "No bulletins yet. Be the first to post!" : "No bulletins to show."}
         </p>
       ) : (
@@ -41,11 +41,11 @@ export default function BulletinBoard({
                   <Link href={`/u/${post.author.username}`} className="text-[#003399] font-bold no-underline">
                     {post.author.displayName}
                   </Link>
-                  <span className="text-gray-500 text-[10px]">
+                  <span className="text-gray-500 text-[11px]">
                     {timeAgo(post.createdAt)} · {visibilityLabels[post.visibility]}
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-[11px] mt-1 mb-0">{post.body}</p>
+                <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
                 {isOwnPost && (
                   <div className="mt-1">
                     <ActionButton
@@ -65,7 +65,7 @@ export default function BulletinBoard({
                       return (
                         <div
                           key={comment._id.toString()}
-                          className="text-[10px] py-0.5 leading-snug"
+                          className="text-[12px] py-0.5 leading-snug"
                         >
                           <Link
                             href={`/u/${comment.author.username}`}
@@ -78,7 +78,7 @@ export default function BulletinBoard({
                           {canDelete && (
                             <ActionButton
                               action={deleteBulletinCommentAction.bind(null, comment._id.toString())}
-                              className="text-[#cc0000] underline text-[9px] ml-1 p-0 border-0 bg-transparent"
+                              className="text-[#cc0000] underline text-[11px] ml-1 p-0 border-0 bg-transparent"
                               confirmText="Delete this comment?"
                             >
                               Delete

@@ -22,7 +22,7 @@ export default async function LoginPage() {
           ]}
           submitLabel="Login"
         />
-        <p className="text-center text-[11px] text-gray-500 mt-3">
+        <p className="text-center text-[12px] text-gray-500 mt-3">
           No account?{" "}
           <Link href="/signup" className="text-[#003399] font-bold">
             Create one here
