@@ -2,9 +2,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
-import { markNotificationsReadAction } from "@/app/actions";
-import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
+import NotificationsReadTracker from "@/app/components/NotificationsReadTracker";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -29,7 +28,9 @@ export default async function NotificationsPage() {
     actors.find((a) => a._id.toString() === id)?.displayName;
 
   return (
-    <div className="max-w-[640px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+    <>
+      <NotificationsReadTracker />
+      <div className="max-w-[640px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
       <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
         🔔 Notifications
       </div>
@@ -39,11 +40,6 @@ export default async function NotificationsPage() {
             <p className="text-gray-500 italic text-[12px]">You&apos;re all caught up!</p>
           ) : (
             <>
-              <div className="mb-2">
-                <ActionButton action={markNotificationsReadAction} className="btn">
-                  Mark all as read
-                </ActionButton>
-              </div>
               {notifications.map((n) => (
                 <div
                   key={n._id.toString()}
@@ -63,6 +59,7 @@ export default async function NotificationsPage() {
           )}
         </Box>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
