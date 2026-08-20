@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "genggeng.pro - Alex's Profile",
-  description: "Alex Rivera's nostalgic profile page — made for nostalgic fun.",
+  title: {
+    default: "genggeng.pro",
+    template: "%s | genggeng.pro",
+  },
+  description: "A nostalgic social network for profiles, friends, messages, and fun.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
