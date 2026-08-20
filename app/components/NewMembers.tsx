@@ -64,6 +64,11 @@ export default async function NewMembers({
                     ))}
                 </div>
             )}
+            <div className="text-center mt-2">
+                <Link href="/members" className="btn no-underline">
+                    View All Members »
+                </Link>
+            </div>
         </Box>
     );
 }
