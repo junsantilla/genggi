@@ -40,7 +40,7 @@ export default async function Profile({
   const theme = user.theme || { bgTint: "#eef3fb", border: "#6699cc" };
   const canView = isOwner || !user.isPrivate || isFriend;
 
-  // Top 8 friends
+  // Six most recent friends
   const friendDocs = await db
     .collection("friendships")
     .find({
@@ -48,7 +48,7 @@ export default async function Profile({
       $or: [{ requesterId: user._id }, { addresseeId: user._id }],
     })
     .sort({ createdAt: -1 })
-    .limit(8)
+    .limit(6)
     .toArray();
   const friendIds = friendDocs.map((f) =>
     f.requesterId.toString() === uid ? f.addresseeId : f.requesterId
@@ -372,7 +372,7 @@ export default async function Profile({
           <div className="w-full sm:w-1/4 p-2.5 pt-0 sm:pt-2.5">
             {/* Top 8 friends */}
             <Box
-              title={`${user.displayName.split(" ")[0]}'s Friends (showing ${topFriends.length} of ...)`}
+              title={`${user.displayName.split(" ")[0]}'s Friends (recent ${topFriends.length})`}
               border={theme.border}
               bg="#f5f9ff"
             >
@@ -380,9 +380,9 @@ export default async function Profile({
                 <span className="text-gray-500 italic text-[11px]">No friends yet.</span>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
                     {topFriends.map((f) => (
-                      <div key={f._id.toString()} className="text-center text-[10px]">
+                      <div key={f._id.toString()} className="min-w-0 text-center text-[10px]">
                         <Link href={`/u/${f.username}`} className="block">
                           {f.photo ? (
                             // eslint-disable-next-line @next/next/no-img-element
