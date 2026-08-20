@@ -66,7 +66,7 @@ export async function signupAction(
     mood: "",
     awayMessage: "",
     photo: null,
-    theme: { barFrom: "#4a76b8", barTo: "#2c4d80", bgTint: "#eef3fb", border: "#6699cc" },
+    theme: { bgTint: "#eef3fb", border: "#6699cc" },
     profileViews: 0,
     lastActive: new Date(),
     isPrivate: false,
@@ -172,8 +172,6 @@ export async function removePhotoAction(): Promise<ActionResult> {
 export async function updateThemeAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   const theme = {
-    barFrom: String(formData.get("barFrom") || "#4a76b8"),
-    barTo: String(formData.get("barTo") || "#2c4d80"),
     bgTint: String(formData.get("bgTint") || "#eef3fb"),
     border: String(formData.get("border") || "#6699cc"),
   };
