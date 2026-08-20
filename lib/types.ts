@@ -60,6 +60,22 @@ export interface BulletinPostWithAuthor extends BulletinPost {
   author: Pick<User, "_id" | "username" | "displayName">;
 }
 
+export interface BulletinComment {
+  _id: ObjectId;
+  postId: ObjectId;
+  authorId: ObjectId;
+  body: string;
+  createdAt: Date;
+}
+
+export interface BulletinCommentWithAuthor extends BulletinComment {
+  author: Pick<User, "_id" | "username" | "displayName">;
+}
+
+export interface BulletinPostWithComments extends BulletinPostWithAuthor {
+  comments: BulletinCommentWithAuthor[];
+}
+
 export interface Session {
   _id: ObjectId;
   userId: ObjectId;

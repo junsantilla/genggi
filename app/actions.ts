@@ -474,8 +474,69 @@ export async function deleteBulletinPostAction(postId: string): Promise<ActionRe
   if (!post) return { error: "Post not found." };
 
   await db.collection("bulletinPosts").deleteOne({ _id: post._id });
+  await db.collection("bulletinComments").deleteMany({ postId: post._id });
   revalidatePath("/");
   revalidatePath(`/u/${user.username}`);
+  return { ok: true };
+}
+
+export async function createBulletinCommentAction(
+  postId: string,
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Comment cannot be empty." };
+  if (body.length > 500) return { error: "Comments must be 500 characters or fewer." };
+
+  const db = getDb();
+  const post = await db.collection("bulletinPosts").findOne({ _id: new ObjectId(postId) });
+  if (!post) return { error: "Post not found." };
+
+  await db.collection("bulletinComments").insertOne({
+    postId: post._id,
+    authorId: user._id,
+    body,
+    createdAt: new Date(),
+  });
+
+  const author = await db.collection("users").findOne({ _id: post.authorId });
+  if (author && author._id.toString() !== user._id.toString()) {
+    await notify(
+      author._id.toString(),
+      "bulletin_comment",
+      user._id.toString(),
+      `${user.displayName} commented on your bulletin post.`,
+      "/"
+    );
+  }
+
+  revalidatePath("/");
+  if (author) revalidatePath(`/u/${author.username}`);
+  return { ok: true };
+}
+
+export async function deleteBulletinCommentAction(commentId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const db = getDb();
+  const comment = await db
+    .collection("bulletinComments")
+    .findOne({ _id: new ObjectId(commentId) });
+  if (!comment) return { error: "Comment not found." };
+
+  const post = await db.collection("bulletinPosts").findOne({ _id: comment.postId });
+  const isCommentAuthor = comment.authorId.toString() === user._id.toString();
+  const isPostAuthor = post ? post.authorId.toString() === user._id.toString() : false;
+  if (!isCommentAuthor && !isPostAuthor && user.role !== "admin")
+    return { error: "Not allowed." };
+
+  await db.collection("bulletinComments").deleteOne({ _id: comment._id });
+  revalidatePath("/");
+  if (post) {
+    const author = await db.collection("users").findOne({ _id: post.authorId });
+    if (author) revalidatePath(`/u/${author.username}`);
+  }
   return { ok: true };
 }
 

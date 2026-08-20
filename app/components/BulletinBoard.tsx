@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { deleteBulletinPostAction } from "@/app/actions";
-import type { BulletinPostWithAuthor } from "@/lib/types";
+import { deleteBulletinPostAction, deleteBulletinCommentAction } from "@/app/actions";
+import type { BulletinPostWithComments } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import ActionButton from "./ActionButton";
 import Box from "./Box";
+import BulletinCommentForm from "./BulletinCommentForm";
 import BulletinPostForm from "./BulletinPostForm";
 
 const visibilityLabels = {
@@ -18,7 +19,7 @@ export default function BulletinBoard({
   showComposer = false,
   title = "📌 Bulletin Board",
 }: {
-  posts: BulletinPostWithAuthor[];
+  posts: BulletinPostWithComments[];
   currentUserId?: string;
   showComposer?: boolean;
   title?: string;
@@ -56,6 +57,39 @@ export default function BulletinBoard({
                     </ActionButton>
                   </div>
                 )}
+                {post.comments.length > 0 && (
+                  <div className="mt-1.5 border-l-2 border-[#99bbdd] pl-2">
+                    {post.comments.map((comment) => {
+                      const canDelete =
+                        currentUserId === comment.author._id.toString() || isOwnPost;
+                      return (
+                        <div
+                          key={comment._id.toString()}
+                          className="text-[10px] py-0.5 leading-snug"
+                        >
+                          <Link
+                            href={`/u/${comment.author.username}`}
+                            className="text-[#003399] font-bold no-underline"
+                          >
+                            {comment.author.displayName}
+                          </Link>{" "}
+                          <span className="text-gray-500">({timeAgo(comment.createdAt)})</span>{" "}
+                          <span className="whitespace-pre-wrap">{comment.body}</span>
+                          {canDelete && (
+                            <ActionButton
+                              action={deleteBulletinCommentAction.bind(null, comment._id.toString())}
+                              className="text-[#cc0000] underline text-[9px] ml-1 p-0 border-0 bg-transparent"
+                              confirmText="Delete this comment?"
+                            >
+                              Delete
+                            </ActionButton>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {currentUserId && <BulletinCommentForm postId={post._id.toString()} />}
               </article>
             );
           })}
