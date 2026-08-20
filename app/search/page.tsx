@@ -80,12 +80,14 @@ export default async function SearchPage({
             results.map((r, i) => (
               <div key={r._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                 <div className="flex items-center gap-2">
-                  {r.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.photo} alt={r.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
-                  ) : (
-                    <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
-                  )}
+                  <Link href={`/u/${r.username}`} className="flex shrink-0">
+                    {r.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.photo} alt={r.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
+                    ) : (
+                      <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
+                    )}
+                  </Link>
                   <div>
                     <Link href={`/u/${r.username}`} className="text-[#003399] font-bold no-underline">
                       {r.displayName}
