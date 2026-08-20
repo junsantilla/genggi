@@ -12,7 +12,7 @@ import type {
 const BULLETIN_LIMIT = 50;
 const BULLETIN_COMMENT_LIMIT = 100;
 
-type Author = Pick<User, "_id" | "username" | "displayName">;
+type Author = Pick<User, "_id" | "username" | "displayName" | "photo">;
 
 async function withAuthors(posts: BulletinPost[]): Promise<BulletinPostWithAuthor[]> {
   if (posts.length === 0) return [];
@@ -21,7 +21,7 @@ async function withAuthors(posts: BulletinPost[]): Promise<BulletinPostWithAutho
   const authors = (await getDb()
     .collection("users")
     .find({ _id: { $in: authorIds } })
-    .project({ _id: 1, username: 1, displayName: 1 })
+    .project({ _id: 1, username: 1, displayName: 1, photo: 1 })
     .toArray()) as unknown as Author[];
   const authorById = new Map(authors.map((author) => [author._id.toString(), author]));
 
@@ -52,7 +52,7 @@ async function withComments(
       ? ((await getDb()
           .collection("users")
           .find({ _id: { $in: commentAuthorIds } })
-          .project({ _id: 1, username: 1, displayName: 1 })
+          .project({ _id: 1, username: 1, displayName: 1, photo: 1 })
           .toArray()) as unknown as Author[])
       : [];
   const commentAuthorById = new Map(
