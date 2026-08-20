@@ -39,16 +39,18 @@ export default async function NewMembers({
                             key={u._id.toString()}
                             className="text-center text-[10px]"
                         >
-                            {u.photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    src={u.photo}
-                                    alt={u.displayName}
-                                    className="w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
-                                />
-                            ) : (
-                                <div className="friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
-                            )}
+                            <Link href={`/u/${u.username}`} className="block">
+                                {u.photo ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={u.photo}
+                                        alt={u.displayName}
+                                        className="w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
+                                    />
+                                ) : (
+                                    <div className="friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
+                                )}
+                            </Link>
                             <Link
                                 href={`/u/${u.username}`}
                                 className="text-[#003399] no-underline font-bold"
