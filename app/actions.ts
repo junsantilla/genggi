@@ -441,10 +441,7 @@ export async function deleteTestimonialAction(testimonialId: string): Promise<Ac
 
 const BULLETIN_VISIBILITIES: BulletinVisibility[] = ["public", "friends", "private"];
 
-export async function createBulletinPostAction(
-  _prev: ActionResult,
-  formData: FormData
-): Promise<ActionResult> {
+export async function createBulletinPostAction(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
   const body = String(formData.get("body") || "").trim();
   const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
@@ -452,10 +449,37 @@ export async function createBulletinPostAction(
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
 
+  const file = formData.get("photo");
+  let uploaded: { secure_url: string; public_id: string } | null = null;
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 3 * 1024 * 1024) return { error: "Image must be under 3MB." };
+    if (!file.type.startsWith("image/")) return { error: "Please upload an image file." };
+    const buf = Buffer.from(await file.arrayBuffer());
+    try {
+      uploaded = await uploadImage(buf, `bulletin-posts/${user.username}`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : "Unknown Cloudinary error.";
+      console.error("Bulletin image upload failed:", message);
+      return {
+        error:
+          process.env.NODE_ENV === "development"
+            ? `Image upload failed: ${message}`
+            : "Image upload failed. Please try again.",
+      };
+    }
+  }
+
   await getDb().collection("bulletinPosts").insertOne({
     authorId: user._id,
     body,
     visibility: visibilityValue,
+    photo: uploaded?.secure_url ?? null,
+    photoPublicId: uploaded?.public_id ?? null,
     createdAt: new Date(),
   });
   revalidatePath("/");
@@ -475,6 +499,9 @@ export async function deleteBulletinPostAction(postId: string): Promise<ActionRe
   if (!isAuthor && user.username !== "genggengpro")
     return { error: "Not allowed." };
 
+  if (post.photoPublicId) {
+    await destroyImage(post.photoPublicId).catch(() => {});
+  }
   await db.collection("bulletinPosts").deleteOne({ _id: post._id });
   await db.collection("bulletinComments").deleteMany({ postId: post._id });
   revalidatePath("/");
@@ -650,8 +677,16 @@ export async function adminDeleteUserAction(targetId: string): Promise<ActionRes
   if (admin._id.toString() === targetId) return { error: "You cannot delete yourself." };
   const db = getDb();
   const oid = new ObjectId(targetId);
+  const userPosts = (await db
+    .collection("bulletinPosts")
+    .find({ authorId: oid })
+    .project({ photoPublicId: 1 })
+    .toArray()) as unknown as { photoPublicId?: string | null }[];
   await db.collection("users").deleteOne({ _id: oid });
   await Promise.all([
+    ...userPosts
+      .filter((p) => p.photoPublicId)
+      .map((p) => destroyImage(p.photoPublicId as string).catch(() => {})),
     db.collection("sessions").deleteMany({ userId: oid }),
     db
       .collection("friendships")

@@ -67,6 +67,14 @@ export default function BulletinBoard({
                       </span>
                     </div>
                     <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
+                    {post.photo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={post.photo}
+                        alt="Post photo"
+                        className="max-w-[420px] w-full mt-1.5 border border-[#99bbdd]"
+                      />
+                    )}
                 {canModerate && (
                   <div className="mt-1">
                     <ActionButton

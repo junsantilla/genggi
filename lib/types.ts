@@ -52,6 +52,8 @@ export interface BulletinPost {
   authorId: ObjectId;
   body: string;
   visibility: BulletinVisibility;
+  photo?: string | null;
+  photoPublicId?: string | null;
   createdAt: Date;
 }
 
