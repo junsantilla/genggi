@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import Landing from "@/app/components/Landing";
 import NewMembers from "@/app/components/NewMembers";
-import BulletinBoard from "@/app/components/BulletinBoard";
-import { getHomeBulletinPosts } from "@/lib/bulletin";
+import BulletinFeed from "@/app/components/BulletinFeed";
+import { getBulletinFeedPage } from "@/lib/bulletin";
 
 export const metadata: Metadata = {
   title: {
@@ -33,16 +33,16 @@ export default async function Home() {
     const user = await getCurrentUser();
     if (!user) return <Landing />;
 
-    const posts = await getHomeBulletinPosts(user._id.toString());
+    const feed = await getBulletinFeedPage(user._id.toString(), null);
 
     return (
         <div className="max-w-[960px] w-full mx-auto">
             <div className="bg-white border border-[#6699cc] sm:border-x p-2.5">
-                <BulletinBoard
-                    posts={posts}
+                <BulletinFeed
+                    initialPosts={feed.posts}
+                    hasMore={feed.nextCursor !== null}
                     currentUserId={user._id.toString()}
                     currentUsername={user.username}
-                    showComposer
                 />
                 <NewMembers excludeId={user._id.toString()} />
             </div>

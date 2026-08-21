@@ -4,13 +4,17 @@ import type {
   BulletinComment,
   BulletinCommentWithAuthor,
   BulletinPost,
+  BulletinPostCard,
   BulletinPostWithAuthor,
   BulletinPostWithComments,
+  SerializedBulletinPost,
   User,
 } from "@/lib/types";
 
 const BULLETIN_LIMIT = 50;
 const BULLETIN_COMMENT_LIMIT = 100;
+
+export const BULLETIN_PAGE_SIZE = 10;
 
 type Author = Pick<User, "_id" | "username" | "displayName" | "photo">;
 
@@ -75,7 +79,11 @@ async function withComments(
   }));
 }
 
-export async function getHomeBulletinPosts(userId: string): Promise<BulletinPostWithComments[]> {
+export async function getHomeBulletinPosts(
+  userId: string,
+  cursor?: { createdAt: Date; _id: ObjectId } | null,
+  limit = BULLETIN_LIMIT
+): Promise<BulletinPostWithComments[]> {
   const db = getDb();
   const userObjectId = new ObjectId(userId);
   const friendIds = await getFriendIds(userId);
@@ -91,14 +99,107 @@ export async function getHomeBulletinPosts(userId: string): Promise<BulletinPost
     });
   }
 
+  const query: Record<string, unknown> = { $or: visibilityRules };
+  if (cursor) {
+    query.$and = [
+      {
+        $or: [
+          { createdAt: { $lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, _id: { $lt: cursor._id } },
+        ],
+      },
+    ];
+  }
+
   const posts = (await db
     .collection("bulletinPosts")
-    .find({ $or: visibilityRules })
-    .sort({ createdAt: -1 })
-    .limit(BULLETIN_LIMIT)
+    .find(query)
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit)
     .toArray()) as unknown as BulletinPost[];
 
   return withComments(await withAuthors(posts));
+}
+
+export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPostCard {
+  return {
+    _id: post._id.toString(),
+    authorId: post.authorId.toString(),
+    body: post.body,
+    visibility: post.visibility,
+    photo: post.photo,
+    createdAt: post.createdAt,
+    author: {
+      _id: post.author._id.toString(),
+      username: post.author.username,
+      displayName: post.author.displayName,
+      photo: post.author.photo,
+    },
+    comments: post.comments.map((c) => ({
+      _id: c._id.toString(),
+      authorId: c.authorId.toString(),
+      body: c.body,
+      createdAt: c.createdAt,
+      author: {
+        _id: c.author._id.toString(),
+        username: c.author.username,
+        displayName: c.author.displayName,
+        photo: c.author.photo,
+      },
+    })),
+  };
+}
+
+export function serializeBulletinPost(post: BulletinPostWithComments): SerializedBulletinPost {
+  return {
+    _id: post._id.toString(),
+    authorId: post.authorId.toString(),
+    body: post.body,
+    visibility: post.visibility,
+    photo: post.photo,
+    createdAt: post.createdAt.toISOString(),
+    author: {
+      _id: post.author._id.toString(),
+      username: post.author.username,
+      displayName: post.author.displayName,
+      photo: post.author.photo,
+    },
+    comments: post.comments.map((c) => ({
+      _id: c._id.toString(),
+      authorId: c.authorId.toString(),
+      body: c.body,
+      createdAt: c.createdAt.toISOString(),
+      author: {
+        _id: c.author._id.toString(),
+        username: c.author.username,
+        displayName: c.author.displayName,
+        photo: c.author.photo,
+      },
+    })),
+  };
+}
+
+export async function getBulletinFeedPage(
+  userId: string,
+  cursor: { createdAt: string; _id: string } | null
+): Promise<{
+  posts: SerializedBulletinPost[];
+  nextCursor: { createdAt: string; _id: string } | null;
+}> {
+  const parsedCursor = cursor
+    ? { createdAt: new Date(cursor.createdAt), _id: new ObjectId(cursor._id) }
+    : null;
+  const posts = await getHomeBulletinPosts(userId, parsedCursor, BULLETIN_PAGE_SIZE + 1);
+  const page = posts.slice(0, BULLETIN_PAGE_SIZE);
+  const hasMore = posts.length > BULLETIN_PAGE_SIZE;
+  const nextCursor =
+    hasMore && page.length > 0
+      ? {
+          createdAt: page[page.length - 1].createdAt.toISOString(),
+          _id: page[page.length - 1]._id.toString(),
+        }
+      : null;
+  return { posts: page.map(serializeBulletinPost), nextCursor };
 }
 
 export async function getBulletinPostById(
