@@ -73,7 +73,24 @@ export interface BulletinCommentWithAuthor extends BulletinComment {
   author: Pick<User, "_id" | "username" | "displayName" | "photo">;
 }
 
+export const REACTION_TYPES = ["👍", "❤️", "😂", "😮", "😢", "😡"] as const;
+
+export interface BulletinReaction {
+  _id: ObjectId;
+  postId: ObjectId;
+  userId: ObjectId;
+  type: string;
+  createdAt: Date;
+}
+
+export interface BulletinReactionSummary {
+  type: string;
+  count: number;
+}
+
 export interface BulletinPostWithComments extends BulletinPostWithAuthor {
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
   comments: BulletinCommentWithAuthor[];
 }
 
@@ -102,6 +119,8 @@ export interface BulletinPostCard {
   photo?: string | null;
   createdAt: Date | string;
   author: BulletinAuthorCard;
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
   comments: BulletinCommentCard[];
 }
 
@@ -113,6 +132,8 @@ export interface SerializedBulletinPost {
   photo?: string | null;
   createdAt: string;
   author: BulletinAuthorCard;
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
   comments: {
     _id: string;
     authorId: string;

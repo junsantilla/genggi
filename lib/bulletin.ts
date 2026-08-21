@@ -7,6 +7,8 @@ import type {
   BulletinPostCard,
   BulletinPostWithAuthor,
   BulletinPostWithComments,
+  BulletinReaction,
+  BulletinReactionSummary,
   SerializedBulletinPost,
   User,
 } from "@/lib/types";
@@ -32,6 +34,41 @@ async function withAuthors(posts: BulletinPost[]): Promise<BulletinPostWithAutho
   return posts.flatMap((post) => {
     const author = authorById.get(post.authorId.toString());
     return author ? [{ ...post, author }] : [];
+  });
+}
+
+async function withReactions(
+  posts: BulletinPostWithComments[],
+  viewerId: string | null
+): Promise<BulletinPostWithComments[]> {
+  if (posts.length === 0) return [];
+
+  const postIds = posts.map((post) => post._id);
+  const reactions = (await getDb()
+    .collection("bulletinReactions")
+    .find({ postId: { $in: postIds } })
+    .toArray()) as unknown as BulletinReaction[];
+
+  const byPost = new Map<string, BulletinReaction[]>();
+  for (const r of reactions) {
+    const key = r.postId.toString();
+    const list = byPost.get(key) ?? [];
+    list.push(r);
+    byPost.set(key, list);
+  }
+
+  return posts.map((post) => {
+    const list = byPost.get(post._id.toString()) ?? [];
+    const counts = new Map<string, number>();
+    let myReaction: string | null = null;
+    for (const r of list) {
+      counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+      if (viewerId && r.userId.toString() === viewerId) myReaction = r.type;
+    }
+    const reactions: BulletinReactionSummary[] = [...counts.entries()]
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+    return { ...post, reactions, myReaction };
   });
 }
 
@@ -75,6 +112,8 @@ async function withComments(
 
   return posts.map((post) => ({
     ...post,
+    reactions: [],
+    myReaction: null,
     comments: commentsByPost.get(post._id.toString()) ?? [],
   }));
 }
@@ -118,7 +157,7 @@ export async function getHomeBulletinPosts(
     .limit(limit)
     .toArray()) as unknown as BulletinPost[];
 
-  return withComments(await withAuthors(posts));
+  return withReactions(await withComments(await withAuthors(posts)), userId);
 }
 
 export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPostCard {
@@ -135,6 +174,8 @@ export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPost
       displayName: post.author.displayName,
       photo: post.author.photo,
     },
+    reactions: post.reactions,
+    myReaction: post.myReaction,
     comments: post.comments.map((c) => ({
       _id: c._id.toString(),
       authorId: c.authorId.toString(),
@@ -164,6 +205,8 @@ export function serializeBulletinPost(post: BulletinPostWithComments): Serialize
       displayName: post.author.displayName,
       photo: post.author.photo,
     },
+    reactions: post.reactions,
+    myReaction: post.myReaction,
     comments: post.comments.map((c) => ({
       _id: c._id.toString(),
       authorId: c.authorId.toString(),
@@ -235,14 +278,18 @@ export async function getBulletinPostById(
     )) as unknown as Author | null;
   if (!author) return null;
 
-  const [result] = await withComments([{ ...post, author }]);
+  const [result] = await withReactions(
+    await withComments([{ ...post, author }]),
+    viewerId
+  );
   return result ?? null;
 }
 
 export async function getProfileBulletinPosts(
   profileId: string,
   isOwner: boolean,
-  isFriend: boolean
+  isFriend: boolean,
+  viewerId: string | null = null
 ): Promise<BulletinPostWithComments[]> {
   const visibility = isOwner
     ? undefined
@@ -260,5 +307,5 @@ export async function getProfileBulletinPosts(
     .limit(BULLETIN_LIMIT)
     .toArray()) as unknown as BulletinPost[];
 
-  return withComments(await withAuthors(posts));
+  return withReactions(await withComments(await withAuthors(posts)), viewerId);
 }
