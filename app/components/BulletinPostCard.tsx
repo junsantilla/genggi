@@ -7,7 +7,12 @@ import {
   deleteBulletinCommentAction,
   reactToBulletinPostAction,
 } from "@/app/actions";
-import { REACTION_TYPES, type BulletinPostCard } from "@/lib/types";
+import {
+  REACTION_TYPES,
+  type BulletinCommentCard,
+  type BulletinPostCard,
+  type SerializedBulletinComment,
+} from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import ActionButton from "./ActionButton";
 import BulletinCommentForm from "./BulletinCommentForm";
@@ -22,10 +27,12 @@ export default function BulletinPostCard({
   post,
   currentUserId,
   currentUsername,
+  onPostDeleted,
 }: {
   post: BulletinPostCard;
   currentUserId?: string;
   currentUsername?: string;
+  onPostDeleted?: (postId: string) => void;
 }) {
   const isOwnPost = currentUserId === post.author._id;
   const canModerate = isOwnPost || currentUsername === "genggengpro";
@@ -33,6 +40,7 @@ export default function BulletinPostCard({
   const [myReaction, setMyReaction] = useState<string | null>(post.myReaction);
   const [reactions, setReactions] = useState(post.reactions);
   const [reacting, setReacting] = useState(false);
+  const [comments, setComments] = useState<BulletinCommentCard[]>(post.comments);
 
   const countOf = (type: string) => reactions.find((r) => r.type === type)?.count ?? 0;
   const totalReactions = reactions.reduce((sum, r) => sum + r.count, 0);
@@ -138,14 +146,15 @@ export default function BulletinPostCard({
                 action={deleteBulletinPostAction.bind(null, post._id)}
                 className="btn btn-danger"
                 confirmText="Delete this bulletin post?"
+                onSuccess={() => onPostDeleted?.(post._id)}
               >
                 Delete
               </ActionButton>
             </div>
           )}
-          {post.comments.length > 0 && (
+          {comments.length > 0 && (
             <div className="mt-1.5 border-l-2 border-[#99bbdd] pl-2">
-              {post.comments.map((comment) => {
+              {comments.map((comment) => {
                 const canDelete =
                   currentUserId === comment.author._id || isOwnPost;
                 return (
@@ -166,6 +175,9 @@ export default function BulletinPostCard({
                         action={deleteBulletinCommentAction.bind(null, comment._id)}
                         className="text-[#cc0000] underline text-[11px] ml-1 p-0 border-0 bg-transparent"
                         confirmText="Delete this comment?"
+                        onSuccess={() =>
+                          setComments((prev) => prev.filter((c) => c._id !== comment._id))
+                        }
                       >
                         Delete
                       </ActionButton>
@@ -175,7 +187,14 @@ export default function BulletinPostCard({
               })}
             </div>
           )}
-          {currentUserId && <BulletinCommentForm postId={post._id} />}
+          {currentUserId && (
+            <BulletinCommentForm
+              postId={post._id}
+              onPosted={(comment: SerializedBulletinComment) =>
+                setComments((prev) => [...prev, comment])
+              }
+            />
+          )}
         </div>
       </div>
     </article>

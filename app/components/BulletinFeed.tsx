@@ -79,6 +79,9 @@ export default function BulletinFeed({
               post={post}
               currentUserId={currentUserId}
               currentUsername={currentUsername}
+              onPostDeleted={(postId) =>
+                setPosts((prev) => prev.filter((p) => p._id !== postId))
+              }
             />
           ))}
         </div>
