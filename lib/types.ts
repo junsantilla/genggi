@@ -124,6 +124,15 @@ export interface BulletinPostCard {
   comments: BulletinCommentCard[];
 }
 
+export interface SerializedBulletinComment {
+  _id: string;
+  postId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  author: BulletinAuthorCard;
+}
+
 export interface SerializedBulletinPost {
   _id: string;
   authorId: string;
@@ -134,13 +143,7 @@ export interface SerializedBulletinPost {
   author: BulletinAuthorCard;
   reactions: BulletinReactionSummary[];
   myReaction: string | null;
-  comments: {
-    _id: string;
-    authorId: string;
-    body: string;
-    createdAt: string;
-    author: BulletinAuthorCard;
-  }[];
+  comments: SerializedBulletinComment[];
 }
 
 export interface Session {

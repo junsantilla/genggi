@@ -209,6 +209,7 @@ export function serializeBulletinPost(post: BulletinPostWithComments): Serialize
     myReaction: post.myReaction,
     comments: post.comments.map((c) => ({
       _id: c._id.toString(),
+      postId: post._id.toString(),
       authorId: c.authorId.toString(),
       body: c.body,
       createdAt: c.createdAt.toISOString(),

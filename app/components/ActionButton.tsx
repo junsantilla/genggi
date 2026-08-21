@@ -10,12 +10,14 @@ export default function ActionButton({
   className = "btn",
   confirmText,
   disabled,
+  onSuccess,
 }: {
   action: () => Promise<ActionResult | void>;
   children: React.ReactNode;
   className?: string;
   confirmText?: string;
   disabled?: boolean;
+  onSuccess?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -32,6 +34,7 @@ export default function ActionButton({
           startTransition(async () => {
             const res = await action();
             if (res && "error" in res && res.error) setError(res.error);
+            else onSuccess?.();
           });
         }}
       >

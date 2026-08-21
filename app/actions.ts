@@ -20,6 +20,7 @@ import {
   type BulletinReaction,
   type BulletinReactionSummary,
   type BulletinVisibility,
+  type SerializedBulletinComment,
   type SerializedBulletinPost,
   type User,
 } from "@/lib/types";
@@ -605,9 +606,8 @@ export async function deleteBulletinPostAction(postId: string): Promise<ActionRe
 
 export async function createBulletinCommentAction(
   postId: string,
-  _prev: ActionResult,
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResult & { comment?: SerializedBulletinComment }> {
   const user = await requireUser();
   const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Comment cannot be empty." };
@@ -617,11 +617,12 @@ export async function createBulletinCommentAction(
   const post = await db.collection("bulletinPosts").findOne({ _id: new ObjectId(postId) });
   if (!post) return { error: "Post not found." };
 
-  await db.collection("bulletinComments").insertOne({
+  const createdAt = new Date();
+  const inserted = await db.collection("bulletinComments").insertOne({
     postId: post._id,
     authorId: user._id,
     body,
-    createdAt: new Date(),
+    createdAt,
   });
 
   const author = await db.collection("users").findOne({ _id: post.authorId });
@@ -631,13 +632,30 @@ export async function createBulletinCommentAction(
       "bulletin_comment",
       user._id.toString(),
       `${user.displayName} commented on your bulletin post.`,
-      "/"
+      `/bulletin/${postId}`
     );
   }
 
   revalidatePath("/");
   if (author) revalidatePath(`/u/${author.username}`);
-  return { ok: true };
+  revalidatePath(`/bulletin/${postId}`);
+
+  return {
+    ok: true,
+    comment: {
+      _id: inserted.insertedId.toString(),
+      postId: post._id.toString(),
+      authorId: user._id.toString(),
+      body,
+      createdAt: createdAt.toISOString(),
+      author: {
+        _id: user._id.toString(),
+        username: user.username,
+        displayName: user.displayName,
+        photo: user.photo,
+      },
+    },
+  };
 }
 
 export async function deleteBulletinCommentAction(commentId: string): Promise<ActionResult> {
