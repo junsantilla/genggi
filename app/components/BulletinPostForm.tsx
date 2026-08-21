@@ -1,13 +1,34 @@
 "use client";
 
-import { useActionState } from "react";
+import { useRef, useState } from "react";
 import { createBulletinPostAction } from "@/app/actions";
 
 export default function BulletinPostForm() {
-  const [state, formAction, pending] = useActionState(createBulletinPostAction, { error: "" });
+  const [fileName, setFileName] = useState("");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const [posted, setPosted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={formAction} className="border-b border-[#99bbdd] pb-2 mb-2">
+    <form
+      ref={formRef}
+      action={async (fd: FormData) => {
+        setPending(true);
+        setError("");
+        setPosted(false);
+        const res = await createBulletinPostAction(fd);
+        setPending(false);
+        if (res && "error" in res && res.error) {
+          setError(res.error);
+        } else {
+          setPosted(true);
+          setFileName("");
+          if (formRef.current) formRef.current.reset();
+        }
+      }}
+      className="border-b border-[#99bbdd] pb-2 mb-2"
+    >
       <textarea
         name="body"
         rows={3}
@@ -16,6 +37,27 @@ export default function BulletinPostForm() {
         className="input"
         placeholder="What&apos;s on your mind?"
       />
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <label className="label mb-0" htmlFor="bulletin-photo">Add a photo (optional)</label>
+        <label htmlFor="bulletin-photo" className="btn">
+          {fileName ? fileName : "Choose File"}
+        </label>
+        <input
+          id="bulletin-photo"
+          type="file"
+          name="photo"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) {
+              setFileName(f.name);
+            } else {
+              setFileName("");
+            }
+          }}
+        />
+      </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
         <label className="label mb-0" htmlFor="bulletin-visibility">Who can see this?</label>
         <select id="bulletin-visibility" name="visibility" defaultValue="public" className="input w-auto">
@@ -27,8 +69,8 @@ export default function BulletinPostForm() {
           {pending ? "Posting..." : "Post Bulletin"}
         </button>
       </div>
-      {state.error && <div className="text-red-600 text-[11px] mt-1">{state.error}</div>}
-      {state.ok && (
+      {error && <div className="text-red-600 text-[11px] mt-1">{error}</div>}
+      {posted && (
         <div className="text-green-700 text-[11px] font-bold mt-1" role="status">
           Posted!
         </div>
