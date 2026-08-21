@@ -101,6 +101,43 @@ export async function getHomeBulletinPosts(userId: string): Promise<BulletinPost
   return withComments(await withAuthors(posts));
 }
 
+export async function getBulletinPostById(
+  postId: string,
+  viewerId: string
+): Promise<BulletinPostWithComments | null> {
+  const db = getDb();
+  let oid;
+  try {
+    oid = new ObjectId(postId);
+  } catch {
+    return null;
+  }
+
+  const post = (await db
+    .collection("bulletinPosts")
+    .findOne({ _id: oid })) as unknown as BulletinPost | null;
+  if (!post) return null;
+
+  const isAuthor = post.authorId.toString() === viewerId;
+  if (post.visibility === "private" && !isAuthor) return null;
+  if (post.visibility === "friends" && !isAuthor) {
+    const friendIds = await getFriendIds(viewerId);
+    const isFriend = friendIds.some((id) => id.toString() === post.authorId.toString());
+    if (!isFriend) return null;
+  }
+
+  const author = (await db
+    .collection("users")
+    .findOne(
+      { _id: post.authorId },
+      { projection: { _id: 1, username: 1, displayName: 1, photo: 1 } }
+    )) as unknown as Author | null;
+  if (!author) return null;
+
+  const [result] = await withComments([{ ...post, author }]);
+  return result ?? null;
+}
+
 export async function getProfileBulletinPosts(
   profileId: string,
   isOwner: boolean,

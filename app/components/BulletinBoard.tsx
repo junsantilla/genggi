@@ -62,18 +62,28 @@ export default function BulletinBoard({
                       <Link href={`/u/${post.author.username}`} className="text-[#003399] font-bold no-underline">
                         {post.author.displayName}
                       </Link>
-                      <span className="text-gray-500 text-[11px]">
+                      <Link
+                        href={`/bulletin/${post._id.toString()}`}
+                        className="text-gray-500 text-[11px] no-underline hover:underline"
+                      >
                         {timeAgo(post.createdAt)} · {visibilityLabels[post.visibility]}
-                      </span>
+                      </Link>
                     </div>
-                    <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
+                    <Link
+                      href={`/bulletin/${post._id.toString()}`}
+                      className="block no-underline text-inherit hover:underline"
+                    >
+                      <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">{post.body}</p>
+                    </Link>
                     {post.photo && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={post.photo}
-                        alt="Post photo"
-                        className="max-w-[420px] w-full mt-1.5 border border-[#99bbdd]"
-                      />
+                      <Link href={`/bulletin/${post._id.toString()}`} className="block mt-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={post.photo}
+                          alt="Post photo"
+                          className="max-w-[420px] w-full border border-[#99bbdd]"
+                        />
+                      </Link>
                     )}
                 {canModerate && (
                   <div className="mt-1">
