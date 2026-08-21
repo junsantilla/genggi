@@ -156,7 +156,9 @@ export default function BulletinPostCard({
             <div className="mt-1.5 border-l-2 border-[#99bbdd] pl-2">
               {comments.map((comment) => {
                 const canDelete =
-                  currentUserId === comment.author._id || isOwnPost;
+                  currentUserId === comment.author._id ||
+                  isOwnPost ||
+                  currentUsername === "genggengpro";
                 return (
                   <div
                     key={comment._id}

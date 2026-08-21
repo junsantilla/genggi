@@ -669,7 +669,7 @@ export async function deleteBulletinCommentAction(commentId: string): Promise<Ac
   const post = await db.collection("bulletinPosts").findOne({ _id: comment.postId });
   const isCommentAuthor = comment.authorId.toString() === user._id.toString();
   const isPostAuthor = post ? post.authorId.toString() === user._id.toString() : false;
-  if (!isCommentAuthor && !isPostAuthor && user.role !== "admin")
+  if (!isCommentAuthor && !isPostAuthor && user.role !== "admin" && user.username !== "genggengpro")
     return { error: "Not allowed." };
 
   await db.collection("bulletinComments").deleteOne({ _id: comment._id });
