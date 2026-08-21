@@ -77,6 +77,51 @@ export interface BulletinPostWithComments extends BulletinPostWithAuthor {
   comments: BulletinCommentWithAuthor[];
 }
 
+// Client-friendly shape: ObjectIds and Dates flattened to plain values so posts
+// can be passed to client components and returned from server actions.
+export interface BulletinAuthorCard {
+  _id: string;
+  username: string;
+  displayName: string;
+  photo: string | null;
+}
+
+export interface BulletinCommentCard {
+  _id: string;
+  authorId: string;
+  body: string;
+  createdAt: Date | string;
+  author: BulletinAuthorCard;
+}
+
+export interface BulletinPostCard {
+  _id: string;
+  authorId: string;
+  body: string;
+  visibility: BulletinVisibility;
+  photo?: string | null;
+  createdAt: Date | string;
+  author: BulletinAuthorCard;
+  comments: BulletinCommentCard[];
+}
+
+export interface SerializedBulletinPost {
+  _id: string;
+  authorId: string;
+  body: string;
+  visibility: BulletinVisibility;
+  photo?: string | null;
+  createdAt: string;
+  author: BulletinAuthorCard;
+  comments: {
+    _id: string;
+    authorId: string;
+    body: string;
+    createdAt: string;
+    author: BulletinAuthorCard;
+  }[];
+}
+
 export interface Session {
   _id: ObjectId;
   userId: ObjectId;

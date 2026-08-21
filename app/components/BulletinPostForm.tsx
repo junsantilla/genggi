@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { createBulletinPostAction } from "@/app/actions";
 
-export default function BulletinPostForm() {
+export default function BulletinPostForm({ onPosted }: { onPosted?: () => void }) {
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -25,6 +25,7 @@ export default function BulletinPostForm() {
           setPosted(true);
           setFileName("");
           if (formRef.current) formRef.current.reset();
+          onPosted?.();
         }
       }}
       className="border-b border-[#99bbdd] pb-2 mb-2"

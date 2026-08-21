@@ -14,7 +14,8 @@ import {
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
-import type { BulletinVisibility, User } from "@/lib/types";
+import { getBulletinFeedPage } from "@/lib/bulletin";
+import type { BulletinVisibility, SerializedBulletinPost, User } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string };
 
@@ -485,6 +486,16 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   revalidatePath("/");
   revalidatePath(`/u/${user.username}`);
   return { ok: true };
+}
+
+export async function getMoreBulletinPostsAction(
+  cursor: { createdAt: string; _id: string } | null
+): Promise<{
+  posts: SerializedBulletinPost[];
+  nextCursor: { createdAt: string; _id: string } | null;
+}> {
+  const user = await requireUser();
+  return getBulletinFeedPage(user._id.toString(), cursor);
 }
 
 export async function deleteBulletinPostAction(postId: string): Promise<ActionResult> {
