@@ -3,7 +3,6 @@ import type { ObjectId } from "mongodb";
 export type Role = "user" | "admin";
 
 export interface Theme {
-  bgTint: string;
   border: string;
   customCss?: string;
 }

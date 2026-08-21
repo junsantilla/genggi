@@ -116,7 +116,7 @@ summary::-webkit-details-marker {
 /* Profile theme: form controls inside a profile page follow the user's theme */
 .profile-page .input {
   border-color: var(--profile-border, #6699cc);
-  background: var(--profile-bg, #f5f9ff);
+  background: #f5f9ff;
 }
 .profile-page .input:focus {
   outline-color: var(--profile-border, #6699cc);
