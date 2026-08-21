@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { createBulletinPostAction } from "@/app/actions";
 
 export default function BulletinPostForm({ onPosted }: { onPosted?: () => void }) {
-  const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [posted, setPosted] = useState(false);
@@ -23,7 +22,6 @@ export default function BulletinPostForm({ onPosted }: { onPosted?: () => void }
           setError(res.error);
         } else {
           setPosted(true);
-          setFileName("");
           if (formRef.current) formRef.current.reset();
           onPosted?.();
         }
@@ -38,25 +36,14 @@ export default function BulletinPostForm({ onPosted }: { onPosted?: () => void }
         className="input"
         placeholder="What&apos;s on your mind?"
       />
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+      <div className="mt-1.5">
         <label className="label mb-0" htmlFor="bulletin-photo">Add a photo (optional)</label>
-        <label htmlFor="bulletin-photo" className="btn">
-          {fileName ? fileName : "Choose File"}
-        </label>
         <input
           id="bulletin-photo"
           type="file"
           name="photo"
           accept="image/*"
-          className="sr-only"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) {
-              setFileName(f.name);
-            } else {
-              setFileName("");
-            }
-          }}
+          className="btn-file"
         />
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

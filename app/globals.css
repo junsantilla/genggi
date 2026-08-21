@@ -109,6 +109,26 @@ main:has(.profile-page) {
   margin-bottom: 2px;
 }
 
+/* Style the native file input's "Choose File" button to match .btn */
+input[type="file"].btn-file {
+  font-size: 12px;
+  color: #2c4d80;
+}
+input[type="file"].btn-file::file-selector-button {
+  background: #6699cc;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #2c4d80;
+  cursor: pointer;
+  border-radius: 0;
+  margin-right: 0.5rem;
+}
+input[type="file"].btn-file::file-selector-button:hover {
+  background: #4a76b8;
+}
+
 summary::-webkit-details-marker {
   display: none;
 }
