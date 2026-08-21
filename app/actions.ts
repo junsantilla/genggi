@@ -15,7 +15,14 @@ import {
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
 import { getBulletinFeedPage } from "@/lib/bulletin";
-import type { BulletinVisibility, SerializedBulletinPost, User } from "@/lib/types";
+import {
+  REACTION_TYPES,
+  type BulletinReaction,
+  type BulletinReactionSummary,
+  type BulletinVisibility,
+  type SerializedBulletinPost,
+  type User,
+} from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string };
 
@@ -486,6 +493,81 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   revalidatePath("/");
   revalidatePath(`/u/${user.username}`);
   return { ok: true };
+}
+
+export async function reactToBulletinPostAction(
+  postId: string,
+  type: string
+): Promise<ActionResult & {
+  reactions?: BulletinReactionSummary[];
+  myReaction?: string | null;
+}> {
+  const user = await requireUser();
+  const db = getDb();
+  let oid;
+  try {
+    oid = new ObjectId(postId);
+  } catch {
+    return { error: "Post not found." };
+  }
+  const post = await db.collection("bulletinPosts").findOne({ _id: oid });
+  if (!post) return { error: "Post not found." };
+  if (!(REACTION_TYPES as readonly string[]).includes(type))
+    return { error: "Invalid reaction." };
+
+  const existing = await db
+    .collection("bulletinReactions")
+    .findOne({ postId: oid, userId: user._id });
+  const created = !existing;
+  if (existing && existing.type === type) {
+    await db.collection("bulletinReactions").deleteOne({ _id: existing._id });
+  } else if (existing) {
+    await db.collection("bulletinReactions").updateOne({ _id: existing._id }, { $set: { type } });
+  } else {
+    await db.collection("bulletinReactions").insertOne({
+      postId: oid,
+      userId: user._id,
+      type,
+      createdAt: new Date(),
+    });
+  }
+
+  if (created) {
+    const author = await db.collection("users").findOne({ _id: post.authorId });
+    if (author && author._id.toString() !== user._id.toString()) {
+      await notify(
+        author._id.toString(),
+        "bulletin_reaction",
+        user._id.toString(),
+        `${user.displayName} reacted ${type} to your bulletin post.`,
+        `/bulletin/${postId}`
+      );
+    }
+  }
+
+  const reactions = (await db
+    .collection("bulletinReactions")
+    .find({ postId: oid })
+    .toArray()) as unknown as BulletinReaction[];
+  const counts = new Map<string, number>();
+  let myReaction: string | null = null;
+  for (const r of reactions) {
+    counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+    if (r.userId.toString() === user._id.toString()) myReaction = r.type;
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/bulletin/${postId}`);
+  const author = await db.collection("users").findOne({ _id: post.authorId });
+  if (author) revalidatePath(`/u/${author.username}`);
+
+  return {
+    ok: true,
+    reactions: [...counts.entries()]
+      .map(([t, c]) => ({ type: t, count: c }))
+      .sort((a, b) => b.count - a.count),
+    myReaction,
+  };
 }
 
 export async function getMoreBulletinPostsAction(

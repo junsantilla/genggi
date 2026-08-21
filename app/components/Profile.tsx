@@ -48,7 +48,7 @@ export default async function Profile({
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
     const bulletinPosts = canView
-        ? await getProfileBulletinPosts(uid, isOwner, isFriend)
+        ? await getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null)
         : [];
 
     // Six most recent friends
