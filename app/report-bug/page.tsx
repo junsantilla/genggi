@@ -1,0 +1,64 @@
+import { getCurrentUser } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { timeAgo } from "@/lib/utils";
+import Box from "@/app/components/Box";
+import BoundForm from "@/app/components/BoundForm";
+import { reportBugAction } from "@/app/actions";
+
+export default async function ReportBugPage() {
+  const user = await getCurrentUser();
+  const isAdmin = user?.username === "genggengpro";
+
+  let reports: any[] = [];
+  if (isAdmin) {
+    const db = getDb();
+    reports = await db
+      .collection("bugReports")
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+  }
+
+  return (
+    <div className="max-w-[640px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+      <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
+        🐛 Report a Bug
+      </div>
+      <div className="p-4">
+        <Box title="Found a bug?">
+          <p className="text-[12px] text-gray-600 mb-3">
+            Describe the bug below and we&apos;ll look into it. Include what
+            page you were on and what you expected to happen.
+          </p>
+          <BoundForm
+            action={reportBugAction}
+            submitLabel="Submit Bug Report"
+            textarea
+            name="body"
+            placeholder="e.g. On the messages page, clicking send doesn't do anything..."
+            rows={6}
+            successMessage="Thanks! Your bug report has been sent."
+          />
+        </Box>
+
+        {isAdmin && reports.length > 0 && (
+          <Box title={`Bug Reports (${reports.length})`}>
+            {reports.map((r) => (
+              <div
+                key={r._id.toString()}
+                className="border-b border-dotted border-[#99bbdd] py-2 last:border-0"
+              >
+                <p className="text-[12px]">{r.body}</p>
+                <div className="text-gray-500 text-[11px] mt-1">
+                  {r.userId ? `User ID: ${r.userId}` : "Anonymous"} ·{" "}
+                  {timeAgo(r.createdAt)}
+                </div>
+              </div>
+            ))}
+          </Box>
+        )}
+      </div>
+    </div>
+  );
+}

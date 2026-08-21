@@ -678,3 +678,23 @@ export async function adminReviewReportAction(
   revalidatePath("/admin");
   return { ok: true };
 }
+
+// ---------------------------------------------------------------- Bug Reports
+
+export async function reportBugAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Please describe the bug." };
+  if (body.length > 2000) return { error: "Bug report must be 2,000 characters or fewer." };
+
+  const user = await getCurrentUser();
+  await getDb().collection("bugReports").insertOne({
+    userId: user?._id ?? null,
+    body,
+    status: "open",
+    createdAt: new Date(),
+  });
+  return { ok: true };
+}
