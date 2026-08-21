@@ -7,12 +7,10 @@ type ThemeAction = (formData: FormData) => Promise<void>;
 
 export default function ThemeForm({
   action,
-  bgTint,
   border,
   customCss,
 }: {
   action: ThemeAction;
-  bgTint: string;
   border: string;
   customCss?: string;
 }) {
@@ -30,10 +28,6 @@ export default function ThemeForm({
 
   return (
     <form action={formAction} className="grid grid-cols-2 gap-2.5">
-      <div>
-        <label className="label">Background tint</label>
-        <input type="color" name="bgTint" defaultValue={bgTint} className="input h-8 p-0.5" />
-      </div>
       <div>
         <label className="label">Border color</label>
         <input type="color" name="border" defaultValue={border} className="input h-8 p-0.5" />

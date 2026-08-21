@@ -44,7 +44,6 @@ export default async function EditPage() {
         <Box title="🎨 Profile Theme">
           <ThemeForm
             action={updateThemeAction}
-            bgTint={user.theme.bgTint}
             border={user.theme.border}
             customCss={user.theme.customCss}
           />

@@ -43,7 +43,7 @@ export default async function Profile({
             me ? areFriends(me, uid) : Promise.resolve(false),
         ]);
 
-    const theme = user.theme || { bgTint: "#eef3fb", border: "#6699cc" };
+    const theme = user.theme || { border: "#6699cc" };
     const customCss = user.theme?.customCss?.trim();
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
@@ -132,7 +132,6 @@ export default async function Profile({
             style={
                 {
                     "--profile-border": theme.border || "#6699cc",
-                    "--profile-bg": theme.bgTint || "#f5f9ff",
                 } as CSSProperties
             }
         >
@@ -601,7 +600,6 @@ export default async function Profile({
                 <div
                     className="profile-footer text-center text-[11px] text-[#6699cc] p-2 border-t"
                     style={{
-                        background: theme.bgTint,
                         borderColor: theme.border,
                     }}
                 >
