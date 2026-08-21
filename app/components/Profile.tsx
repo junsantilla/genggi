@@ -596,16 +596,6 @@ export default async function Profile({
                     </div>
                 )}
 
-                {/* Footer */}
-                <div
-                    className="profile-footer text-center text-[11px] text-[#6699cc] p-2 border-t"
-                    style={{
-                        borderColor: theme.border,
-                    }}
-                >
-                    genggeng.pro — made for nostalgic fun. · @{user.username}{" "}
-                    joined {timeAgo(user.createdAt)}
-                </div>
             </div>
         </div>
     );
