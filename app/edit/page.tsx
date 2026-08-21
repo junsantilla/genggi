@@ -34,7 +34,7 @@ export default async function EditPage() {
 
       <div className="p-4 flex flex-col gap-4">
         <Box title="Profile Photo">
-          <PhotoUpload hasPhoto={!!user.photo} />
+          <PhotoUpload hasPhoto={!!user.photo} photoUrl={user.photo} />
         </Box>
 
         <Box title="Basic Info">
