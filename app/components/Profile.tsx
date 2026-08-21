@@ -157,7 +157,7 @@ export default async function Profile({
                 ) : (
                     <div className="flex flex-wrap w-full">
                         {/* ---------------- Left column ---------------- */}
-                        <div className="profile-main-column w-full sm:w-3/4 p-2.5 pb-0 sm:pb-2.5">
+                        <div className="profile-main-column w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5">
                             <Box
                                 title={`${user.displayName} (@${user.username})`}
                                 border={theme.border}
@@ -534,7 +534,7 @@ export default async function Profile({
                         </div>
 
                         {/* ---------------- Right column ---------------- */}
-                        <div className="profile-sidebar w-full sm:w-1/4 p-2.5 pt-0 sm:pt-2.5">
+                        <div className="profile-sidebar w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5">
                             {/* Six most recent friends */}
                             <Box
                                 title={`${user.displayName.split(" ")[0]}'s Friends (recent ${topFriends.length})`}
