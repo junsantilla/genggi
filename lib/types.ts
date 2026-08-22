@@ -40,6 +40,7 @@ export interface User {
   theme: Theme;
   profileViews: number;
   lastActive: Date;
+  notificationAcknowledgedAt?: Date;
 
   isPrivate: boolean;
   hideFromSearch: boolean;

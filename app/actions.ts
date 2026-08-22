@@ -767,11 +767,19 @@ export async function reportUserAction(
 
 // ---------------------------------------------------------------- Notifications
 
-export async function markNotificationsReadAction(): Promise<ActionResult> {
+export async function markNotificationReadAction(notificationId: string): Promise<ActionResult> {
   const user = await requireUser();
-  await getDb()
+  const db = getDb();
+  const acknowledgedAt = new Date();
+  await db
     .collection("notifications")
-    .updateMany({ userId: user._id, read: false }, { $set: { read: true } });
+    .updateOne(
+      { _id: new ObjectId(notificationId), userId: user._id },
+      { $set: { read: true } }
+    );
+  await db
+    .collection("users")
+    .updateOne({ _id: user._id }, { $set: { notificationAcknowledgedAt: acknowledgedAt } });
   revalidatePath("/notifications");
   revalidatePath("/");
   return { ok: true };
