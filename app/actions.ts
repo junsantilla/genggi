@@ -15,6 +15,7 @@ import {
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
 import { getBulletinFeedPage } from "@/lib/bulletin";
+import { getYouTubeVideoId } from "@/lib/utils";
 import {
   REACTION_TYPES,
   type BulletinReaction,
@@ -205,15 +206,22 @@ export async function removePhotoAction(): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function updateThemeAction(formData: FormData): Promise<void> {
+export async function updateThemeAction(formData: FormData): Promise<{ ok?: boolean; error?: string }> {
   const user = await requireUser();
+  const youtubeUrl = String(formData.get("youtubeUrl") || "").trim().slice(0, 500);
+  const youtubeVideoId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : "";
+  if (youtubeUrl && !youtubeVideoId) {
+    return { error: "Please enter a valid YouTube video link." };
+  }
   const theme = {
     border: String(formData.get("border") || "#6699cc"),
     customCss: String(formData.get("customCss") || "").trim().slice(0, 12000),
+    youtubeVideoId,
   };
   await getDb().collection("users").updateOne({ _id: user._id }, { $set: { theme } });
   revalidatePath(`/u/${user.username}`);
   revalidatePath("/edit");
+  return { ok: true };
 }
 
 export async function updatePrivacyAction(formData: FormData): Promise<void> {

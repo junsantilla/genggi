@@ -1,24 +1,27 @@
 "use client";
 
 import { useActionState } from "react";
+import { getYouTubeWatchUrl } from "@/lib/utils";
 
 type ThemeState = { ok?: boolean; error?: string };
-type ThemeAction = (formData: FormData) => Promise<void>;
+type ThemeAction = (formData: FormData) => Promise<{ ok?: boolean; error?: string }>;
 
 export default function ThemeForm({
   action,
   border,
   customCss,
+  youtubeVideoId,
 }: {
   action: ThemeAction;
   border: string;
   customCss?: string;
+  youtubeVideoId?: string;
 }) {
   const [state, formAction, pending] = useActionState(
     async (_prev: ThemeState, formData: FormData): Promise<ThemeState> => {
       try {
-        await action(formData);
-        return { ok: true };
+        const result = await action(formData);
+        return result?.error ? { error: result.error } : { ok: true };
       } catch {
         return { error: "Could not save your theme. Please try again." };
       }
@@ -31,6 +34,22 @@ export default function ThemeForm({
       <div>
         <label className="label">Border color</label>
         <input type="color" name="border" defaultValue={border} className="input h-8 p-0.5" />
+      </div>
+      <div className="col-span-2">
+        <label className="label" htmlFor="profile-youtube-url">YouTube music</label>
+        <p className="text-gray-500 text-[11px] mb-1">
+          Paste a YouTube video link to add autoplaying music to your profile. Browsers may require visitors to click Turn on sound.
+        </p>
+        <input
+          id="profile-youtube-url"
+          name="youtubeUrl"
+          type="url"
+          defaultValue={youtubeVideoId ? getYouTubeWatchUrl(youtubeVideoId) : ""}
+          maxLength={500}
+          className="input"
+          placeholder="https://www.youtube.com/watch?v=..."
+        />
+        <p className="text-gray-500 text-[10px] mt-1">Leave blank to remove profile music.</p>
       </div>
       <div className="col-span-2">
         <label className="label">Custom CSS</label>

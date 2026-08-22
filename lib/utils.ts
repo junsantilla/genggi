@@ -40,6 +40,39 @@ export function padViews(n: number): string {
   return n.toString().padStart(6, "0");
 }
 
+export function getYouTubeVideoId(value: string): string | null {
+  const input = value.trim();
+  if (!input) return null;
+  try {
+    const url = new URL(input);
+    if (url.protocol !== "https:") return null;
+    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+    const allowedHosts = new Set(["youtube.com", "youtu.be", "youtube-nocookie.com", "music.youtube.com"]);
+    if (!allowedHosts.has(hostname)) return null;
+
+    if (hostname === "youtu.be") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return isYouTubeVideoId(id) ? id : null;
+    }
+
+    const queryId = url.searchParams.get("v");
+    if (isYouTubeVideoId(queryId)) return queryId;
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const pathId = pathParts[0] === "embed" || pathParts[0] === "shorts" ? pathParts[1] : null;
+    return isYouTubeVideoId(pathId) ? pathId : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isYouTubeVideoId(value: string | null | undefined): value is string {
+  return !!value && /^[A-Za-z0-9_-]{11}$/.test(value);
+}
+
+export function getYouTubeWatchUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+}
+
 export const GENDERS = ["", "Male", "Female", "Other"];
 export const STATUSES = ["Single", "Taken", "It's Complicated", "Married", "Looking"];
 export const ZODIACS = [
