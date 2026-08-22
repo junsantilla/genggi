@@ -141,9 +141,19 @@ export default async function FriendsPage() {
           ) : (
             outgoingUsers.map((f) => (
               <div key={f._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
-                <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
-                  {f.displayName}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/u/${f.username}`} className="flex shrink-0">
+                    {f.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={f.photo} alt={f.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
+                    ) : (
+                      <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
+                    )}
+                  </Link>
+                  <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
+                    {f.displayName}
+                  </Link>
+                </div>
                 <span className="text-gray-500 text-[11px] italic">awaiting response…</span>
               </div>
             ))
@@ -155,11 +165,21 @@ export default async function FriendsPage() {
             <p className="text-gray-500 italic text-[12px]">Nothing yet.</p>
           ) : (
             recent.map(({ friend, at }) => (
-              <div key={friend._id.toString()} className="border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[12px]">
-                <Link href={`/u/${friend.username}`} className="text-[#003399] font-bold no-underline">
-                  {friend.displayName}
-                </Link>{" "}
-                became friends {timeAgo(at)}
+              <div key={friend._id.toString()} className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[12px]">
+                <Link href={`/u/${friend.username}`} className="flex shrink-0">
+                  {friend.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={friend.photo} alt={friend.displayName} className="w-7 h-7 object-cover border border-[#cc99cc]" />
+                  ) : (
+                    <div className="friend-thumb-bg w-7 h-7 border border-[#cc99cc]"></div>
+                  )}
+                </Link>
+                <div>
+                  <Link href={`/u/${friend.username}`} className="text-[#003399] font-bold no-underline">
+                    {friend.displayName}
+                  </Link>{" "}
+                  became friends {timeAgo(at)}
+                </div>
               </div>
             ))
           )}

@@ -24,8 +24,9 @@ export default async function NotificationsPage() {
           .find({ _id: { $in: actorIds.map((id) => new ObjectId(id)) } })
           .toArray()
       : [];
-  const actorName = (id: string) =>
-    actors.find((a) => a._id.toString() === id)?.displayName;
+  const actorMap = new Map(actors.map((a) => [a._id.toString(), a]));
+  const actorName = (id: string) => actorMap.get(id)?.displayName;
+  const actorPhoto = (id: string) => actorMap.get(id)?.photo as string | undefined;
 
   return (
     <>
@@ -40,21 +41,41 @@ export default async function NotificationsPage() {
             <p className="text-gray-500 italic text-[12px]">You&apos;re all caught up!</p>
           ) : (
             <>
-              {notifications.map((n) => (
-                <div
-                  key={n._id.toString()}
-                  className={`border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 ${n.read ? "" : "bg-[#eef3fb]"}`}
-                >
-                  <Link href={n.link} className="text-[#003399] no-underline">
-                    <span className="font-bold">{n.text}</span>
-                  </Link>
-                  <div className="text-gray-500 text-[11px]">
-                    {actorName(n.actorId.toString()) ? `${actorName(n.actorId.toString())} · ` : ""}
-                    {timeAgo(n.createdAt)}
-                    {!n.read && <span className="text-[#cc3399] font-bold"> · new</span>}
+              {notifications.map((n) => {
+                const aId = n.actorId.toString();
+                const photo = actorPhoto(aId);
+                const name = actorName(aId);
+                return (
+                  <div
+                    key={n._id.toString()}
+                    className={`border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 ${n.read ? "" : "bg-[#eef3fb]"}`}
+                  >
+                    <div className="flex ite ms-start gap-2">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt={name || ""}
+                          className="w-6 h-6 object-cover border border-[#6699cc] shrink-0"
+                        />
+                      ) : name ? (
+                        <div className="w-6 h-6 bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[9px] text-[#4a76b8] font-bold shrink-0">
+                          {name.charAt(0).toUpperCase()}
+                        </div>
+                      ) : null}
+                      <div className="min-w-0">
+                        <Link href={n.link} className="text-[#003399] no-underline">
+                          <span className="font-bold">{n.text}</span>
+                        </Link>
+                        <div className="text-gray-500 text-[11px]">
+                          {name ? `${name} · ` : ""}
+                          {timeAgo(n.createdAt)}
+                          {!n.read && <span className="text-[#cc3399] font-bold"> · new</span>}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
         </Box>
