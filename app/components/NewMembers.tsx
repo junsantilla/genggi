@@ -33,7 +33,7 @@ export default async function NewMembers({
                     No members yet — be the first to join!
                 </span>
             ) : (
-                <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
                     {users.map((u) => (
                         <div
                             key={u._id.toString()}

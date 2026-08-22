@@ -98,7 +98,7 @@ export default function BulletinPostCard({
               <img
                 src={post.photo}
                 alt="Post photo"
-                className="max-w-[420px] w-full border border-[#99bbdd]"
+                className="w-full border border-[#99bbdd]"
               />
             </Link>
           )}
