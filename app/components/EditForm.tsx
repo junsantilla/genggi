@@ -27,6 +27,7 @@ export type EditableUser = Pick<
   | "favoriteSong"
   | "interests"
   | "aboutMe"
+  | "hereFor"
   | "whoIdLikeToMeet"
 >;
 
@@ -116,6 +117,10 @@ export default function EditForm({
       <div>
         <label className="label">Interests (comma separated)</label>
         <input name="interests" defaultValue={user.interests.join(", ")} className="input" placeholder="AIM, mix CDs, LAN parties" />
+      </div>
+      <div className="col-span-2">
+        <label className="label">Here for</label>
+        <input name="hereFor" defaultValue={user.hereFor} className="input" placeholder="Friends, Dating, Networking" />
       </div>
       <div className="col-span-2">
         <label className="label">About Me</label>

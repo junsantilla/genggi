@@ -29,6 +29,7 @@ export interface User {
   bodyType: string;
   occupation: string;
   aboutMe: string;
+  hereFor: string;
   whoIdLikeToMeet: string;
   favoriteSong: string;
   mood: string;

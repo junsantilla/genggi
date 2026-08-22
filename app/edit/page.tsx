@@ -23,6 +23,7 @@ export default async function EditPage() {
     favoriteSong: user.favoriteSong,
     interests: user.interests,
     aboutMe: user.aboutMe,
+    hereFor: user.hereFor,
     whoIdLikeToMeet: user.whoIdLikeToMeet,
   };
 
