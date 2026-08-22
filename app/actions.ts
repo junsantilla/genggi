@@ -858,7 +858,33 @@ export async function reportBugAction(
     userId: user?._id ?? null,
     body,
     status: "open",
+    done: false,
     createdAt: new Date(),
   });
+  return { ok: true };
+}
+
+export async function toggleBugReportDoneAction(reportId: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.username !== "genggengpro") return { error: "Not allowed." };
+  const db = getDb();
+  const report = await db
+    .collection("bugReports")
+    .findOne({ _id: new ObjectId(reportId) });
+  if (!report) return { error: "Report not found." };
+  await db
+    .collection("bugReports")
+    .updateOne({ _id: report._id }, { $set: { done: !report.done } });
+  revalidatePath("/report-bug");
+  return { ok: true };
+}
+
+export async function deleteBugReportAction(reportId: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.username !== "genggengpro") return { error: "Not allowed." };
+  await getDb()
+    .collection("bugReports")
+    .deleteOne({ _id: new ObjectId(reportId) });
+  revalidatePath("/report-bug");
   return { ok: true };
 }
