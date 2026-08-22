@@ -34,12 +34,12 @@ export default async function NavBar() {
 
     return (
         <header>
-            <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl sm:text-center tracking-tight">
+            <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl sm:text-center tracking-tight">
                 <Link href="/" className="no-underline text-white">
                     <img
                         src="/images/genggeng-logo4.png"
                         alt="genggeng"
-                        className="h-12 w-12 inline-block object-cover rounded"
+                        className="h-10 w-10 inline-block object-cover rounded"
                     />{" "}
                     genggeng<span className="text-[#ffde00]">.pro</span>
                 </Link>
