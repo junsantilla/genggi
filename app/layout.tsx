@@ -4,6 +4,7 @@ import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next"
+import { getCurrentUser } from "@/lib/auth"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,10 @@ export const metadata: Metadata = {
   description: "A nostalgic social network for profiles, friends, messages, and fun.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === "admin";
+
   return (
     <html
       lang="en"
@@ -36,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <span>© 2026 genggeng.pro — made for nostalgic fun.</span>
           <a href="/report-bug" className="underline hover:text-gray-600">Report a bug</a>
         </footer>
-        {process.env.NODE_ENV === "production" && <Analytics />}
+        {process.env.NODE_ENV === "production" && !isAdmin && <Analytics />}
       </body>
     </html>
   );
