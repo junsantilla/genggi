@@ -39,7 +39,7 @@ export default async function NewMembers({
                             key={u._id.toString()}
                             className="text-center text-[11px]"
                         >
-                            <Link href={`/u/${u.username}`} className="block">
+                            <Link href={`/${u.username}`} className="block">
                                 {u.photo ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
@@ -52,7 +52,7 @@ export default async function NewMembers({
                                 )}
                             </Link>
                             <Link
-                                href={`/u/${u.username}`}
+                                href={`/${u.username}`}
                                 className="text-[#003399] no-underline font-bold"
                             >
                                 {u.displayName}

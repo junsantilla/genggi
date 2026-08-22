@@ -34,7 +34,7 @@ export default async function MembersPage() {
                   key={user._id.toString()}
                   className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
                 >
-                  <Link href={`/u/${user.username}`} className="flex shrink-0">
+                  <Link href={`/${user.username}`} className="flex shrink-0">
                     {user.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -48,7 +48,7 @@ export default async function MembersPage() {
                   </Link>
                   <div className="min-w-0">
                     <Link
-                      href={`/u/${user.username}`}
+                      href={`/${user.username}`}
                       className="text-[#003399] font-bold no-underline"
                     >
                       {user.displayName}

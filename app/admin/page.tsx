@@ -106,7 +106,7 @@ export default async function AdminPage({
                     <div className="text-[12px]">
                       <b>
                         {reported ? (
-                          <Link href={`/u/${reported.username}`} className="text-[#003399] no-underline">
+                          <Link href={`/${reported.username}`} className="text-[#003399] no-underline">
                             {reported.displayName}
                           </Link>
                         ) : (
@@ -148,7 +148,7 @@ export default async function AdminPage({
                   <b>
                     {testiProfile(t.profileId.toString()) ? (
                       <Link
-                        href={`/u/${testiProfile(t.profileId.toString())!.username}`}
+                        href={`/${testiProfile(t.profileId.toString())!.username}`}
                         className="text-[#003399] no-underline"
                       >
                         {testiProfile(t.profileId.toString())!.displayName}
@@ -187,7 +187,7 @@ export default async function AdminPage({
             users.map((u) => (
               <div key={u._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 flex-wrap">
                 <div className="text-[12px]">
-                  <Link href={`/u/${u.username}`} className="text-[#003399] font-bold no-underline">
+                  <Link href={`/${u.username}`} className="text-[#003399] font-bold no-underline">
                     {u.displayName}
                   </Link>{" "}
                   <span className="text-gray-500">@{u.username}</span>

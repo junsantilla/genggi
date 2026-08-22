@@ -88,7 +88,7 @@ export async function signupAction(
   };
   const res = await db.collection("users").insertOne(user);
   await createSession(res.insertedId.toString());
-  redirect(`/u/${username}`);
+  redirect(`/${username}`);
 }
 
 export async function loginAction(
@@ -155,7 +155,7 @@ export async function updateProfileAction(
   patch.whoCanFriendRequest = String(formData.get("whoCanFriendRequest") || "everyone");
 
   await getDb().collection("users").updateOne({ _id: user._id }, { $set: patch });
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };
 }
@@ -189,7 +189,7 @@ export async function uploadPhotoAction(formData: FormData): Promise<ActionResul
     { _id: user._id },
     { $set: { photo: uploaded.secure_url, photoPublicId: uploaded.public_id } }
   );
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };
 }
@@ -203,7 +203,7 @@ export async function removePhotoAction(): Promise<ActionResult> {
     { _id: user._id },
     { $set: { photo: null, photoPublicId: null } }
   );
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };
 }
@@ -221,7 +221,7 @@ export async function updateThemeAction(formData: FormData): Promise<{ ok?: bool
     youtubeVideoId,
   };
   await getDb().collection("users").updateOne({ _id: user._id }, { $set: { theme } });
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/edit");
   return { ok: true };
 }
@@ -239,7 +239,7 @@ export async function updatePrivacyAction(formData: FormData): Promise<void> {
       },
     }
   );
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/edit");
 }
 
@@ -250,7 +250,7 @@ export async function incrementProfileViewAction(username: string): Promise<Acti
   const current = await getCurrentUser();
   if (current && current._id.toString() === user._id.toString()) return { ok: true };
   await db.collection("users").updateOne({ _id: user._id }, { $inc: { profileViews: 1 } });
-  revalidatePath(`/u/${username}`);
+  revalidatePath(`/${username}`);
   return { ok: true };
 }
 
@@ -287,7 +287,7 @@ export async function sendFriendRequestAction(targetId: string): Promise<ActionR
     `${user.displayName} sent you a friend request.`,
     "/friends"
   );
-  revalidatePath(`/u/${target.username}`);
+  revalidatePath(`/${target.username}`);
   revalidatePath("/friends");
   return { ok: true };
 }
@@ -313,7 +313,7 @@ export async function respondFriendRequestAction(
       "friend_accepted",
       user._id.toString(),
       `${user.displayName} accepted your friend request.`,
-      `/u/${user.username}`
+      `/${user.username}`
     );
   } else {
     await db.collection("friendships").deleteOne({ _id: f._id });
@@ -423,9 +423,9 @@ export async function writeTestimonialAction(
       "testimonial",
       user._id.toString(),
       `${user.displayName} wrote you a testimonial.`,
-      `/u/${profile.username}`
+      `/${profile.username}`
     );
-  revalidatePath(`/u/${profile.username}`);
+  revalidatePath(`/${profile.username}`);
   return { ok: true };
 }
 
@@ -437,7 +437,7 @@ export async function approveTestimonialAction(testimonialId: string): Promise<A
     .findOne({ _id: new ObjectId(testimonialId), profileId: user._id });
   if (!t) return { error: "Testimonial not found." };
   await db.collection("testimonials").updateOne({ _id: t._id }, { $set: { status: "approved" } });
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   return { ok: true };
 }
 
@@ -451,7 +451,7 @@ export async function deleteTestimonialAction(testimonialId: string): Promise<Ac
   const isAdmin = user.role === "admin";
   if (!isOwner && !isAuthor && !isAdmin) return { error: "Not allowed." };
   await db.collection("testimonials").deleteOne({ _id: t._id });
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -502,7 +502,7 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
     createdAt: new Date(),
   });
   revalidatePath("/");
-  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/${user.username}`);
   return { ok: true };
 }
 
@@ -570,7 +570,7 @@ export async function reactToBulletinPostAction(
   revalidatePath("/");
   revalidatePath(`/bulletin/${postId}`);
   const author = await db.collection("users").findOne({ _id: post.authorId });
-  if (author) revalidatePath(`/u/${author.username}`);
+  if (author) revalidatePath(`/${author.username}`);
 
   return {
     ok: true,
@@ -610,7 +610,7 @@ export async function deleteBulletinPostAction(postId: string): Promise<ActionRe
   await db.collection("bulletinComments").deleteMany({ postId: post._id });
   revalidatePath("/");
   const author = await db.collection("users").findOne({ _id: post.authorId });
-  if (author) revalidatePath(`/u/${author.username}`);
+  if (author) revalidatePath(`/${author.username}`);
   return { ok: true };
 }
 
@@ -647,7 +647,7 @@ export async function createBulletinCommentAction(
   }
 
   revalidatePath("/");
-  if (author) revalidatePath(`/u/${author.username}`);
+  if (author) revalidatePath(`/${author.username}`);
   revalidatePath(`/bulletin/${postId}`);
 
   return {
@@ -686,7 +686,7 @@ export async function deleteBulletinCommentAction(commentId: string): Promise<Ac
   revalidatePath("/");
   if (post) {
     const author = await db.collection("users").findOne({ _id: post.authorId });
-    if (author) revalidatePath(`/u/${author.username}`);
+    if (author) revalidatePath(`/${author.username}`);
   }
   return { ok: true };
 }
@@ -710,9 +710,9 @@ export async function pokeAction(targetId: string): Promise<ActionResult> {
     "poke",
     user._id.toString(),
     `${user.displayName} poked you!`,
-    `/u/${target.username}`
+    `/${target.username}`
   );
-  revalidatePath(`/u/${target.username}`);
+  revalidatePath(`/${target.username}`);
   return { ok: true };
 }
 
@@ -733,7 +733,7 @@ export async function blockUserAction(targetId: string): Promise<ActionResult> {
       { requesterId: new ObjectId(targetId), addresseeId: user._id },
     ],
   });
-  revalidatePath(`/u/${targetId}`);
+  revalidatePath(`/${targetId}`);
   revalidatePath("/friends");
   return { ok: true };
 }
@@ -743,7 +743,7 @@ export async function unblockUserAction(targetId: string): Promise<ActionResult>
   await getDb()
     .collection("blocks")
     .deleteOne({ blockerId: user._id, blockedId: new ObjectId(targetId) });
-  revalidatePath(`/u/${targetId}`);
+  revalidatePath(`/${targetId}`);
   return { ok: true };
 }
 

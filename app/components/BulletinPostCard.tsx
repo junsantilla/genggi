@@ -62,7 +62,7 @@ export default function BulletinPostCard({
   return (
     <article className="bulletin-post border-b border-dotted border-[#99bbdd] py-2 last:border-0">
       <div className="flex gap-2">
-        <Link href={`/u/${post.author.username}`} className="shrink-0 block">
+        <Link href={`/${post.author.username}`} className="shrink-0 block">
           {post.author.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -76,7 +76,7 @@ export default function BulletinPostCard({
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-            <Link href={`/u/${post.author.username}`} className="text-[#003399] font-bold no-underline">
+            <Link href={`/${post.author.username}`} className="text-[#003399] font-bold no-underline">
               {post.author.displayName}
             </Link>
             <Link
@@ -165,7 +165,7 @@ export default function BulletinPostCard({
                     className="text-[12px] py-0.5 leading-snug"
                   >
                     <Link
-                      href={`/u/${comment.author.username}`}
+                      href={`/${comment.author.username}`}
                       className="text-[#003399] font-bold no-underline"
                     >
                       {comment.author.displayName}
