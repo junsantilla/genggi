@@ -563,7 +563,7 @@ export default async function Profile({
                                                     className="profile-friend-card min-w-0 text-center text-[11px]"
                                                 >
                                                     <Link
-                                                        href={`/u/${f.username}`}
+                                                        href={`/${f.username}`}
                                                         className="block"
                                                     >
                                                         {f.photo ? (
@@ -580,7 +580,7 @@ export default async function Profile({
                                                         )}
                                                     </Link>
                                                     <Link
-                                                        href={`/u/${f.username}`}
+                                                        href={`/${f.username}`}
                                                         className="text-[#003399] no-underline font-bold"
                                                     >
                                                         {f.displayName}

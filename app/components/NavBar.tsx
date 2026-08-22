@@ -48,7 +48,7 @@ export default async function NavBar() {
                 {user ? (
                     <>
                         <NavLink href="/">Home</NavLink>
-                        <NavLink href={`/u/${user.username}`}>
+                        <NavLink href={`/${user.username}`}>
                             My Profile
                         </NavLink>
                         <NavLink href="/friends" count={counts.friendRequests}>

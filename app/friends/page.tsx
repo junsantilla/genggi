@@ -74,7 +74,7 @@ export default async function FriendsPage() {
             <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-4 gap-1.5">
               {top8.map((f) => (
                 <div key={f._id.toString()} className="text-center text-[11px]">
-                  <Link href={`/u/${f.username}`} className="block">
+                  <Link href={`/${f.username}`} className="block">
                     {f.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={f.photo} alt={f.displayName} className="w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5" />
@@ -82,7 +82,7 @@ export default async function FriendsPage() {
                       <div className="friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
                     )}
                   </Link>
-                  <Link href={`/u/${f.username}`} className="text-[#003399] no-underline font-bold">
+                  <Link href={`/${f.username}`} className="text-[#003399] no-underline font-bold">
                     {f.displayName}
                   </Link>
                 </div>
@@ -100,7 +100,7 @@ export default async function FriendsPage() {
               return (
                 <div key={f._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                   <div className="flex items-center gap-2">
-                    <Link href={`/u/${f.username}`} className="flex shrink-0">
+                    <Link href={`/${f.username}`} className="flex shrink-0">
                       {f.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={f.photo} alt={f.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
@@ -109,7 +109,7 @@ export default async function FriendsPage() {
                       )}
                     </Link>
                     <div>
-                      <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
+                      <Link href={`/${f.username}`} className="text-[#003399] font-bold no-underline">
                         {f.displayName}
                       </Link>
                       <div className="text-gray-500 text-[11px]">{timeAgo(fr?.createdAt)}</div>
@@ -142,7 +142,7 @@ export default async function FriendsPage() {
             outgoingUsers.map((f) => (
               <div key={f._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                 <div className="flex items-center gap-2">
-                  <Link href={`/u/${f.username}`} className="flex shrink-0">
+                  <Link href={`/${f.username}`} className="flex shrink-0">
                     {f.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={f.photo} alt={f.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
@@ -150,7 +150,7 @@ export default async function FriendsPage() {
                       <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
                     )}
                   </Link>
-                  <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
+                  <Link href={`/${f.username}`} className="text-[#003399] font-bold no-underline">
                     {f.displayName}
                   </Link>
                 </div>
@@ -166,7 +166,7 @@ export default async function FriendsPage() {
           ) : (
             recent.map(({ friend, at }) => (
               <div key={friend._id.toString()} className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[12px]">
-                <Link href={`/u/${friend.username}`} className="flex shrink-0">
+                <Link href={`/${friend.username}`} className="flex shrink-0">
                   {friend.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={friend.photo} alt={friend.displayName} className="w-7 h-7 object-cover border border-[#cc99cc]" />
@@ -175,7 +175,7 @@ export default async function FriendsPage() {
                   )}
                 </Link>
                 <div>
-                  <Link href={`/u/${friend.username}`} className="text-[#003399] font-bold no-underline">
+                  <Link href={`/${friend.username}`} className="text-[#003399] font-bold no-underline">
                     {friend.displayName}
                   </Link>{" "}
                   became friends {timeAgo(at)}
@@ -202,7 +202,7 @@ export default async function FriendsPage() {
                 return (
                   <div key={f._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                     <div className="flex items-center gap-2">
-                      <Link href={`/u/${f.username}`} className="flex shrink-0">
+                      <Link href={`/${f.username}`} className="flex shrink-0">
                         {f.photo ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={f.photo} alt={f.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
@@ -210,7 +210,7 @@ export default async function FriendsPage() {
                           <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
                         )}
                       </Link>
-                      <Link href={`/u/${f.username}`} className="text-[#003399] font-bold no-underline">
+                      <Link href={`/${f.username}`} className="text-[#003399] font-bold no-underline">
                         {f.displayName}
                       </Link>
                     </div>
