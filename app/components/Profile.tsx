@@ -111,7 +111,7 @@ export default async function Profile({
 
     const brief: [string, string][] = [
         ["Status:", user.relationshipStatus || "—"],
-        ["Here for:", "Friends, Dating, Networking"],
+        ["Here for:", user.hereFor || "—"],
         ["Orientation:", user.orientation || "—"],
         ["Hometown:", user.location || "—"],
         ["Body type:", user.bodyType || "—"],
