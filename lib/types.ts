@@ -5,6 +5,7 @@ export type Role = "user" | "admin";
 export interface Theme {
   border: string;
   customCss?: string;
+  youtubeVideoId?: string;
 }
 
 export interface User {

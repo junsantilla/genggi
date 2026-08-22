@@ -20,6 +20,7 @@ import ActionButton from "./ActionButton";
 import BoundForm from "./BoundForm";
 import Box from "./Box";
 import BulletinBoard from "./BulletinBoard";
+import YouTubeMusicPlayer from "./YouTubeMusicPlayer";
 
 export default async function Profile({
     user,
@@ -338,6 +339,10 @@ export default async function Profile({
                                                 </tr>
                                             </tbody>
                                         </table>
+                                        <YouTubeMusicPlayer
+                                            key={user.theme?.youtubeVideoId}
+                                            videoId={user.theme?.youtubeVideoId}
+                                        />
                                     </div>
                                 </div>
                             </Box>

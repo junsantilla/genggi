@@ -46,6 +46,7 @@ export default async function EditPage() {
             action={updateThemeAction}
             border={user.theme.border}
             customCss={user.theme.customCss}
+            youtubeVideoId={user.theme.youtubeVideoId}
           />
         </Box>
 
