@@ -33,7 +33,7 @@ export default async function Profile({
     const me = currentUser?._id.toString();
     const isOwner = !!me && me === uid;
 
-    const [friendshipStatus, blockedByProfile, iBlockedThem, isFriend] =
+    const [friendshipStatus, blockedByProfile, iBlockedThem, isFriend, incomingRequest] =
         await Promise.all([
             me
                 ? getFriendshipStatus(me, uid)
@@ -41,6 +41,13 @@ export default async function Profile({
             me ? isBlocked(uid, me) : Promise.resolve(false),
             me ? isBlocked(me, uid) : Promise.resolve(false),
             me ? areFriends(me, uid) : Promise.resolve(false),
+            me
+                ? db.collection("friendships").findOne({
+                      requesterId: user._id,
+                      addresseeId: currentUser!._id,
+                      status: "pending",
+                  })
+                : Promise.resolve(null),
         ]);
 
     const theme = user.theme || { border: "#6699cc" };
@@ -214,7 +221,7 @@ export default async function Profile({
                                                         <ActionButton
                                                             action={respondFriendRequestAction.bind(
                                                                 null,
-                                                                uid,
+                                                                incomingRequest?._id.toString() || "",
                                                                 true,
                                                             )}
                                                             className="btn w-full"
@@ -311,7 +318,7 @@ export default async function Profile({
                                             <tbody>
                                                 {brief.map(([k, v]) => (
                                                     <tr key={k}>
-                                                        <td className="p-0.5 px-1 align-top font-bold text-[#2c4d80] w-[90px]">
+                                                        <td className="p-0.5 px-1 align-top font-bold text-[#2c4d80] w-[120px]">
                                                             {k}
                                                         </td>
                                                         <td className="p-0.5 px-1 align-top">
@@ -319,22 +326,19 @@ export default async function Profile({
                                                         </td>
                                                     </tr>
                                                 ))}
+                                                <tr>
+                                                    <td className="p-0.5 px-1 align-top font-bold text-[#2c4d80] w-[120px]">
+                                                        Profile views:
+                                                    </td>
+                                                    <td className="p-0.5 px-1 align-top">
+                                                        <span className="bg-black text-[#0f0] font-mono text-[12px] px-1.5 py-0.5 inline-block border border-[#333]">
+                                                            {padViews(user.profileViews)}
+                                                        </span>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-                            </Box>
-
-                            <Box
-                                title="Profile Views"
-                                border={theme.border}
-                                bg="#f5f9ff"
-                                className="profile-views"
-                            >
-                                <div className="text-center">
-                                    <span className="bg-black text-[#0f0] font-mono text-[12px] px-1.5 py-0.5 inline-block border border-[#333]">
-                                        {padViews(user.profileViews)}
-                                    </span>
                                 </div>
                             </Box>
 
