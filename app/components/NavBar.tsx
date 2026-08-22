@@ -30,7 +30,7 @@ function NavLink({
 export default async function NavBar() {
     const user = await getCurrentUser();
     let counts = { messages: 0, friendRequests: 0, notifications: 0 };
-    if (user) counts = await countUnread(user._id.toString());
+    if (user) counts = await countUnread(user._id.toString(), user.notificationAcknowledgedAt);
 
     return (
         <header>

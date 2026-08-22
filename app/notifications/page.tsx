@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "@/app/components/Box";
-import NotificationsReadTracker from "@/app/components/NotificationsReadTracker";
+import NotificationLink from "@/app/components/NotificationLink";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -30,7 +29,6 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <NotificationsReadTracker />
       <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
       <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
         🔔 Notifications
@@ -48,7 +46,7 @@ export default async function NotificationsPage() {
                 return (
                   <div
                     key={n._id.toString()}
-                    className={`border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 ${n.read ? "" : "bg-[#eef3fb]"}`}
+                    className={`border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 ${n.read ? "" : "bg-[#fff7d6]"}`}
                   >
                     <div className="flex ite ms-start gap-2">
                       {photo ? (
@@ -63,13 +61,16 @@ export default async function NotificationsPage() {
                         </div>
                       ) : null}
                       <div className="min-w-0">
-                        <Link href={n.link} className="text-[#003399] no-underline">
+                        <NotificationLink
+                          notificationId={n._id.toString()}
+                          href={n.link}
+                          className="text-[#003399] no-underline"
+                        >
                           <span className="font-bold">{n.text}</span>
-                        </Link>
+                        </NotificationLink>
                         <div className="text-gray-500 text-[11px]">
                           {name ? `${name} · ` : ""}
                           {timeAgo(n.createdAt)}
-                          {!n.read && <span className="text-[#cc3399] font-bold"> · new</span>}
                         </div>
                       </div>
                     </div>

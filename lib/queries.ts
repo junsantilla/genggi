@@ -68,14 +68,18 @@ export async function notify(
   });
 }
 
-export async function countUnread(userId: string) {
+export async function countUnread(userId: string, notificationAcknowledgedAt?: Date) {
   const db = getDb();
   const [messages, friendRequests, notifications] = await Promise.all([
     db.collection("messages").countDocuments({ recipientId: new ObjectId(userId), read: false }),
     db
       .collection("friendships")
       .countDocuments({ addresseeId: new ObjectId(userId), status: "pending" }),
-    db.collection("notifications").countDocuments({ userId: new ObjectId(userId), read: false }),
+    db.collection("notifications").countDocuments({
+      userId: new ObjectId(userId),
+      read: false,
+      ...(notificationAcknowledgedAt ? { createdAt: { $gt: notificationAcknowledgedAt } } : {}),
+    }),
   ]);
   return { messages, friendRequests, notifications };
 }
