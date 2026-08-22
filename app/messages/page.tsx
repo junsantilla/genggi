@@ -35,8 +35,10 @@ export default async function MessagesPage({
     counterpartIds.length > 0
       ? await db.collection("users").find({ _id: { $in: counterpartIds.map((id) => new ObjectId(id)) } }).toArray()
       : [];
+  const counterpartMap = new Map(counterparts.map((c) => [c._id.toString(), c]));
   const nameOf = (id: string) =>
-    counterparts.find((c) => c._id.toString() === id)?.displayName || "Unknown";
+    counterpartMap.get(id)?.displayName || "Unknown";
+  const photoOf = (id: string) => counterpartMap.get(id)?.photo as string | undefined;
 
   // Compose target
   let composeTarget = null;
@@ -90,6 +92,17 @@ export default async function MessagesPage({
                   className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 no-underline"
                 >
                   <div className="flex items-center gap-2 min-w-0">
+                    {photoOf(otherId) ? (
+                      <img
+                        src={photoOf(otherId)!}
+                        alt={nameOf(otherId)}
+                        className="w-8 h-8 object-cover border border-[#6699cc] shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[10px] text-[#4a76b8] font-bold shrink-0">
+                        {nameOf(otherId).charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="text-[#003399] font-bold shrink-0">{nameOf(otherId)}</span>
                     <span className="text-gray-500 text-[12px] truncate">
                       {lastFromMe ? "You: " : ""}
