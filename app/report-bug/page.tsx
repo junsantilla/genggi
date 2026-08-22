@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "@/app/components/Box";
 import BoundForm from "@/app/components/BoundForm";
@@ -9,15 +9,15 @@ export default async function ReportBugPage() {
   const user = await getCurrentUser();
   const isAdmin = user?.username === "genggengpro";
 
-  let reports: any[] = [];
+  let reports: { _id: ObjectId; userId?: ObjectId | null; body: string; createdAt: Date }[] = [];
   if (isAdmin) {
     const db = getDb();
-    reports = await db
+    reports = (await db
       .collection("bugReports")
       .find({})
       .sort({ createdAt: -1 })
       .limit(50)
-      .toArray();
+      .toArray()) as typeof reports;
   }
 
   return (
