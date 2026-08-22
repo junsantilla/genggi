@@ -1,15 +1,15 @@
 import { getCurrentUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
-import { timeAgo } from "@/lib/utils";
 import Box from "@/app/components/Box";
 import BoundForm from "@/app/components/BoundForm";
+import BugReportList from "@/app/components/BugReportList";
 import { reportBugAction } from "@/app/actions";
 
 export default async function ReportBugPage() {
   const user = await getCurrentUser();
   const isAdmin = user?.username === "genggengpro";
 
-  let reports: { _id: ObjectId; userId?: ObjectId | null; body: string; createdAt: Date }[] = [];
+  let reports: { _id: ObjectId; userId?: ObjectId | null; body: string; createdAt: Date; done: boolean }[] = [];
   if (isAdmin) {
     const db = getDb();
     reports = (await db
@@ -44,18 +44,15 @@ export default async function ReportBugPage() {
 
         {isAdmin && reports.length > 0 && (
           <Box title={`Bug Reports (${reports.length})`}>
-            {reports.map((r) => (
-              <div
-                key={r._id.toString()}
-                className="border-b border-dotted border-[#99bbdd] py-2 last:border-0"
-              >
-                <p className="text-[12px]">{r.body}</p>
-                <div className="text-gray-500 text-[11px] mt-1">
-                  {r.userId ? `User ID: ${r.userId}` : "Anonymous"} ·{" "}
-                  {timeAgo(r.createdAt)}
-                </div>
-              </div>
-            ))}
+            <BugReportList
+              reports={reports.map((r) => ({
+                _id: r._id.toString(),
+                userId: r.userId?.toString() ?? null,
+                body: r.body,
+                createdAt: r.createdAt,
+                done: !!r.done,
+              }))}
+            />
           </Box>
         )}
       </div>
