@@ -48,7 +48,24 @@ export async function signupAction(
   const password = String(formData.get("password") || "");
   const confirm = String(formData.get("confirm") || "");
   const displayName = String(formData.get("displayName") || "").trim();
+  const mathFirstRaw = String(formData.get("mathFirst") || "");
+  const mathSecondRaw = String(formData.get("mathSecond") || "");
+  const mathAnswerRaw = String(formData.get("mathAnswer") || "");
+  const mathFirst = Number(mathFirstRaw);
+  const mathSecond = Number(mathSecondRaw);
+  const mathAnswer = Number(mathAnswerRaw);
 
+  if (
+    !mathFirstRaw ||
+    !mathSecondRaw ||
+    !mathAnswerRaw ||
+    !Number.isInteger(mathFirst) ||
+    !Number.isInteger(mathSecond) ||
+    !Number.isInteger(mathAnswer)
+  )
+    return { error: "Please solve the math problem." };
+  if (mathFirst < 1 || mathFirst > 9 || mathSecond < 1 || mathSecond > 9 || mathAnswer !== mathFirst + mathSecond)
+    return { error: "The math answer is incorrect." };
   if (!username || !email || !password) return { error: "All fields are required." };
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
   if (password !== confirm) return { error: "Passwords do not match." };
