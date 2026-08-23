@@ -177,6 +177,51 @@ export interface Message {
   createdAt: Date;
 }
 
+export type ChatboxVisibility = "public" | "friends";
+
+export interface Chatbox {
+  _id: ObjectId;
+  name: string;
+  createdBy: ObjectId;
+  visibility: ChatboxVisibility;
+  createdAt: Date;
+}
+
+export interface ChatboxMessage {
+  _id: ObjectId;
+  chatboxId: ObjectId;
+  senderId: ObjectId;
+  body: string;
+  createdAt: Date;
+}
+
+export interface ChatboxAuthorCard {
+  _id: string;
+  username: string;
+  displayName: string;
+  photo: string | null;
+}
+
+export interface ChatboxListItem {
+  _id: string;
+  name: string;
+  visibility: ChatboxVisibility;
+  createdAt: Date | string;
+  createdBy: string;
+  author: ChatboxAuthorCard;
+  messageCount: number;
+  lastMessageAt: Date | string | null;
+}
+
+export interface ChatboxMessageCard {
+  _id: string;
+  chatboxId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  author: ChatboxAuthorCard;
+}
+
 export type TestimonialStatus = "pending" | "approved";
 
 export interface Testimonial {
