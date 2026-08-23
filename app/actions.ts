@@ -15,6 +15,12 @@ import {
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
 import { getBulletinFeedPage } from "@/lib/bulletin";
+import {
+  canAccessChatbox,
+  getChatboxById,
+  getChatboxMessages,
+  toChatboxMessageCard,
+} from "@/lib/chatbox";
 import { getYouTubeVideoId } from "@/lib/utils";
 import {
   REACTION_TYPES,
@@ -23,6 +29,8 @@ import {
   type BulletinVisibility,
   type SerializedBulletinComment,
   type SerializedBulletinPost,
+  type ChatboxMessageCard,
+  type ChatboxVisibility,
   type User,
 } from "@/lib/types";
 
@@ -841,6 +849,94 @@ export async function adminReviewReportAction(
     .updateOne({ _id: new ObjectId(reportId) }, { $set: { status: resolution } });
   revalidatePath("/admin");
   return { ok: true };
+}
+
+// ---------------------------------------------------------------- Chatboxes
+
+export async function createChatboxAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const name = String(formData.get("name") || "").trim();
+  const visibilityValue = String(formData.get("visibility") || "public") as ChatboxVisibility;
+  if (!name) return { error: "Please give your chatbox a name." };
+  if (name.length > 60) return { error: "Chatbox name must be 60 characters or fewer." };
+  if (!["public", "friends"].includes(visibilityValue)) return { error: "Invalid chatbox visibility." };
+
+  await getDb().collection("chatboxes").insertOne({
+    name,
+    createdBy: user._id,
+    visibility: visibilityValue,
+    createdAt: new Date(),
+  });
+  revalidatePath("/chatboxes");
+  return { ok: true };
+}
+
+export async function sendChatboxMessageAction(
+  chatboxId: string,
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult & { message?: ChatboxMessageCard }> {
+  const user = await requireUser();
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Message cannot be empty." };
+  if (body.length > 2000) return { error: "Message must be 2,000 characters or fewer." };
+
+  const chatbox = await getChatboxById(chatboxId);
+  if (!chatbox) return { error: "Chatbox not found." };
+  if (!(await canAccessChatbox(chatbox, user._id.toString())))
+    return { error: "You don't have access to this chatbox." };
+
+  const createdAt = new Date();
+  const inserted = await getDb().collection("chatboxMessages").insertOne({
+    chatboxId: chatbox._id,
+    senderId: user._id,
+    body,
+    createdAt,
+  });
+  revalidatePath(`/chatboxes/${chatboxId}`);
+  return {
+    ok: true,
+    message: {
+      _id: inserted.insertedId.toString(),
+      chatboxId: chatbox._id.toString(),
+      senderId: user._id.toString(),
+      body,
+      createdAt: createdAt.toISOString(),
+      author: {
+        _id: user._id.toString(),
+        username: user.username,
+        displayName: user.displayName,
+        photo: user.photo,
+      },
+    },
+  };
+}
+
+export async function getChatboxMessagesAction(
+  chatboxId: string,
+): Promise<{ messages: ChatboxMessageCard[] }> {
+  const user = await requireUser();
+  const chatbox = await getChatboxById(chatboxId);
+  if (!chatbox) return { messages: [] };
+  if (!(await canAccessChatbox(chatbox, user._id.toString())))
+    return { messages: [] };
+  const messages = await getChatboxMessages(chatbox._id);
+  return { messages: messages.map(toChatboxMessageCard) };
+}
+
+export async function deleteChatboxAction(chatboxId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const chatbox = await getChatboxById(chatboxId);
+  if (!chatbox) return { error: "Chatbox not found." };
+  if (chatbox.createdBy.toString() !== user._id.toString() && user.username !== "genggengpro")
+    return { error: "Not allowed." };
+  await getDb().collection("chatboxes").deleteOne({ _id: chatbox._id });
+  await getDb().collection("chatboxMessages").deleteMany({ chatboxId: chatbox._id });
+  revalidatePath("/chatboxes");
+  redirect("/chatboxes");
 }
 
 // ---------------------------------------------------------------- Bug Reports

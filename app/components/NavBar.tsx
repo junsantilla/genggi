@@ -57,6 +57,7 @@ export default async function NavBar() {
                         <NavLink href="/messages" count={counts.messages}>
                             Messages
                         </NavLink>
+                        <NavLink href="/chatboxes">Chatbox</NavLink>
                         <NavLink href="/search">Search</NavLink>
                         <NavLink
                             href="/notifications"
