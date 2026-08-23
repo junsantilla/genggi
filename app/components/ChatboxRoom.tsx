@@ -46,6 +46,10 @@ function formatTime(iso: string): string {
     });
 }
 
+function snippet(text: string, max = 80): string {
+    return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
 export default function ChatboxRoom({
     chatboxId,
     chatboxName,
@@ -66,10 +70,17 @@ export default function ChatboxRoom({
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
     const [error, setError] = useState("");
+    const [replyingTo, setReplyingTo] = useState<ChatboxMessageCard | null>(
+        null,
+    );
+    const [pressedId, setPressedId] = useState<string | null>(null);
+    const [highlightId, setHighlightId] = useState<string | null>(null);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const isAtBottomRef = useRef(true);
+    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const holdStartRef = useRef<{ x: number; y: number } | null>(null);
 
     // Auto-scroll only if the user is already near the bottom.
     useEffect(() => {
@@ -120,6 +131,56 @@ export default function ChatboxRoom({
         isAtBottomRef.current = distanceFromBottom < 100;
     };
 
+    // Long-press (hold) on touch screens reveals the reply button, mirroring
+    // the hover behavior on desktop.
+    const cancelHold = () => {
+        if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        holdStartRef.current = null;
+    };
+
+    const startHold = (messageId: string, e: React.TouchEvent) => {
+        holdStartRef.current = {
+            x: e.touches[0]?.clientX ?? 0,
+            y: e.touches[0]?.clientY ?? 0,
+        };
+        cancelHold();
+        holdTimerRef.current = setTimeout(() => {
+            setPressedId(messageId);
+            holdTimerRef.current = null;
+        }, 450);
+    };
+
+    const moveHold = (e: React.TouchEvent) => {
+        if (!holdStartRef.current || !holdTimerRef.current) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+        if (
+            Math.abs(touch.clientX - holdStartRef.current.x) > 12 ||
+            Math.abs(touch.clientY - holdStartRef.current.y) > 12
+        ) {
+            cancelHold();
+        }
+    };
+
+    const startReply = (m: ChatboxMessageCard) => {
+        setReplyingTo(m);
+        setPressedId(null);
+        inputRef.current?.focus();
+    };
+
+    const scrollToMessage = (messageId: string) => {
+        const el = document.getElementById(`chatmsg-${messageId}`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightId(messageId);
+        setTimeout(() => {
+            setHighlightId((cur) => (cur === messageId ? null : cur));
+        }, 1500);
+    };
+
     const send = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -136,6 +197,7 @@ export default function ChatboxRoom({
         try {
             const res = await sendChatboxMessageAction(
                 chatboxId,
+                replyingTo?._id ?? null,
                 { error: "" },
                 formData,
             );
@@ -143,6 +205,7 @@ export default function ChatboxRoom({
             if (res.ok && res.message) {
                 setMessages((prev) => [...prev, res.message!]);
                 setInput("");
+                setReplyingTo(null);
 
                 // Make sure the sender stays at the bottom after sending.
                 isAtBottomRef.current = true;
@@ -181,13 +244,19 @@ export default function ChatboxRoom({
                 ) : (
                     messages.map((m) => {
                         const mine = m.senderId === viewerId;
+                        const reply = m.replyTo;
 
                         return (
                             <div
                                 key={m._id}
-                                className={`flex gap-2 items-end ${
+                                id={`chatmsg-${m._id}`}
+                                onTouchStart={(e) => startHold(m._id, e)}
+                                onTouchMove={moveHold}
+                                onTouchEnd={cancelHold}
+                                onTouchCancel={cancelHold}
+                                className={`group flex gap-2 items-end [@media(pointer:coarse)]:select-none [@media(pointer:coarse)]:[-webkit-touch-callout:none] ${
                                     mine ? "flex-row-reverse" : ""
-                                }`}
+                                } ${m._id === highlightId ? "bg-[#fff3cd]" : ""}`}
                             >
                                 {mine ? (
                                     <Avatar
@@ -215,6 +284,30 @@ export default function ChatboxRoom({
                                             : "bg-white border-[#6699cc] text-left"
                                     }`}
                                 >
+                                    {reply && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                scrollToMessage(reply.messageId)
+                                            }
+                                            title={`View ${reply.authorDisplayName}'s message`}
+                                            className={`block w-full max-w-full border-l-2 bg-black/5 px-1.5 py-0.5 mb-1 text-left ${
+                                                mine
+                                                    ? "border-[#cc99cc]"
+                                                    : "border-[#6699cc]"
+                                            }`}
+                                        >
+                                            <span className="block font-bold text-[11px] text-[#003399] truncate">
+                                                {reply.authorId === viewerId
+                                                    ? "You"
+                                                    : reply.authorDisplayName}
+                                            </span>
+                                            <span className="block text-[11px] text-gray-500 line-clamp-2 whitespace-pre-wrap break-words">
+                                                {reply.body}
+                                            </span>
+                                        </button>
+                                    )}
+
                                     <div className="flex items-baseline gap-2 flex-wrap">
                                         {mine ? (
                                             <span className="font-bold text-[11px] text-[#8a2b9a]">
@@ -241,11 +334,51 @@ export default function ChatboxRoom({
                                         {m.body}
                                     </p>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => startReply(m)}
+                                    aria-label={`Reply to ${m.author.displayName}`}
+                                    title="Reply"
+                                    className={`self-center w-7 h-7 shrink-0 flex items-center justify-center text-[15px] border border-[#6699cc] bg-white hover:bg-[#dbe9f7] transition-opacity hover:cursor-pointer ${
+                                        pressedId === m._id
+                                            ? "opacity-100"
+                                            : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                                >
+                                    ↩️
+                                </button>
                             </div>
                         );
                     })
                 )}
             </div>
+
+            {/* Replying-to banner */}
+            {replyingTo && (
+                <div className="flex items-center gap-2 mt-2 px-2.5 py-1.5 border border-[#6699cc] bg-[#dbe9f7]">
+                    <span className="font-bold text-[12px] text-[#003399] shrink-0">
+                        ↩️ Replying to{" "}
+                        {replyingTo.author._id === viewerId
+                            ? "yourself"
+                            : replyingTo.author.displayName}
+                    </span>
+                    <span className="text-[12px] text-gray-600 truncate min-w-0 flex-1">
+                        “{snippet(replyingTo.body, 80)}”
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setReplyingTo(null);
+                            inputRef.current?.focus();
+                        }}
+                        aria-label="Cancel reply"
+                        className="shrink-0 w-5 h-5 flex items-center justify-center text-[11px] text-[#2c4d80] hover:bg-[#c9ddf0]"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
 
             {/* Composer */}
             <form

@@ -30,7 +30,9 @@ import {
   type BulletinVisibility,
   type SerializedBulletinComment,
   type SerializedBulletinPost,
+  type ChatboxMessage,
   type ChatboxMessageCard,
+  type ChatboxReplyRef,
   type ChatboxVisibility,
   type User,
 } from "@/lib/types";
@@ -980,6 +982,7 @@ export async function createChatboxAction(
 
 export async function sendChatboxMessageAction(
   chatboxId: string,
+  replyToId: string | null,
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult & { message?: ChatboxMessageCard }> {
@@ -993,13 +996,47 @@ export async function sendChatboxMessageAction(
   if (!(await canAccessChatbox(chatbox, user._id.toString())))
     return { error: "You don't have access to this chatbox." };
 
+  const db = getDb();
   const createdAt = new Date();
-  const inserted = await getDb().collection("chatboxMessages").insertOne({
+  const messageDoc: ChatboxMessage = {
+    _id: new ObjectId(),
     chatboxId: chatbox._id,
     senderId: user._id,
     body,
     createdAt,
-  });
+  };
+
+  // If the sender is replying to an earlier message, snapshot its author and
+  // body so the reply renders even when the original is no longer loaded.
+  let replyTo: ChatboxReplyRef | undefined;
+  if (replyToId) {
+    let replyOid: ObjectId | null = null;
+    try {
+      replyOid = new ObjectId(replyToId);
+    } catch {
+      replyOid = null;
+    }
+    if (replyOid) {
+      const target = await db
+        .collection("chatboxMessages")
+        .findOne({ _id: replyOid, chatboxId: chatbox._id });
+      if (target) {
+        const replyAuthor = await db
+          .collection("users")
+          .findOne({ _id: target.senderId });
+        replyTo = {
+          messageId: target._id.toString(),
+          authorId: target.senderId.toString(),
+          authorDisplayName: replyAuthor?.displayName ?? "Unknown",
+          authorUsername: replyAuthor?.username ?? "unknown",
+          body: target.body,
+        };
+        messageDoc.replyTo = replyTo;
+      }
+    }
+  }
+
+  const inserted = await db.collection("chatboxMessages").insertOne(messageDoc);
   revalidatePath(`/chatboxes/${chatboxId}`);
   return {
     ok: true,
@@ -1015,6 +1052,7 @@ export async function sendChatboxMessageAction(
         displayName: user.displayName,
         photo: user.photo,
       },
+      ...(replyTo ? { replyTo } : {}),
     },
   };
 }

@@ -187,12 +187,21 @@ export interface Chatbox {
   createdAt: Date;
 }
 
+export interface ChatboxReplyRef {
+  messageId: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorUsername: string;
+  body: string;
+}
+
 export interface ChatboxMessage {
   _id: ObjectId;
   chatboxId: ObjectId;
   senderId: ObjectId;
   body: string;
   createdAt: Date;
+  replyTo?: ChatboxReplyRef;
 }
 
 export interface ChatboxAuthorCard {
@@ -220,6 +229,7 @@ export interface ChatboxMessageCard {
   body: string;
   createdAt: string;
   author: ChatboxAuthorCard;
+  replyTo?: ChatboxReplyRef;
 }
 
 export type TestimonialStatus = "pending" | "approved";
