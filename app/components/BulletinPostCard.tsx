@@ -195,7 +195,7 @@ export default function BulletinPostCard({
                         </div>
                     )}
                     {comments.length > 0 && (
-                        <div className="mt-1.5 border-l-2 border-[#99bbdd] pl-2">
+                        <div className="mt-1.5">
                             {comments.map((comment) => {
                                 const canDelete =
                                     currentUserId === comment.author._id ||
@@ -204,7 +204,7 @@ export default function BulletinPostCard({
                                 return (
                                     <div
                                         key={comment._id}
-                                        className="text-[12px] py-0.5 leading-snug"
+                                        className="text-[12px] leading-snug bg-[#DBE9F7] border-b border-[#fff] p-2"
                                     >
                                         <Link
                                             href={`/${comment.author.username}`}
