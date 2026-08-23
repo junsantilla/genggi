@@ -39,7 +39,7 @@ export default async function Home() {
         <div className="max-w-[960px] w-full mx-auto">
             <div className="bg-white border border-[#6699cc] sm:border-x">
                 <div className="flex flex-wrap w-full">
-                    <div className="w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5">
+                    <div className="w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5 sm:pr-[5px]">
                         <BulletinFeed
                             initialPosts={feed.posts}
                             hasMore={feed.nextCursor !== null}
@@ -47,7 +47,7 @@ export default async function Home() {
                             currentUsername={user.username}
                         />
                     </div>
-                    <div className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5">
+                    <div className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
                         <NewMembers limit={9} excludeId={user._id.toString()} />
                     </div>
                 </div>

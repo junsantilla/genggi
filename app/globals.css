@@ -133,6 +133,17 @@ summary::-webkit-details-marker {
   display: none;
 }
 
+/* Prevent iOS Safari from auto-zooming when focusing form controls.
+   Zoom is triggered when the font-size is below 16px, so bump text inputs,
+   textareas and selects to 16px on small/touch screens. Desktop keeps 13px. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* Profile theme: form controls inside a profile page follow the user's theme */
 .profile-page .input {
   border-color: var(--profile-border, #6699cc);
