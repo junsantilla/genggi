@@ -11,6 +11,8 @@ import {
 } from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
+import DeleteUserById from "@/app/components/DeleteUserById";
+import BulletinPostLimit from "@/app/components/BulletinPostLimit";
 
 export default async function AdminPage({
   searchParams,
@@ -40,6 +42,9 @@ export default async function AdminPage({
     ];
   }
   const users = await db.collection("users").find(userFilter).sort({ createdAt: -1 }).limit(100).toArray();
+
+  const bulletinSetting = await db.collection("settings").findOne({ key: "bulletin" });
+  const bulletinPostLimit = (bulletinSetting?.maxBulletinPostsPerHour as number | null | undefined) ?? null;
 
   const reports = await db
     .collection("reports")
@@ -92,6 +97,21 @@ export default async function AdminPage({
               </div>
             ))}
           </div>
+        </Box>
+
+        <Box title="Bulletin Post Limit">
+          <p className="text-[12px] text-gray-600 mb-1.5">
+            Maximum bulletin posts a user can make per hour. Leave blank or set 0 for no limit.
+          </p>
+          <BulletinPostLimit currentLimit={bulletinPostLimit} />
+        </Box>
+
+        <Box title="Delete User by ID">
+          <p className="text-[12px] text-gray-600 mb-1.5">
+            Paste a user&apos;s ID to permanently delete the account and all related data
+            (posts, comments, reactions, messages, friendships, chatboxes, reports, etc.).
+          </p>
+          <DeleteUserById />
         </Box>
 
         <Box title={`Reports (${openReports} open)`}>
