@@ -124,6 +124,7 @@ export function toChatboxMessageCard(
     body: m.body,
     createdAt: m.createdAt.toISOString(),
     author: m.author,
+    ...(m.replyTo ? { replyTo: m.replyTo } : {}),
   };
 }
 
