@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getDb, ObjectId } from "@/lib/db";
+import type { Db } from "mongodb";
 import {
   hashPassword,
   verifyPassword,
@@ -476,6 +477,21 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
 
+  // Enforce the admin-configured per-hour posting limit.
+  const bulletinSetting = await getDb().collection("settings").findOne({ key: "bulletin" });
+  const postsPerHour = bulletinSetting?.maxBulletinPostsPerHour as number | null | undefined;
+  if (postsPerHour && postsPerHour > 0) {
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const recentCount = await getDb()
+      .collection("bulletinPosts")
+      .countDocuments({ authorId: user._id, createdAt: { $gt: since } });
+    if (recentCount >= postsPerHour) {
+      return {
+        error: `You've reached the limit of ${postsPerHour} bulletin post${postsPerHour === 1 ? "" : "s"} per hour. Please try again later.`,
+      };
+    }
+  }
+
   const file = formData.get("photo");
   let uploaded: { secure_url: string; public_id: string } | null = null;
   if (file instanceof File && file.size > 0) {
@@ -809,16 +825,22 @@ export async function adminSetRoleAction(targetId: string, role: string): Promis
   return { ok: true };
 }
 
-export async function adminDeleteUserAction(targetId: string): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (admin._id.toString() === targetId) return { error: "You cannot delete yourself." };
-  const db = getDb();
-  const oid = new ObjectId(targetId);
+// Deletes the user and every document referencing them across all collections.
+async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
   const userPosts = (await db
     .collection("bulletinPosts")
     .find({ authorId: oid })
-    .project({ photoPublicId: 1 })
-    .toArray()) as unknown as { photoPublicId?: string | null }[];
+    .project({ _id: 1, photoPublicId: 1 })
+    .toArray()) as unknown as { _id: ObjectId; photoPublicId?: string | null }[];
+  const postIds = userPosts.map((p) => p._id);
+
+  const ownedChatboxes = (await db
+    .collection("chatboxes")
+    .find({ createdBy: oid })
+    .project({ _id: 1 })
+    .toArray()) as unknown as { _id: ObjectId }[];
+  const chatboxIds = ownedChatboxes.map((c) => c._id);
+
   await db.collection("users").deleteOne({ _id: oid });
   await Promise.all([
     ...userPosts
@@ -830,11 +852,76 @@ export async function adminDeleteUserAction(targetId: string): Promise<ActionRes
       .deleteMany({ $or: [{ requesterId: oid }, { addresseeId: oid }] }),
     db.collection("messages").deleteMany({ $or: [{ senderId: oid }, { recipientId: oid }] }),
     db.collection("bulletinPosts").deleteMany({ authorId: oid }),
+    db.collection("bulletinReactions").deleteMany({
+      $or: [{ userId: oid }, ...(postIds.length > 0 ? [{ postId: { $in: postIds } }] : [])],
+    }),
+    db.collection("bulletinComments").deleteMany({
+      $or: [{ authorId: oid }, ...(postIds.length > 0 ? [{ postId: { $in: postIds } }] : [])],
+    }),
     db
       .collection("testimonials")
       .deleteMany({ $or: [{ authorId: oid }, { profileId: oid }] }),
-    db.collection("notifications").deleteMany({ userId: oid }),
+    db
+      .collection("notifications")
+      .deleteMany({ $or: [{ userId: oid }, { actorId: oid }] }),
+    db.collection("reports").deleteMany({ $or: [{ reporterId: oid }, { reportedId: oid }] }),
+    db.collection("blocks").deleteMany({ $or: [{ blockerId: oid }, { blockedId: oid }] }),
+    db.collection("pokes").deleteMany({ $or: [{ fromId: oid }, { toId: oid }] }),
+    db.collection("chatboxes").deleteMany({ createdBy: oid }),
+    db.collection("chatboxMessages").deleteMany({
+      $or: [{ senderId: oid }, ...(chatboxIds.length > 0 ? [{ chatboxId: { $in: chatboxIds } }] : [])],
+    }),
+    db.collection("bugReports").deleteMany({ userId: oid }),
   ]);
+}
+
+export async function adminDeleteUserAction(targetId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (admin._id.toString() === targetId) return { error: "You cannot delete yourself." };
+  await deleteAllUserData(getDb(), new ObjectId(targetId));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function adminSetBulletinPostLimitAction(limitValue: string): Promise<ActionResult> {
+  await requireAdmin();
+  const raw = String(limitValue || "").trim();
+  let limit: number | null = null;
+  if (raw) {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > 1000)
+      return { error: "Limit must be a whole number between 0 and 1000." };
+    limit = Math.floor(n);
+  }
+  await getDb().collection("settings").updateOne(
+    { key: "bulletin" },
+    {
+      $set: {
+        maxBulletinPostsPerHour: limit === 0 ? null : limit,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: { key: "bulletin" },
+    },
+    { upsert: true }
+  );
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function adminDeleteUserByIdAction(userId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const id = userId.trim();
+  if (!id) return { error: "Please enter a user ID." };
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "That doesn't look like a valid user ID." };
+  }
+  if (admin._id.toString() === oid.toString()) return { error: "You cannot delete yourself." };
+  const user = await getDb().collection("users").findOne({ _id: oid });
+  if (!user) return { error: "No user found with that ID." };
+  await deleteAllUserData(getDb(), oid);
   revalidatePath("/admin");
   return { ok: true };
 }
