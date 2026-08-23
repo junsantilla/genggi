@@ -37,7 +37,7 @@ export default async function NewMembers({
                     {users.map((u) => (
                         <div
                             key={u._id.toString()}
-                            className="text-center text-[11px]"
+                            className="text-center text-[11px] friend-bg p-2.5"
                         >
                             <Link href={`/${u.username}`} className="block">
                                 {u.photo ? (
@@ -45,10 +45,10 @@ export default async function NewMembers({
                                     <img
                                         src={u.photo}
                                         alt={u.displayName}
-                                        className="w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
+                                        className="w-full aspect-square object-cover border border-[#cc99cc] mx-auto mb-0.5"
                                     />
                                 ) : (
-                                    <div className="friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
+                                    <div className="friend-thumb-bg w-full aspect-square border border-[#cc99cc] mx-auto mb-0.5"></div>
                                 )}
                             </Link>
                             <Link
@@ -58,7 +58,7 @@ export default async function NewMembers({
                                 {u.displayName}
                             </Link>
                             <div className="text-gray-500">
-                                joined {timeAgo(u.createdAt)}
+                                {timeAgo(u.createdAt)}
                             </div>
                         </div>
                     ))}

@@ -1,161 +1,166 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: #ffffff;
+    --foreground: #171717;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background-color: #e5e7eb;
-  color: #000000;
-  font-family: Arial, Helvetica, sans-serif;
+    background-color: #e5e7eb;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 main:has(.profile-page) {
-  padding-block: 0;
+    padding-block: 0;
 }
 
 .pic-bg {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #cddcee,
-    #cddcee 10px,
-    #dbe9f7 10px,
-    #dbe9f7 20px
-  );
+    background-image: repeating-linear-gradient(
+        45deg,
+        #cddcee,
+        #cddcee 10px,
+        #dbe9f7 10px,
+        #dbe9f7 20px
+    );
+}
+
+.friend-bg {
+    background: #dbe9f7;
+    border-bottom: 1px solid #6699cc;
 }
 
 .friend-thumb-bg {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #f0d9ec,
-    #f0d9ec 6px,
-    #fbe9f6 6px,
-    #fbe9f6 12px
-  );
+    background-image: repeating-linear-gradient(
+        45deg,
+        #f0d9ec,
+        #f0d9ec 6px,
+        #fbe9f6 6px,
+        #fbe9f6 12px
+    );
 }
 
 .blink {
-  animation: blink 1s steps(1) infinite;
+    animation: blink 1s steps(1) infinite;
 }
 
 @keyframes blink {
-  50% {
-    opacity: 0;
-  }
+    50% {
+        opacity: 0;
+    }
 }
 
 .input {
-  width: 100%;
-  border: 1px solid #6699cc;
-  background: #f5f9ff;
-  padding: 0.3rem 0.5rem;
-  font-size: 13px;
-  color: #000;
-  border-radius: 0;
+    width: 100%;
+    border: 1px solid #6699cc;
+    background: #f5f9ff;
+    padding: 0.3rem 0.5rem;
+    font-size: 13px;
+    color: #000;
+    border-radius: 0;
 }
 .input:focus {
-  outline: 2px solid #6699cc;
-  outline-offset: 0;
+    outline: 2px solid #6699cc;
+    outline-offset: 0;
 }
 
 .btn {
-  display: inline-block;
-  background: #6699cc;
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 0.3rem 0.75rem;
-  border: 1px solid #2c4d80;
-  cursor: pointer;
-  border-radius: 0;
-  text-align: center;
+    display: inline-block;
+    background: #6699cc;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid #2c4d80;
+    cursor: pointer;
+    border-radius: 0;
+    text-align: center;
 }
 .btn:hover {
-  background: #4a76b8;
+    background: #4a76b8;
 }
 .btn:disabled {
-  opacity: 0.6;
-  cursor: default;
+    opacity: 0.6;
+    cursor: default;
 }
 .btn-danger {
-  background: #cc6666;
-  border-color: #802020;
+    background: #cc6666;
+    border-color: #802020;
 }
 .btn-danger:hover {
-  background: #b84a4a;
+    background: #b84a4a;
 }
 .btn-ghost {
-  background: #fff;
-  color: #003399;
-  border-color: #6699cc;
+    background: #fff;
+    color: #003399;
+    border-color: #6699cc;
 }
 .btn-ghost:hover {
-  background: #dbe9f7;
+    background: #dbe9f7;
 }
 
 .label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: #2c4d80;
-  margin-bottom: 2px;
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #2c4d80;
+    margin-bottom: 2px;
 }
 
 /* Style the native file input's "Choose File" button to match .btn */
 input[type="file"].btn-file {
-  font-size: 12px;
-  color: #2c4d80;
+    font-size: 12px;
+    color: #2c4d80;
 }
 input[type="file"].btn-file::file-selector-button {
-  background: #6699cc;
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 0.3rem 0.75rem;
-  border: 1px solid #2c4d80;
-  cursor: pointer;
-  border-radius: 0;
-  margin-right: 0.5rem;
+    background: #6699cc;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid #2c4d80;
+    cursor: pointer;
+    border-radius: 0;
+    margin-right: 0.5rem;
 }
 input[type="file"].btn-file::file-selector-button:hover {
-  background: #4a76b8;
+    background: #4a76b8;
 }
 
 summary::-webkit-details-marker {
-  display: none;
+    display: none;
 }
 
 /* Prevent iOS Safari from auto-zooming when focusing form controls.
    Zoom is triggered when the font-size is below 16px, so bump text inputs,
    textareas and selects to 16px on small/touch screens. Desktop keeps 13px. */
 @media (max-width: 639px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
-  textarea,
-  select {
-    font-size: 16px;
-  }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select {
+        font-size: 16px;
+    }
 }
 
 /* Profile theme: form controls inside a profile page follow the user's theme */
 .profile-page .input {
-  border-color: var(--profile-border, #6699cc);
-  background: #f5f9ff;
+    border-color: var(--profile-border, #6699cc);
+    background: #f5f9ff;
 }
 .profile-page .input:focus {
-  outline-color: var(--profile-border, #6699cc);
+    outline-color: var(--profile-border, #6699cc);
 }
 .profile-page .btn:not(.btn-danger):not(.btn-ghost) {
-  background: var(--profile-border, #6699cc);
-  border-color: color-mix(in srgb, var(--profile-border, #6699cc) 60%, #000);
+    background: var(--profile-border, #6699cc);
+    border-color: color-mix(in srgb, var(--profile-border, #6699cc) 60%, #000);
 }
 .profile-page .btn:not(.btn-danger):not(.btn-ghost):hover {
-  background: color-mix(in srgb, var(--profile-border, #6699cc) 85%, #000);
+    background: color-mix(in srgb, var(--profile-border, #6699cc) 85%, #000);
 }
