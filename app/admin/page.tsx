@@ -12,6 +12,7 @@ import {
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
 import DeleteUserById from "@/app/components/DeleteUserById";
+import DeleteUserByUsername from "@/app/components/DeleteUserByUsername";
 import BulletinPostLimit from "@/app/components/BulletinPostLimit";
 
 export default async function AdminPage({
@@ -104,6 +105,14 @@ export default async function AdminPage({
             Maximum bulletin posts a user can make per hour. Leave blank or set 0 for no limit.
           </p>
           <BulletinPostLimit currentLimit={bulletinPostLimit} />
+        </Box>
+
+        <Box title="Delete User by Username">
+          <p className="text-[12px] text-gray-600 mb-1.5">
+            Enter a username to permanently delete the account and all related data
+            (posts, comments, reactions, messages, friendships, chatboxes, reports, etc.).
+          </p>
+          <DeleteUserByUsername />
         </Box>
 
         <Box title="Delete User by ID">

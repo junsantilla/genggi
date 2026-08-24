@@ -1118,6 +1118,22 @@ export async function adminDeleteUserByIdAction(userId: string): Promise<ActionR
   return { ok: true };
 }
 
+export async function adminDeleteUserByUsernameAction(
+  username: string
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const name = username.trim().toLowerCase().replace(/^@/, "");
+  if (!name) return { error: "Please enter a username." };
+  if (admin.username === name) return { error: "You cannot delete yourself." };
+
+  const user = await getDb().collection("users").findOne({ username: name });
+  if (!user) return { error: `No user found with the username @${name}.` };
+
+  await deleteAllUserData(getDb(), user._id);
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function adminReviewReportAction(
   reportId: string,
   resolution: string
