@@ -16,6 +16,9 @@ export default async function NewMembers({
     const filter: Record<string, unknown> = {
         banned: { $ne: true },
         hideFromSearch: { $ne: true },
+        // Only hide accounts created after email verification was added; older
+        // accounts have no emailVerified field and should still be shown.
+        emailVerified: { $ne: false },
     };
     if (excludeId) filter._id = { $ne: new ObjectId(excludeId) };
 
