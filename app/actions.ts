@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { getDb, ObjectId } from "@/lib/db";
 import type { Db } from "mongodb";
+import { randomBytes } from "node:crypto";
 import {
   hashPassword,
   verifyPassword,
@@ -15,6 +17,7 @@ import {
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
+import { sendPasswordResetEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
 import {
   canAccessChatbox,
@@ -140,6 +143,82 @@ export async function loginAction(
 export async function logoutAction(): Promise<void> {
   await destroySession();
   redirect("/login");
+}
+
+// ---------------------------------------------------------------- Password Reset
+
+export async function requestPasswordResetAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email." };
+
+  const db = getDb();
+  const user = await db.collection("users").findOne({ email });
+
+  if (user && !user.banned) {
+    // Only send one reset email per account per minute to avoid flooding.
+    const latest = await db
+      .collection("passwordResetTokens")
+      .findOne({ userId: user._id }, { sort: { createdAt: -1 } });
+    const lastRequestedAt = latest
+      ? new Date(latest.createdAt).getTime()
+      : 0;
+    if (Date.now() - lastRequestedAt >= 60_000) {
+      const token = randomBytes(32).toString("hex");
+      await db.collection("passwordResetTokens").deleteMany({ userId: user._id });
+      await db.collection("passwordResetTokens").insertOne({
+        userId: user._id,
+        token,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        createdAt: new Date(),
+      });
+
+      const h = await headers();
+      const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+      const proto =
+        h.get("x-forwarded-proto") ||
+        (process.env.NODE_ENV === "production" ? "https" : "http");
+      const resetUrl = `${proto}://${host}/reset-password?token=${token}`;
+
+      try {
+        await sendPasswordResetEmail(user.email, resetUrl);
+      } catch (error) {
+        console.error("Failed to send password reset email:", error);
+      }
+    }
+  }
+
+  // Always return success so the form doesn't reveal whether an account exists.
+  return { ok: true };
+}
+
+export async function resetPasswordAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const token = String(formData.get("token") || "").trim();
+  const password = String(formData.get("password") || "");
+  const confirm = String(formData.get("confirm") || "");
+  if (!token) return { error: "This reset link is invalid or has expired." };
+  if (password.length < 6) return { error: "Password must be at least 6 characters." };
+  if (password !== confirm) return { error: "Passwords do not match." };
+
+  const db = getDb();
+  const doc = await db.collection("passwordResetTokens").findOne({ token });
+  if (!doc || new Date(doc.expiresAt).getTime() < Date.now())
+    return { error: "This reset link is invalid or has expired. Please request a new one." };
+
+  const user = await db.collection("users").findOne({ _id: doc.userId });
+  if (!user || user.banned) return { error: "This account is no longer available." };
+
+  await db
+    .collection("users")
+    .updateOne({ _id: user._id }, { $set: { passwordHash: hashPassword(password) } });
+  await db.collection("passwordResetTokens").deleteMany({ userId: user._id });
+  await db.collection("sessions").deleteMany({ userId: user._id });
+  redirect("/login?reset=1");
 }
 
 // ---------------------------------------------------------------- Profile

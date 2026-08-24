@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction } from "@/app/actions";
 
@@ -18,6 +19,7 @@ export default function HomeLoginForm() {
     );
 
     return (
+        <div className="flex flex-col items-end gap-1">
         <form
             action={formAction}
             className="relative flex flex-wrap items-end gap-1.5"
@@ -72,5 +74,9 @@ export default function HomeLoginForm() {
                 </div>
             )}
         </form>
+        <Link href="/forgot-password" className="text-[11px] text-[#dbe9f7] underline">
+            Forgot password?
+        </Link>
+        </div>
     );
 }
