@@ -18,6 +18,10 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+p {
+    font-size: 14px;
+}
+
 main:has(.profile-page),
 main:has(.landing-page) {
     padding-block: 0;
