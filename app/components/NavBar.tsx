@@ -1,6 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
-import { countUnread } from "@/lib/queries";
+import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 
 function NavLink({
@@ -27,15 +28,28 @@ function NavLink({
     );
 }
 
-export default async function NavBar() {
-    const user = await getCurrentUser();
-    let counts = { messages: 0, friendRequests: 0, notifications: 0 };
-    if (user) counts = await countUnread(user._id.toString(), user.notificationAcknowledgedAt);
+export default function NavBar({
+    isLoggedIn,
+    username,
+    isAdmin,
+    counts,
+}: {
+    isLoggedIn: boolean;
+    username: string;
+    isAdmin: boolean;
+    counts: { messages: number; friendRequests: number; notifications: number };
+}) {
+    const pathname = usePathname();
+
+    // Logged-out visitors get a dedicated landing page with its own header
+    // (logo + login form), so the standard navigation bar is hidden there.
+    if (!isLoggedIn && pathname === "/") return null;
 
     return (
         <header>
             <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl sm:text-center tracking-tight">
                 <Link href="/" className="no-underline text-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/images/genggeng-logo4.png"
                         alt="genggeng"
@@ -45,10 +59,10 @@ export default async function NavBar() {
                 </Link>
             </div>
             <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[12px] sm:text-[13px] flex flex-wrap gap-x-2.5 gap-y-0.5 sm:justify-center">
-                {user ? (
+                {isLoggedIn ? (
                     <>
                         <NavLink href="/">Home</NavLink>
-                        <NavLink href={`/${user.username}`}>
+                        <NavLink href={`/${username}`}>
                             My Profile
                         </NavLink>
                         <NavLink href="/friends" count={counts.friendRequests}>
@@ -66,9 +80,7 @@ export default async function NavBar() {
                             Notifications
                         </NavLink>
                         <NavLink href="/edit">Edit Profile</NavLink>
-                        {user.role === "admin" && (
-                            <NavLink href="/admin">Admin</NavLink>
-                        )}
+                        {isAdmin && <NavLink href="/admin">Admin</NavLink>}
                         <LogoutButton />
                     </>
                 ) : (
