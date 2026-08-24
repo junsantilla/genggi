@@ -58,7 +58,7 @@ export default function NavBar({
                     genggeng<span className="text-[#ffde00]">.pro</span>
                 </Link>
             </div>
-            <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[12px] sm:text-[13px] flex flex-nowrap items-center gap-x-2.5 overflow-x-auto overscroll-x-contain whitespace-nowrap sm:justify-center">
+            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5 text-[12px] sm:text-[13px] flex flex-nowrap items-center gap-x-2.5 overflow-x-auto overscroll-x-contain whitespace-nowrap sm:justify-center">
                 {isLoggedIn ? (
                     <>
                         <NavLink href="/">Home</NavLink>

@@ -139,6 +139,14 @@ input[type="file"].btn-file::file-selector-button:hover {
     background: #4a76b8;
 }
 
+.nav-scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.nav-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
 summary::-webkit-details-marker {
     display: none;
 }
