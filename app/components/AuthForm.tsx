@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 
 type ActionResult = { ok?: boolean; error?: string };
 type MathChallenge = { first: number; second: number };
@@ -17,16 +17,14 @@ export default function AuthForm({
   mathChallenge?: boolean;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
-  const [challenge, setChallenge] = useState<MathChallenge | null>(null);
-
-  useEffect(() => {
-    if (mathChallenge) {
-      setChallenge({
-        first: Math.floor(Math.random() * 9) + 1,
-        second: Math.floor(Math.random() * 9) + 1,
-      });
-    }
-  }, [mathChallenge]);
+  const [challenge] = useState<MathChallenge | null>(() =>
+    mathChallenge
+      ? {
+          first: Math.floor(Math.random() * 9) + 1,
+          second: Math.floor(Math.random() * 9) + 1,
+        }
+      : null,
+  );
   const [state, formAction, pending] = useActionState(
     async (prev: ActionResult, formData: FormData) => {
       try {
