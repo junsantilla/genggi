@@ -721,6 +721,77 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   return { ok: true };
 }
 
+export async function updateBulletinPostAction(
+  postId: string,
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult & { body?: string; visibility?: BulletinVisibility }> {
+  const user = await requireUser();
+  const body = String(formData.get("body") || "").trim();
+  const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
+  if (!body) return { error: "Your post cannot be empty." };
+  if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
+  if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
+
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(postId);
+  } catch {
+    return { error: "Post not found." };
+  }
+
+  const db = getDb();
+  const result = await db.collection("bulletinPosts").updateOne(
+    { _id: oid, authorId: user._id },
+    { $set: { body, visibility: visibilityValue } }
+  );
+  if (result.matchedCount === 0) return { error: "Post not found or you don't own it." };
+
+  revalidatePath("/");
+  revalidatePath(`/${user.username}`);
+  revalidatePath(`/bulletin/${postId}`);
+  return { ok: true, body, visibility: visibilityValue };
+}
+
+export async function updateBulletinCommentAction(
+  commentId: string,
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult & { body?: string }> {
+  const user = await requireUser();
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Comment cannot be empty." };
+  if (body.length > 500) return { error: "Comments must be 500 characters or fewer." };
+
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(commentId);
+  } catch {
+    return { error: "Comment not found." };
+  }
+
+  const db = getDb();
+  const comment = await db.collection("bulletinComments").findOne({
+    _id: oid,
+    authorId: user._id,
+  });
+  if (!comment) return { error: "Comment not found or you don't own it." };
+
+  await db.collection("bulletinComments").updateOne(
+    { _id: comment._id, authorId: user._id },
+    { $set: { body } }
+  );
+
+  revalidatePath("/");
+  revalidatePath(`/bulletin/${comment.postId.toString()}`);
+  const post = await db.collection("bulletinPosts").findOne({ _id: comment.postId });
+  if (post) {
+    const postAuthor = await db.collection("users").findOne({ _id: post.authorId });
+    if (postAuthor) revalidatePath(`/${postAuthor.username}`);
+  }
+  return { ok: true, body };
+}
+
 export async function reactToBulletinPostAction(
   postId: string,
   type: string
