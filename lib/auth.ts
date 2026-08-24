@@ -2,10 +2,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomBytes, createHmac, timingSafeEqual, scryptSync } from "node:crypto";
 import { getDb, ObjectId } from "./db";
+import { getAuthSecret, hashToken, signaturesEqual } from "./security";
 import type { User } from "./types";
 
-const SECRET = process.env.AUTH_SECRET || "dev-secret-change-me";
-const SESSION_COOKIE = "session";
+const SESSION_TOKEN_BYTES = 32;
+const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-session" : "session";
 const SESSION_DAYS = 30;
 
 export function hashPassword(password: string): string {
@@ -23,16 +24,21 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 function sign(token: string): string {
-  return createHmac("sha256", SECRET).update(token).digest("hex");
+  return createHmac("sha256", getAuthSecret()).update(token).digest("hex");
 }
 
 export async function createSession(userId: string): Promise<void> {
-  const token = randomBytes(32).toString("hex");
+  const token = randomBytes(SESSION_TOKEN_BYTES).toString("hex");
   const sig = sign(token);
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await getDb()
     .collection("sessions")
-    .insertOne({ userId: new ObjectId(userId), token, sig, expiresAt, createdAt: new Date() });
+    .insertOne({
+      userId: new ObjectId(userId),
+      tokenHash: hashToken(token),
+      expiresAt,
+      createdAt: new Date(),
+    });
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, `${token}.${sig}`, {
     httpOnly: true,
@@ -40,6 +46,7 @@ export async function createSession(userId: string): Promise<void> {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     expires: expiresAt,
+    maxAge: SESSION_DAYS * 24 * 60 * 60,
   });
 }
 
@@ -48,26 +55,38 @@ export async function destroySession(): Promise<void> {
   const value = cookieStore.get(SESSION_COOKIE)?.value;
   if (value) {
     const [token] = value.split(".");
-    await getDb().collection("sessions").deleteMany({ token });
+    if (token && /^[a-f\d]{64}$/i.test(token)) {
+      await getDb().collection("sessions").deleteMany({ tokenHash: hashToken(token) });
+    }
     cookieStore.delete(SESSION_COOKIE);
+  }
+  // Also clear the pre-hardening cookie name if it is still present.
+  if (SESSION_COOKIE !== "session" && cookieStore.has("session")) {
+    cookieStore.delete("session");
   }
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
   const value = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!value) return null;
+  if (!value || value.length > 150) return null;
   const [token, sig] = value.split(".");
-  if (!token || !sig || sig !== sign(token)) return null;
+  if (
+    !token ||
+    !sig ||
+    !/^[a-f\d]{64}$/i.test(token) ||
+    !/^[a-f\d]{64}$/i.test(sig) ||
+    !signaturesEqual(sig, sign(token))
+  ) return null;
 
   const db = getDb();
   const session = await db
     .collection("sessions")
-    .findOne({ token, expiresAt: { $gt: new Date() } });
+    .findOne({ tokenHash: hashToken(token), expiresAt: { $gt: new Date() } });
   if (!session) return null;
 
   const user = await db.collection("users").findOne({ _id: session.userId });
-  if (!user) return null;
+  if (!user || user.banned) return null;
 
   // Throttled last-active update (online indicator)
   const now = Date.now();

@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const videoId = request.nextUrl.searchParams.get("videoId");
 
-  if (!videoId) {
-    return NextResponse.json({ error: "videoId is required" }, { status: 400 });
+  if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+    return NextResponse.json({ error: "Invalid videoId" }, { status: 400 });
   }
 
   try {
@@ -16,7 +16,14 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json({ title: data.title ?? null });
+    return NextResponse.json(
+      { title: typeof data.title === "string" ? data.title.slice(0, 200) : null },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+        },
+      },
+    );
   } catch {
     return NextResponse.json({ title: null }, { status: 200 });
   }
