@@ -5,6 +5,7 @@ import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { getCurrentUser } from "@/lib/auth"
 import { countUnread } from "@/lib/queries"
 
@@ -51,6 +52,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <Link href="/report-bug" className="underline hover:text-gray-600">Report a bug</Link>
         </footer>
         {process.env.NODE_ENV === "production" && !isAdmin && <Analytics />}
+        {process.env.NODE_ENV === "production" && !isAdmin && (
+          <GoogleAnalytics gaId="G-66BXBYF7CL" />
+        )}
       </body>
     </html>
   );
