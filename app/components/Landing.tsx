@@ -17,7 +17,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
     return (
         <div className="landing-page min-h-[calc(100dvh-66px)] flex flex-col">
             {/* Header: full-width bar flush to top, logo on the left, login form on the right */}
-            <header className="bg-[#2C4D80] text-white border-b border-[#6699cc]">
+            <header className="sticky top-0 z-50 bg-[#2C4D80] text-white border-b border-[#6699cc]">
                 <div className="max-w-[960px] w-full mx-auto flex flex-wrap items-center justify-between gap-2 px-2.5 py-2">
                     <Link
                         href="/"
