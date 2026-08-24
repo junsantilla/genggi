@@ -16,7 +16,7 @@ function NavLink({
     return (
         <Link
             href={href}
-            className="text-[#003399] font-bold no-underline hover:underline py-0.5 inline-flex items-center gap-1"
+            className="shrink-0 whitespace-nowrap text-[#003399] font-bold no-underline hover:underline py-0.5 inline-flex items-center gap-1"
         >
             {children}
             {!!count && (
@@ -46,7 +46,7 @@ export default function NavBar({
     if (!isLoggedIn && pathname === "/") return null;
 
     return (
-        <header>
+        <header className="sticky top-0 z-50">
             <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl sm:text-center tracking-tight">
                 <Link href="/" className="no-underline text-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -58,7 +58,7 @@ export default function NavBar({
                     genggeng<span className="text-[#ffde00]">.pro</span>
                 </Link>
             </div>
-            <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[12px] sm:text-[13px] flex flex-wrap gap-x-2.5 gap-y-0.5 sm:justify-center">
+            <nav className="bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1 text-[12px] sm:text-[13px] flex flex-nowrap items-center gap-x-2.5 overflow-x-auto overscroll-x-contain whitespace-nowrap sm:justify-center">
                 {isLoggedIn ? (
                     <>
                         <NavLink href="/">Home</NavLink>
