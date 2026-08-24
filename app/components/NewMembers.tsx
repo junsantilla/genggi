@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "./Box";
+import UserAvatar from "./UserAvatar";
 
 export default async function NewMembers({
     limit = 10,
@@ -43,16 +44,11 @@ export default async function NewMembers({
                             className="text-center text-[11px] friend-bg p-2.5"
                         >
                             <Link href={`/${u.username}`} className="block">
-                                {u.photo ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={u.photo}
-                                        alt={u.displayName}
-                                        className="w-full aspect-square object-cover border border-[#cc99cc] mx-auto mb-0.5"
-                                    />
-                                ) : (
-                                    <div className="friend-thumb-bg w-full aspect-square border border-[#cc99cc] mx-auto mb-0.5"></div>
-                                )}
+                                <UserAvatar
+                                    src={u.photo}
+                                    alt={u.displayName}
+                                    className="w-full aspect-square object-cover mx-auto mb-0.5"
+                                />
                             </Link>
                             <Link
                                 href={`/${u.username}`}

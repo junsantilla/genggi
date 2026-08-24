@@ -4,7 +4,7 @@ import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
 import type { User } from "@/lib/types";
 import { getFriendshipStatus, isBlocked, areFriends } from "@/lib/queries";
-import { timeAgo, padViews, initials } from "@/lib/utils";
+import { timeAgo, padViews } from "@/lib/utils";
 import {
     sendFriendRequestAction,
     respondFriendRequestAction,
@@ -21,6 +21,7 @@ import BoundForm from "./BoundForm";
 import Box from "./Box";
 import BulletinBoard from "./BulletinBoard";
 import YouTubeMusicPlayer from "./YouTubeMusicPlayer";
+import UserAvatar from "./UserAvatar";
 
 export default async function Profile({
     user,
@@ -174,26 +175,11 @@ export default async function Profile({
                                 <div className="flex flex-wrap">
                                     {/* Left: photo, name, username, buttons */}
                                     <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
-                                        {user.photo ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={user.photo}
-                                                alt={`${user.displayName}'s photo`}
-                                                className="profile-photo w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] object-cover border mx-auto mb-2"
-                                                style={{
-                                                    borderColor: theme.border,
-                                                }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="profile-photo pic-bg w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] border flex items-center justify-center text-[#4a76b8] italic text-[12px] mx-auto mb-2"
-                                                style={{
-                                                    borderColor: theme.border,
-                                                }}
-                                            >
-                                                {initials(user.displayName)}
-                                            </div>
-                                        )}
+                                        <UserAvatar
+                                            src={user.photo}
+                                            alt={`${user.displayName}'s photo`}
+                                            className="profile-photo w-full max-w-[260px] sm:max-w-none sm:w-[200px] h-[220px] object-cover mx-auto mb-2"
+                                        />
 
                                         {/* Actions */}
                                         {!isOwner && me && (
@@ -566,18 +552,11 @@ export default async function Profile({
                                                         href={`/${f.username}`}
                                                         className="block"
                                                     >
-                                                        {f.photo ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img
-                                                                src={f.photo}
-                                                                alt={
-                                                                    f.displayName
-                                                                }
-                                                                className="profile-friend-photo w-[60px] h-[60px] object-cover border border-[#cc99cc] mx-auto mb-0.5"
-                                                            />
-                                                        ) : (
-                                                            <div className="profile-friend-photo friend-thumb-bg w-[60px] h-[60px] border border-[#cc99cc] mx-auto mb-0.5"></div>
-                                                        )}
+                                                        <UserAvatar
+                                                            src={f.photo}
+                                                            alt={f.displayName}
+                                                            className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
+                                                        />
                                                     </Link>
                                                     <Link
                                                         href={`/${f.username}`}

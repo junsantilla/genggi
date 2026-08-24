@@ -7,6 +7,7 @@ import { sendMessageAction, deleteMessageAction } from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import BoundForm from "@/app/components/BoundForm";
 import Box from "@/app/components/Box";
+import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function ThreadPage({
   params,
@@ -52,11 +53,11 @@ export default async function ThreadPage({
   return (
     <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
       <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight flex items-center justify-center gap-2">
-        {other.photo ? (
-          <img src={other.photo} alt={other.displayName} className="w-6 h-6 object-cover border border-white/50" />
-        ) : (
-          <span className="w-6 h-6 bg-white/20 flex items-center justify-center text-[11px]">{other.displayName.charAt(0).toUpperCase()}</span>
-        )}
+        <UserAvatar
+          src={other.photo}
+          alt={other.displayName}
+          className="w-6 h-6 object-cover"
+        />
         💬 {other.displayName}
       </div>
       <div className="p-4 flex flex-col gap-4">
@@ -69,17 +70,11 @@ export default async function ThreadPage({
               return (
                 <div key={m._id.toString()} className="py-1.5 border-b border-dotted border-[#99bbdd] last:border-0">
                   <div className="flex items-center gap-2">
-                    {(mine ? myPhoto : other.photo) ? (
-                      <img
-                        src={mine ? myPhoto : other.photo}
-                        alt={mine ? "You" : other.displayName}
-                        className="w-5 h-5 object-cover border border-[#6699cc] shrink-0"
-                      />
-                    ) : (
-                      <div className="w-5 h-5 bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[8px] text-[#4a76b8] font-bold shrink-0">
-                        {(mine ? "Y" : other.displayName).charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <UserAvatar
+                      src={mine ? myPhoto : other.photo}
+                      alt={mine ? "You" : other.displayName}
+                      className="w-5 h-5 object-cover shrink-0"
+                    />
                     <span className={`font-bold text-[12px] ${mine ? "text-[#cc3399]" : "text-[#003399]"}`}>
                       {mine ? "You" : other.displayName}
                     </span>

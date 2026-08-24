@@ -4,6 +4,7 @@ import { timeAgo } from "@/lib/utils";
 import { getAvailableChatboxes } from "@/lib/chatbox";
 import Box from "@/app/components/Box";
 import CreateChatboxForm from "@/app/components/CreateChatboxForm";
+import UserAvatar from "@/app/components/UserAvatar";
 
 function ChatboxAvatar({
   photo,
@@ -14,22 +15,12 @@ function ChatboxAvatar({
   name: string;
   size?: string;
 }) {
-  if (photo) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={photo}
-        alt={name}
-        className={`${size} object-cover border border-[#6699cc] shrink-0`}
-      />
-    );
-  }
   return (
-    <div
-      className={`${size} bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[#4a76b8] font-bold shrink-0`}
-    >
-      {name.charAt(0).toUpperCase()}
-    </div>
+    <UserAvatar
+      src={photo}
+      alt={name}
+      className={`${size} object-cover shrink-0`}
+    />
   );
 }
 
