@@ -153,7 +153,7 @@ export interface SerializedBulletinPost {
 export interface Session {
   _id: ObjectId;
   userId: ObjectId;
-  tokenHash: string;
+  token: string;
   expiresAt: Date;
   createdAt: Date;
 }

@@ -7,7 +7,7 @@ import { reportBugAction } from "@/app/actions";
 
 export default async function ReportBugPage() {
   const user = await getCurrentUser();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.username === "genggengpro";
 
   let reports: { _id: ObjectId; userId?: ObjectId | null; body: string; createdAt: Date; done: boolean }[] = [];
   if (isAdmin) {
