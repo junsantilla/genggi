@@ -151,8 +151,8 @@ export default function BulletinPostCard({
                             }}
                         />
                     ) : (
-                        <div className="block text-inherit">
-                            <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">
+                        <div className="block text-inherit touch-manipulation">
+                            <p className="whitespace-pre-wrap text-[16px] sm:text-[12px] mt-1 mb-0">
                                 <LinkedText text={postBody} />
                             </p>
                         </div>
