@@ -5,7 +5,7 @@ import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
-import { GoogleTagManager } from "@next/third-parties/google";
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { getCurrentUser } from "@/lib/auth";
 import { countUnread } from "@/lib/queries";
 
@@ -65,6 +65,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 )}
                 {process.env.NODE_ENV === "production" && !isAdmin && (
                     <GoogleTagManager gtmId="G-TKTKE381MM" />
+                )}
+                {process.env.NODE_ENV === "production" && !isAdmin && (
+                    <GoogleAnalytics gaId="G-66BXBYF7CL" />
                 )}
             </body>
         </html>

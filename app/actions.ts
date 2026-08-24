@@ -26,8 +26,6 @@ import {
   toChatboxMessageCard,
 } from "@/lib/chatbox";
 import { getYouTubeVideoId } from "@/lib/utils";
-import { boundedString, getAppOrigin, isSafeRasterImage, safeEnum, safeObjectId } from "@/lib/security";
-import { consumeRateLimit, getRequestSubject } from "@/lib/rate-limit";
 import {
   REACTION_TYPES,
   type BulletinReaction,
@@ -38,6 +36,7 @@ import {
   type ChatboxMessage,
   type ChatboxMessageCard,
   type ChatboxReplyRef,
+  type ChatboxVisibility,
   type User,
 } from "@/lib/types";
 
@@ -49,12 +48,11 @@ export async function signupAction(
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  if (!(await consumeRateLimit("signup", getRequestSubject(await headers()), 5, 3600))) return { error: "Too many signup attempts. Please try again later." };
   const username = String(formData.get("username") || "").trim().toLowerCase();
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  const password = String(formData.get("password") || "").slice(0, 128);
-  const confirm = String(formData.get("confirm") || "").slice(0, 128);
-  const displayName = boundedString(formData.get("displayName"), 80);
+  const password = String(formData.get("password") || "");
+  const confirm = String(formData.get("confirm") || "");
+  const displayName = String(formData.get("displayName") || "").trim();
   const mathFirstRaw = String(formData.get("mathFirst") || "");
   const mathSecondRaw = String(formData.get("mathSecond") || "");
   const mathAnswerRaw = String(formData.get("mathAnswer") || "");
@@ -132,7 +130,12 @@ export async function signupAction(
     createdAt: new Date(),
   });
 
-  const verifyUrl = `${getAppOrigin(await headers())}/verify-email?token=${encodeURIComponent(token)}`;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  const proto =
+    h.get("x-forwarded-proto") ||
+    (process.env.NODE_ENV === "production" ? "https" : "http");
+  const verifyUrl = `${proto}://${host}/verify-email?token=${token}`;
 
   try {
     await sendVerificationEmail(user.email, verifyUrl);
@@ -147,10 +150,8 @@ export async function verifyEmailAction(
   token: string
 ): Promise<ActionResult> {
   const db = getDb();
-  const normalizedToken = boundedString(token, 64);
-  if (!/^[a-f\d]{64}$/i.test(normalizedToken)) return { error: "This verification link is invalid or has expired." };
-  const doc = await db.collection("emailVerificationTokens").findOne({ token: normalizedToken, expiresAt: { $gt: new Date() } });
-  if (!doc)
+  const doc = await db.collection("emailVerificationTokens").findOne({ token });
+  if (!doc || new Date(doc.expiresAt).getTime() < Date.now())
     return { error: "This verification link is invalid or has expired." };
 
   const user = await db.collection("users").findOne({ _id: doc.userId });
@@ -169,7 +170,6 @@ export async function resendVerificationAction(
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  if (!(await consumeRateLimit("verification-resend", getRequestSubject(await headers()), 5, 3600))) return { ok: true };
   const email = String(formData.get("email") || "").trim().toLowerCase();
   if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email." };
 
@@ -194,7 +194,12 @@ export async function resendVerificationAction(
         createdAt: new Date(),
       });
 
-      const verifyUrl = `${getAppOrigin(await headers())}/verify-email?token=${encodeURIComponent(token)}`;
+      const h = await headers();
+      const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+      const proto =
+        h.get("x-forwarded-proto") ||
+        (process.env.NODE_ENV === "production" ? "https" : "http");
+      const verifyUrl = `${proto}://${host}/verify-email?token=${token}`;
 
       try {
         await sendVerificationEmail(user.email, verifyUrl);
@@ -212,9 +217,8 @@ export async function loginAction(
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  if (!(await consumeRateLimit("login", getRequestSubject(await headers()), 10, 900))) return { error: "Too many login attempts. Please try again later." };
   const identifier = String(formData.get("identifier") || "").trim().toLowerCase();
-  const password = String(formData.get("password") || "").slice(0, 128);
+  const password = String(formData.get("password") || "");
   if (!identifier || !password) return { error: "All fields are required." };
   const db = getDb();
   const user = await db
@@ -240,7 +244,6 @@ export async function requestPasswordResetAction(
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  if (!(await consumeRateLimit("password-reset", getRequestSubject(await headers()), 5, 3600))) return { ok: true };
   const email = String(formData.get("email") || "").trim().toLowerCase();
   if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email." };
 
@@ -265,7 +268,12 @@ export async function requestPasswordResetAction(
         createdAt: new Date(),
       });
 
-      const resetUrl = `${getAppOrigin(await headers())}/reset-password?token=${encodeURIComponent(token)}`;
+      const h = await headers();
+      const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+      const proto =
+        h.get("x-forwarded-proto") ||
+        (process.env.NODE_ENV === "production" ? "https" : "http");
+      const resetUrl = `${proto}://${host}/reset-password?token=${token}`;
 
       try {
         await sendPasswordResetEmail(user.email, resetUrl);
@@ -284,17 +292,15 @@ export async function resetPasswordAction(
   formData: FormData
 ): Promise<ActionResult> {
   const token = String(formData.get("token") || "").trim();
-  const password = String(formData.get("password") || "").slice(0, 128);
-  const confirm = String(formData.get("confirm") || "").slice(0, 128);
+  const password = String(formData.get("password") || "");
+  const confirm = String(formData.get("confirm") || "");
   if (!token) return { error: "This reset link is invalid or has expired." };
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
   if (password !== confirm) return { error: "Passwords do not match." };
 
   const db = getDb();
-  const normalizedToken = boundedString(token, 64);
-  if (!/^[a-f\d]{64}$/i.test(normalizedToken)) return { error: "This reset link is invalid or has expired." };
-  const doc = await db.collection("passwordResetTokens").findOne({ token: normalizedToken, expiresAt: { $gt: new Date() } });
-  if (!doc)
+  const doc = await db.collection("passwordResetTokens").findOne({ token });
+  if (!doc || new Date(doc.expiresAt).getTime() < Date.now())
     return { error: "This reset link is invalid or has expired. Please request a new one." };
 
   const user = await db.collection("users").findOne({ _id: doc.userId });
@@ -336,18 +342,17 @@ export async function updateProfileAction(
   const user = await requireUser();
   const patch: Record<string, unknown> = {};
   for (const f of PROFILE_FIELDS) {
-    patch[f] = boundedString(formData.get(f), 2000);
+    patch[f] = String(formData.get(f) || "").trim();
   }
-  patch.interests = boundedString(formData.get("interests"), 500)
+  patch.interests = String(formData.get("interests") || "")
     .split(",")
-    .map((s) => s.trim().toLowerCase().slice(0, 40))
-    .filter(Boolean)
-    .slice(0, 30);
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
 
   patch.isPrivate = formData.get("isPrivate") === "on";
   patch.hideFromSearch = formData.get("hideFromSearch") === "on";
-  patch.whoCanMessage = safeEnum(formData.get("whoCanMessage"), ["everyone", "friends", "nobody"] as const, "everyone");
-  patch.whoCanFriendRequest = safeEnum(formData.get("whoCanFriendRequest"), ["everyone", "nobody"] as const, "everyone");
+  patch.whoCanMessage = String(formData.get("whoCanMessage") || "everyone");
+  patch.whoCanFriendRequest = String(formData.get("whoCanFriendRequest") || "everyone");
 
   await getDb().collection("users").updateOne({ _id: user._id }, { $set: patch });
   revalidatePath(`/${user.username}`);
@@ -360,7 +365,7 @@ export async function uploadPhotoAction(formData: FormData): Promise<ActionResul
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) return { error: "No file selected." };
   if (file.size > 3 * 1024 * 1024) return { error: "Image must be under 3MB." };
-  if (!isSafeRasterImage(file.type, Buffer.from(await file.arrayBuffer()))) return { error: "Please upload a JPG, PNG, GIF, or WebP image." };
+  if (!file.type.startsWith("image/")) return { error: "Please upload an image file." };
   const buf = Buffer.from(await file.arrayBuffer());
   let uploaded;
   try {
@@ -405,18 +410,14 @@ export async function removePhotoAction(): Promise<ActionResult> {
 
 export async function updateThemeAction(formData: FormData): Promise<{ ok?: boolean; error?: string }> {
   const user = await requireUser();
-  const youtubeUrl = boundedString(formData.get("youtubeUrl"), 500);
+  const youtubeUrl = String(formData.get("youtubeUrl") || "").trim().slice(0, 500);
   const youtubeVideoId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : "";
   if (youtubeUrl && !youtubeVideoId) {
     return { error: "Please enter a valid YouTube video link." };
   }
   const theme = {
-    border: /^#[0-9a-f]{6}$/i.test(String(formData.get("border") || ""))
-      ? String(formData.get("border"))
-      : "#6699cc",
-    customCss: boundedString(formData.get("customCss"), 12000)
-      .replace(/<\/style/gi, "")
-      .replace(/@import/gi, ""),
+    border: String(formData.get("border") || "#6699cc"),
+    customCss: String(formData.get("customCss") || "").trim().slice(0, 12000),
     youtubeVideoId,
   };
   await getDb().collection("users").updateOne({ _id: user._id }, { $set: { theme } });
@@ -433,8 +434,8 @@ export async function updatePrivacyAction(formData: FormData): Promise<void> {
       $set: {
         isPrivate: formData.get("isPrivate") === "on",
         hideFromSearch: formData.get("hideFromSearch") === "on",
-        whoCanMessage: safeEnum(formData.get("whoCanMessage"), ["everyone", "friends", "nobody"] as const, "everyone"),
-        whoCanFriendRequest: safeEnum(formData.get("whoCanFriendRequest"), ["everyone", "nobody"] as const, "everyone"),
+        whoCanMessage: String(formData.get("whoCanMessage") || "everyone"),
+        whoCanFriendRequest: String(formData.get("whoCanFriendRequest") || "everyone"),
       },
     }
   );
@@ -459,24 +460,22 @@ export async function sendFriendRequestAction(targetId: string): Promise<ActionR
   const user = await requireUser();
   if (user._id.toString() === targetId) return { error: "You cannot add yourself." };
   const db = getDb();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  const target = await db.collection("users").findOne({ _id: targetObjectId });
+  const target = await db.collection("users").findOne({ _id: new ObjectId(targetId) });
   if (!target) return { error: "User not found." };
   if (await isBlocked(targetId, user._id.toString())) return { error: "You are blocked by this user." };
   if (target.whoCanFriendRequest === "nobody")
     return { error: "This user is not accepting friend requests." };
   const existing = await db.collection("friendships").findOne({
     $or: [
-      { requesterId: user._id, addresseeId: targetObjectId },
-      { requesterId: targetObjectId, addresseeId: user._id },
+      { requesterId: user._id, addresseeId: new ObjectId(targetId) },
+      { requesterId: new ObjectId(targetId), addresseeId: user._id },
     ],
   });
   if (existing)
     return { error: existing.status === "pending" ? "Request already pending." : "You are already friends." };
   await db.collection("friendships").insertOne({
     requesterId: user._id,
-    addresseeId: targetObjectId,
+    addresseeId: new ObjectId(targetId),
     status: "pending",
     createdAt: new Date(),
     respondedAt: null,
@@ -498,11 +497,9 @@ export async function respondFriendRequestAction(
   accept: boolean
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const friendshipObjectId = safeObjectId(friendshipId);
-  if (!friendshipObjectId) return { error: "Request not found." };
   const db = getDb();
   const f = await db.collection("friendships").findOne({
-    _id: friendshipObjectId,
+    _id: new ObjectId(friendshipId),
     addresseeId: user._id,
     status: "pending",
   });
@@ -527,11 +524,9 @@ export async function respondFriendRequestAction(
 
 export async function removeFriendAction(friendshipId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const friendshipObjectId = safeObjectId(friendshipId);
-  if (!friendshipObjectId) return { error: "Friendship not found." };
   const db = getDb();
   const f = await db.collection("friendships").findOne({
-    _id: friendshipObjectId,
+    _id: new ObjectId(friendshipId),
     status: "approved",
     $or: [{ requesterId: user._id }, { addresseeId: user._id }],
   });
@@ -549,14 +544,12 @@ export async function sendMessageAction(
   formData: FormData
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
-  const subject = boundedString(formData.get("subject"), 200);
+  const body = String(formData.get("body") || "").trim();
+  const subject = String(formData.get("subject") || "").trim();
   if (!body) return { error: "Message cannot be empty." };
   if (user._id.toString() === recipientId) return { error: "You cannot message yourself." };
   const db = getDb();
-  const recipientObjectId = safeObjectId(recipientId);
-  if (!recipientObjectId) return { error: "User not found." };
-  const recipient = await db.collection("users").findOne({ _id: recipientObjectId });
+  const recipient = await db.collection("users").findOne({ _id: new ObjectId(recipientId) });
   if (!recipient) return { error: "User not found." };
   const canMessage =
     recipient.whoCanMessage === "everyone" ||
@@ -565,7 +558,7 @@ export async function sendMessageAction(
   if (await isBlocked(recipientId, user._id.toString())) return { error: "You are blocked by this user." };
   await db.collection("messages").insertOne({
     senderId: user._id,
-    recipientId: recipientObjectId,
+    recipientId: new ObjectId(recipientId),
     subject,
     body,
     read: false,
@@ -585,22 +578,18 @@ export async function sendMessageAction(
 
 export async function markMessageReadAction(messageId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const messageObjectId = safeObjectId(messageId);
-  if (!messageObjectId) return { error: "Message not found." };
   await getDb()
     .collection("messages")
-    .updateOne({ _id: messageObjectId, recipientId: user._id }, { $set: { read: true } });
+    .updateOne({ _id: new ObjectId(messageId), recipientId: user._id }, { $set: { read: true } });
   revalidatePath("/messages");
   return { ok: true };
 }
 
 export async function deleteMessageAction(messageId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const messageObjectId = safeObjectId(messageId);
-  if (!messageObjectId) return { error: "Message not found." };
   await getDb()
     .collection("messages")
-    .deleteOne({ _id: messageObjectId, $or: [{ senderId: user._id }, { recipientId: user._id }] });
+    .deleteOne({ _id: new ObjectId(messageId), $or: [{ senderId: user._id }, { recipientId: user._id }] });
   revalidatePath("/messages");
   return { ok: true };
 }
@@ -613,19 +602,17 @@ export async function writeTestimonialAction(
   formData: FormData
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
+  const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Testimonial cannot be empty." };
   const db = getDb();
-  const profileObjectId = safeObjectId(profileId);
-  if (!profileObjectId) return { error: "User not found." };
-  const profile = await db.collection("users").findOne({ _id: profileObjectId });
+  const profile = await db.collection("users").findOne({ _id: new ObjectId(profileId) });
   if (!profile) return { error: "User not found." };
   if (await isBlocked(profileId, user._id.toString())) return { error: "You are blocked by this user." };
   const isOwner = profile._id.toString() === user._id.toString();
   const status = isOwner ? "approved" : "pending";
   await db.collection("testimonials").insertOne({
     authorId: user._id,
-    profileId: profileObjectId,
+    profileId: new ObjectId(profileId),
     body,
     status,
     createdAt: new Date(),
@@ -644,12 +631,10 @@ export async function writeTestimonialAction(
 
 export async function approveTestimonialAction(testimonialId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const testimonialObjectId = safeObjectId(testimonialId);
-  if (!testimonialObjectId) return { error: "Testimonial not found." };
   const db = getDb();
   const t = await db
     .collection("testimonials")
-    .findOne({ _id: testimonialObjectId, profileId: user._id });
+    .findOne({ _id: new ObjectId(testimonialId), profileId: user._id });
   if (!t) return { error: "Testimonial not found." };
   await db.collection("testimonials").updateOne({ _id: t._id }, { $set: { status: "approved" } });
   revalidatePath(`/${user.username}`);
@@ -658,10 +643,8 @@ export async function approveTestimonialAction(testimonialId: string): Promise<A
 
 export async function deleteTestimonialAction(testimonialId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const testimonialObjectId = safeObjectId(testimonialId);
-  if (!testimonialObjectId) return { error: "Testimonial not found." };
   const db = getDb();
-  const t = await db.collection("testimonials").findOne({ _id: testimonialObjectId });
+  const t = await db.collection("testimonials").findOne({ _id: new ObjectId(testimonialId) });
   if (!t) return { error: "Testimonial not found." };
   const isOwner = t.profileId.toString() === user._id.toString();
   const isAuthor = t.authorId.toString() === user._id.toString();
@@ -679,8 +662,8 @@ const BULLETIN_VISIBILITIES: BulletinVisibility[] = ["public", "friends", "priva
 
 export async function createBulletinPostAction(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
-  const visibilityValue = safeEnum(formData.get("visibility"), BULLETIN_VISIBILITIES, "public");
+  const body = String(formData.get("body") || "").trim();
+  const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
   if (!body) return { error: "Your post cannot be empty." };
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
@@ -704,8 +687,8 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   let uploaded: { secure_url: string; public_id: string } | null = null;
   if (file instanceof File && file.size > 0) {
     if (file.size > 3 * 1024 * 1024) return { error: "Image must be under 3MB." };
+    if (!file.type.startsWith("image/")) return { error: "Please upload an image file." };
     const buf = Buffer.from(await file.arrayBuffer());
-    if (!isSafeRasterImage(file.type, buf)) return { error: "Please upload a JPG, PNG, GIF, or WebP image." };
     try {
       uploaded = await uploadImage(buf, `bulletin-posts/${user.username}`);
     } catch (error) {
@@ -744,8 +727,8 @@ export async function updateBulletinPostAction(
   formData: FormData
 ): Promise<ActionResult & { body?: string; visibility?: BulletinVisibility }> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
-  const visibilityValue = safeEnum(formData.get("visibility"), BULLETIN_VISIBILITIES, "public");
+  const body = String(formData.get("body") || "").trim();
+  const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
   if (!body) return { error: "Your post cannot be empty." };
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
@@ -776,7 +759,7 @@ export async function updateBulletinCommentAction(
   formData: FormData
 ): Promise<ActionResult & { body?: string }> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
+  const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Comment cannot be empty." };
   if (body.length > 500) return { error: "Comments must be 500 characters or fewer." };
 
@@ -826,8 +809,6 @@ export async function reactToBulletinPostAction(
   }
   const post = await db.collection("bulletinPosts").findOne({ _id: oid });
   if (!post) return { error: "Post not found." };
-  if (post.visibility === "private" && post.authorId.toString() !== user._id.toString()) return { error: "You cannot react to this post." };
-  if (post.visibility === "friends" && post.authorId.toString() !== user._id.toString() && !(await areFriends(user._id.toString(), post.authorId.toString()))) return { error: "You cannot react to this post." };
   if (!(REACTION_TYPES as readonly string[]).includes(type))
     return { error: "Invalid reaction." };
 
@@ -901,11 +882,11 @@ export async function deleteBulletinPostAction(postId: string): Promise<ActionRe
   const db = getDb();
   const post = await db
     .collection("bulletinPosts")
-    .findOne({ _id: safeObjectId(postId) ?? new ObjectId() });
+    .findOne({ _id: new ObjectId(postId) });
   if (!post) return { error: "Post not found." };
 
   const isAuthor = post.authorId.toString() === user._id.toString();
-  if (!isAuthor && user.role !== "admin")
+  if (!isAuthor && user.username !== "genggengpro")
     return { error: "Not allowed." };
 
   if (post.photoPublicId) {
@@ -924,15 +905,13 @@ export async function createBulletinCommentAction(
   formData: FormData
 ): Promise<ActionResult & { comment?: SerializedBulletinComment }> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
+  const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Comment cannot be empty." };
   if (body.length > 500) return { error: "Comments must be 500 characters or fewer." };
 
   const db = getDb();
-  const post = await db.collection("bulletinPosts").findOne({ _id: safeObjectId(postId) ?? new ObjectId() });
+  const post = await db.collection("bulletinPosts").findOne({ _id: new ObjectId(postId) });
   if (!post) return { error: "Post not found." };
-  if (post.visibility === "private" && post.authorId.toString() !== user._id.toString()) return { error: "You cannot comment on this post." };
-  if (post.visibility === "friends" && post.authorId.toString() !== user._id.toString() && !(await areFriends(user._id.toString(), post.authorId.toString()))) return { error: "You cannot comment on this post." };
 
   const createdAt = new Date();
   const inserted = await db.collection("bulletinComments").insertOne({
@@ -980,13 +959,13 @@ export async function deleteBulletinCommentAction(commentId: string): Promise<Ac
   const db = getDb();
   const comment = await db
     .collection("bulletinComments")
-    .findOne({ _id: safeObjectId(commentId) ?? new ObjectId() });
+    .findOne({ _id: new ObjectId(commentId) });
   if (!comment) return { error: "Comment not found." };
 
   const post = await db.collection("bulletinPosts").findOne({ _id: comment.postId });
   const isCommentAuthor = comment.authorId.toString() === user._id.toString();
   const isPostAuthor = post ? post.authorId.toString() === user._id.toString() : false;
-  if (!isCommentAuthor && !isPostAuthor && user.role !== "admin")
+  if (!isCommentAuthor && !isPostAuthor && user.role !== "admin" && user.username !== "genggengpro")
     return { error: "Not allowed." };
 
   await db.collection("bulletinComments").deleteOne({ _id: comment._id });
@@ -1004,14 +983,12 @@ export async function pokeAction(targetId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (user._id.toString() === targetId) return { error: "You cannot poke yourself." };
   const db = getDb();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  const target = await db.collection("users").findOne({ _id: targetObjectId });
+  const target = await db.collection("users").findOne({ _id: new ObjectId(targetId) });
   if (!target) return { error: "User not found." };
   if (await isBlocked(targetId, user._id.toString())) return { error: "You are blocked by this user." };
   await db.collection("pokes").insertOne({
     fromId: user._id,
-    toId: targetObjectId,
+    toId: new ObjectId(targetId),
     createdAt: new Date(),
   });
   await notify(
@@ -1028,20 +1005,18 @@ export async function pokeAction(targetId: string): Promise<ActionResult> {
 export async function blockUserAction(targetId: string): Promise<ActionResult> {
   const user = await requireUser();
   if (user._id.toString() === targetId) return { error: "You cannot block yourself." };
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
   const db = getDb();
   await db
     .collection("blocks")
     .updateOne(
-      { blockerId: user._id, blockedId: targetObjectId },
-      { $setOnInsert: { blockerId: user._id, blockedId: targetObjectId, createdAt: new Date() } },
+      { blockerId: user._id, blockedId: new ObjectId(targetId) },
+      { $setOnInsert: { blockerId: user._id, blockedId: new ObjectId(targetId), createdAt: new Date() } },
       { upsert: true }
     );
   await db.collection("friendships").deleteMany({
     $or: [
-      { requesterId: user._id, addresseeId: targetObjectId },
-      { requesterId: targetObjectId, addresseeId: user._id },
+      { requesterId: user._id, addresseeId: new ObjectId(targetId) },
+      { requesterId: new ObjectId(targetId), addresseeId: user._id },
     ],
   });
   revalidatePath(`/${targetId}`);
@@ -1051,11 +1026,9 @@ export async function blockUserAction(targetId: string): Promise<ActionResult> {
 
 export async function unblockUserAction(targetId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
   await getDb()
     .collection("blocks")
-    .deleteOne({ blockerId: user._id, blockedId: targetObjectId });
+    .deleteOne({ blockerId: user._id, blockedId: new ObjectId(targetId) });
   revalidatePath(`/${targetId}`);
   return { ok: true };
 }
@@ -1066,12 +1039,10 @@ export async function reportUserAction(
   formData: FormData
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  const reason = boundedString(formData.get("reason"), 1000) || "Reported user";
+  const reason = String(formData.get("reason") || "").trim() || "Reported user";
   await getDb().collection("reports").insertOne({
     reporterId: user._id,
-    reportedId: targetObjectId,
+    reportedId: new ObjectId(targetId),
     type: "user",
     reason,
     status: "open",
@@ -1084,14 +1055,12 @@ export async function reportUserAction(
 
 export async function markNotificationReadAction(notificationId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const notificationObjectId = safeObjectId(notificationId);
-  if (!notificationObjectId) return { error: "Notification not found." };
   const db = getDb();
   const acknowledgedAt = new Date();
   await db
     .collection("notifications")
     .updateOne(
-      { _id: notificationObjectId, userId: user._id },
+      { _id: new ObjectId(notificationId), userId: user._id },
       { $set: { read: true } }
     );
   await db
@@ -1106,19 +1075,14 @@ export async function markNotificationReadAction(notificationId: string): Promis
 
 export async function adminSetBannedAction(targetId: string, banned: boolean): Promise<ActionResult> {
   await requireAdmin();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  await getDb().collection("users").updateOne({ _id: targetObjectId }, { $set: { banned: !!banned } });
+  await getDb().collection("users").updateOne({ _id: new ObjectId(targetId) }, { $set: { banned } });
   revalidatePath("/admin");
   return { ok: true };
 }
 
 export async function adminSetRoleAction(targetId: string, role: string): Promise<ActionResult> {
   await requireAdmin();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  if (role !== "user" && role !== "admin") return { error: "Invalid role." };
-  await getDb().collection("users").updateOne({ _id: targetObjectId }, { $set: { role } });
+  await getDb().collection("users").updateOne({ _id: new ObjectId(targetId) }, { $set: { role } });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -1176,10 +1140,8 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
 
 export async function adminDeleteUserAction(targetId: string): Promise<ActionResult> {
   const admin = await requireAdmin();
-  const targetObjectId = safeObjectId(targetId);
-  if (!targetObjectId) return { error: "User not found." };
-  if (admin._id.toString() === targetObjectId.toString()) return { error: "You cannot delete yourself." };
-  await deleteAllUserData(getDb(), targetObjectId);
+  if (admin._id.toString() === targetId) return { error: "You cannot delete yourself." };
+  await deleteAllUserData(getDb(), new ObjectId(targetId));
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -1248,12 +1210,9 @@ export async function adminReviewReportAction(
   resolution: string
 ): Promise<ActionResult> {
   await requireAdmin();
-  const reportObjectId = safeObjectId(reportId);
-  if (!reportObjectId) return { error: "Report not found." };
-  if (!["open", "resolved", "dismissed"].includes(resolution)) return { error: "Invalid resolution." };
   await getDb()
     .collection("reports")
-    .updateOne({ _id: reportObjectId }, { $set: { status: resolution } });
+    .updateOne({ _id: new ObjectId(reportId) }, { $set: { status: resolution } });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -1266,7 +1225,7 @@ export async function createChatboxAction(
 ): Promise<ActionResult> {
   const user = await requireUser();
   const name = String(formData.get("name") || "").trim();
-  const visibilityValue = safeEnum(formData.get("visibility"), ["public", "friends"] as const, "public");
+  const visibilityValue = String(formData.get("visibility") || "public") as ChatboxVisibility;
   if (!name) return { error: "Please give your chatbox a name." };
   if (name.length > 60) return { error: "Chatbox name must be 60 characters or fewer." };
   if (!["public", "friends"].includes(visibilityValue)) return { error: "Invalid chatbox visibility." };
@@ -1288,13 +1247,11 @@ export async function sendChatboxMessageAction(
   formData: FormData
 ): Promise<ActionResult & { message?: ChatboxMessageCard }> {
   const user = await requireUser();
-  const body = boundedString(formData.get("body"), 2000);
+  const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Message cannot be empty." };
   if (body.length > 2000) return { error: "Message must be 2,000 characters or fewer." };
 
-  const chatboxIdObject = safeObjectId(chatboxId);
-  if (!chatboxIdObject) return { error: "Chatbox not found." };
-  const chatbox = await getChatboxById(chatboxIdObject.toString());
+  const chatbox = await getChatboxById(chatboxId);
   if (!chatbox) return { error: "Chatbox not found." };
   if (!(await canAccessChatbox(chatbox, user._id.toString())))
     return { error: "You don't have access to this chatbox." };
@@ -1315,7 +1272,7 @@ export async function sendChatboxMessageAction(
   if (replyToId) {
     let replyOid: ObjectId | null = null;
     try {
-      replyOid = safeObjectId(replyToId);
+      replyOid = new ObjectId(replyToId);
     } catch {
       replyOid = null;
     }
@@ -1374,11 +1331,9 @@ export async function getChatboxMessagesAction(
 
 export async function deleteChatboxAction(chatboxId: string): Promise<ActionResult> {
   const user = await requireUser();
-  const chatboxIdObject = safeObjectId(chatboxId);
-  if (!chatboxIdObject) return { error: "Chatbox not found." };
-  const chatbox = await getChatboxById(chatboxIdObject.toString());
+  const chatbox = await getChatboxById(chatboxId);
   if (!chatbox) return { error: "Chatbox not found." };
-  if (chatbox.createdBy.toString() !== user._id.toString() && user.role !== "admin")
+  if (chatbox.createdBy.toString() !== user._id.toString() && user.username !== "genggengpro")
     return { error: "Not allowed." };
   await getDb().collection("chatboxes").deleteOne({ _id: chatbox._id });
   await getDb().collection("chatboxMessages").deleteMany({ chatboxId: chatbox._id });
@@ -1392,7 +1347,7 @@ export async function reportBugAction(
   _prev: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  const body = boundedString(formData.get("body"), 2000);
+  const body = String(formData.get("body") || "").trim();
   if (!body) return { error: "Please describe the bug." };
   if (body.length > 2000) return { error: "Bug report must be 2,000 characters or fewer." };
 
@@ -1409,11 +1364,11 @@ export async function reportBugAction(
 
 export async function toggleBugReportDoneAction(reportId: string): Promise<ActionResult> {
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin") return { error: "Not allowed." };
+  if (!user || user.username !== "genggengpro") return { error: "Not allowed." };
   const db = getDb();
   const report = await db
     .collection("bugReports")
-    .findOne({ _id: safeObjectId(reportId) ?? new ObjectId() });
+    .findOne({ _id: new ObjectId(reportId) });
   if (!report) return { error: "Report not found." };
   await db
     .collection("bugReports")
@@ -1424,10 +1379,10 @@ export async function toggleBugReportDoneAction(reportId: string): Promise<Actio
 
 export async function deleteBugReportAction(reportId: string): Promise<ActionResult> {
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin") return { error: "Not allowed." };
+  if (!user || user.username !== "genggengpro") return { error: "Not allowed." };
   await getDb()
     .collection("bugReports")
-    .deleteOne({ _id: safeObjectId(reportId) ?? new ObjectId() });
+    .deleteOne({ _id: new ObjectId(reportId) });
   revalidatePath("/report-bug");
   return { ok: true };
 }
