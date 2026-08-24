@@ -18,6 +18,7 @@ import ActionButton from "./ActionButton";
 import BulletinCommentForm from "./BulletinCommentForm";
 import BulletinEditForm from "./BulletinEditForm";
 import UserAvatar from "./UserAvatar";
+import LinkedText from "./LinkedText";
 
 const visibilityLabels = {
     public: "public",
@@ -150,14 +151,11 @@ export default function BulletinPostCard({
                             }}
                         />
                     ) : (
-                        <Link
-                            href={`/bulletin/${post._id}`}
-                            className="block no-underline text-inherit"
-                        >
+                        <div className="block text-inherit">
                             <p className="whitespace-pre-wrap text-[12px] mt-1 mb-0">
-                                {postBody}
+                                <LinkedText text={postBody} />
                             </p>
-                        </Link>
+                        </div>
                     )}
                     {post.photo && (
                         <Link
@@ -291,7 +289,7 @@ export default function BulletinPostCard({
                                             <>
                                                 {" "}
                                                 <span className="whitespace-pre-wrap">
-                                                    {comment.body}
+                                                    <LinkedText text={comment.body} />
                                                 </span>
                                             </>
                                         )}
