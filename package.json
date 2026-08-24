@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@next/third-parties": "^16.3.2",
     "@vercel/analytics": "^2.0.1",
     "cloudinary": "^2.10.1",
     "mongodb": "^6.21.0",
