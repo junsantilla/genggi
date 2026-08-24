@@ -3,6 +3,7 @@ import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "@/app/components/Box";
 import NotificationLink from "@/app/components/NotificationLink";
+import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -49,16 +50,12 @@ export default async function NotificationsPage() {
                     className={`border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 ${n.read ? "" : "bg-[#fff7d6]"}`}
                   >
                     <div className="flex ite ms-start gap-2">
-                      {photo ? (
-                        <img
+                      {name ? (
+                        <UserAvatar
                           src={photo}
-                          alt={name || ""}
-                          className="w-6 h-6 object-cover border border-[#6699cc] shrink-0"
+                          alt={name}
+                          className="w-6 h-6 object-cover shrink-0"
                         />
-                      ) : name ? (
-                        <div className="w-6 h-6 bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[9px] text-[#4a76b8] font-bold shrink-0">
-                          {name.charAt(0).toUpperCase()}
-                        </div>
                       ) : null}
                       <div className="min-w-0">
                         <NotificationLink

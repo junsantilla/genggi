@@ -5,6 +5,7 @@ import { timeAgo } from "@/lib/utils";
 import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
 import Box from "@/app/components/Box";
+import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function MessagesPage({
   searchParams,
@@ -92,17 +93,11 @@ export default async function MessagesPage({
                   className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 no-underline"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    {photoOf(otherId) ? (
-                      <img
-                        src={photoOf(otherId)!}
-                        alt={nameOf(otherId)}
-                        className="w-8 h-8 object-cover border border-[#6699cc] shrink-0"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[10px] text-[#4a76b8] font-bold shrink-0">
-                        {nameOf(otherId).charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <UserAvatar
+                      src={photoOf(otherId)}
+                      alt={nameOf(otherId)}
+                      className="w-8 h-8 object-cover shrink-0"
+                    />
                     <span className="text-[#003399] font-bold shrink-0">{nameOf(otherId)}</span>
                     <span className="text-gray-500 text-[12px] truncate">
                       {lastFromMe ? "You: " : ""}

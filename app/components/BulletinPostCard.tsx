@@ -17,6 +17,7 @@ import { timeAgo } from "@/lib/utils";
 import ActionButton from "./ActionButton";
 import BulletinCommentForm from "./BulletinCommentForm";
 import BulletinEditForm from "./BulletinEditForm";
+import UserAvatar from "./UserAvatar";
 
 const visibilityLabels = {
     public: "public",
@@ -77,16 +78,11 @@ export default function BulletinPostCard({
                     href={`/${post.author.username}`}
                     className="shrink-0 block"
                 >
-                    {post.author.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={post.author.photo}
-                            alt={post.author.displayName}
-                            className="w-[44px] h-[44px] object-cover border border-[#cc99cc]"
-                        />
-                    ) : (
-                        <div className="friend-thumb-bg w-[44px] h-[44px] border border-[#cc99cc]"></div>
-                    )}
+                    <UserAvatar
+                        src={post.author.photo}
+                        alt={post.author.displayName}
+                        className="w-[44px] h-[44px] object-cover"
+                    />
                 </Link>
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start justify-between gap-x-2">
@@ -172,7 +168,7 @@ export default function BulletinPostCard({
                             <img
                                 src={post.photo}
                                 alt="Post photo"
-                                className="w-full border border-[#99bbdd]"
+                                className="w-full"
                             />
                         </Link>
                     )}

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "@/app/components/Box";
+import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function MembersPage() {
   const currentUser = await getCurrentUser();
@@ -35,16 +36,11 @@ export default async function MembersPage() {
                   className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
                 >
                   <Link href={`/${user.username}`} className="flex shrink-0">
-                    {user.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.photo}
-                        alt={user.displayName}
-                        className="w-14 h-14 object-cover border border-[#cc99cc]"
-                      />
-                    ) : (
-                      <div className="friend-thumb-bg w-14 h-14 border border-[#cc99cc]"></div>
-                    )}
+                    <UserAvatar
+                      src={user.photo}
+                      alt={user.displayName}
+                      className="w-14 h-14 object-cover"
+                    />
                   </Link>
                   <div className="min-w-0">
                     <Link

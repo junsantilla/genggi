@@ -6,6 +6,7 @@ import { getFriendshipStatus } from "@/lib/queries";
 import { sendFriendRequestAction } from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
+import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function SearchPage({
   searchParams,
@@ -81,12 +82,11 @@ export default async function SearchPage({
               <div key={r._id.toString()} className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0">
                 <div className="flex items-center gap-2">
                   <Link href={`/${r.username}`} className="flex shrink-0">
-                    {r.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.photo} alt={r.displayName} className="w-9 h-9 object-cover border border-[#cc99cc]" />
-                    ) : (
-                      <div className="friend-thumb-bg w-9 h-9 border border-[#cc99cc]"></div>
-                    )}
+                    <UserAvatar
+                      src={r.photo}
+                      alt={r.displayName}
+                      className="w-9 h-9 object-cover"
+                    />
                   </Link>
                   <div>
                     <Link href={`/${r.username}`} className="text-[#003399] font-bold no-underline">

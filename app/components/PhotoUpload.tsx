@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { uploadPhotoAction, removePhotoAction } from "@/app/actions";
+import UserAvatar from "./UserAvatar";
 
 const MAX_SIZE = 3 * 1024 * 1024;
 
@@ -84,12 +85,19 @@ export default function PhotoUpload({
               <img
                 src={shown}
                 alt={preview ? "New photo preview" : "Current profile photo"}
-                className="w-[140px] h-[140px] object-cover border-2 border-[#6699cc] hover:opacity-80"
+                className="w-[140px] h-[140px] object-cover hover:opacity-80"
               />
             ) : (
-              <div className="friend-thumb-bg w-[140px] h-[140px] border-2 border-[#6699cc] flex flex-col items-center justify-center gap-1.5 text-[11px] font-bold text-[#2c4d80]">
-                <span>No photo yet</span>
-                <span className="btn">Add a Photo</span>
+              <div className="relative w-[140px] h-[140px] overflow-hidden">
+                <UserAvatar
+                  src={null}
+                  alt="No profile photo"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="relative z-10 flex h-full flex-col items-center justify-center gap-1.5 bg-white/45 text-[11px] font-bold text-[#2c4d80]">
+                  <span>No photo yet</span>
+                  <span className="btn">Add a Photo</span>
+                </div>
               </div>
             )}
           </button>

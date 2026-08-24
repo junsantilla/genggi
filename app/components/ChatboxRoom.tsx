@@ -8,6 +8,7 @@ import {
 } from "@/app/actions";
 import type { ChatboxMessageCard } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import UserAvatar from "./UserAvatar";
 
 function Avatar({
     photo,
@@ -18,23 +19,12 @@ function Avatar({
     name: string;
     size?: string;
 }) {
-    if (photo) {
-        return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-                src={photo}
-                alt={name}
-                className={`${size} object-cover border border-[#6699cc] shrink-0`}
-            />
-        );
-    }
-
     return (
-        <div
-            className={`${size} bg-[#e8e0f0] border border-[#6699cc] flex items-center justify-center text-[#4a76b8] font-bold shrink-0`}
-        >
-            {name.charAt(0).toUpperCase()}
-        </div>
+        <UserAvatar
+            src={photo}
+            alt={name}
+            className={`${size} object-cover shrink-0`}
+        />
     );
 }
 
