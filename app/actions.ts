@@ -17,7 +17,7 @@ import {
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
 import { uploadImage, destroyImage } from "@/lib/cloudinary";
-import { sendPasswordResetEmail } from "@/lib/mail";
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
 import {
   canAccessChatbox,
@@ -90,6 +90,7 @@ export async function signupAction(
     passwordHash: hashPassword(password),
     role: "user",
     banned: false,
+    emailVerified: false,
     createdAt: new Date(),
     displayName: displayName || username,
     firstName: displayName || username,
@@ -118,8 +119,98 @@ export async function signupAction(
     whoCanFriendRequest: "everyone",
   };
   const res = await db.collection("users").insertOne(user);
-  await createSession(res.insertedId.toString());
-  redirect(`/${username}`);
+
+  // Create an email verification token and send a confirmation link. The user
+  // cannot log in until they verify their email.
+  const token = randomBytes(32).toString("hex");
+  await db.collection("emailVerificationTokens").insertOne({
+    userId: res.insertedId,
+    token,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    createdAt: new Date(),
+  });
+
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  const proto =
+    h.get("x-forwarded-proto") ||
+    (process.env.NODE_ENV === "production" ? "https" : "http");
+  const verifyUrl = `${proto}://${host}/verify-email?token=${token}`;
+
+  try {
+    await sendVerificationEmail(user.email, verifyUrl);
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+  }
+
+  redirect("/login?signup=1");
+}
+
+export async function verifyEmailAction(
+  token: string
+): Promise<ActionResult> {
+  const db = getDb();
+  const doc = await db.collection("emailVerificationTokens").findOne({ token });
+  if (!doc || new Date(doc.expiresAt).getTime() < Date.now())
+    return { error: "This verification link is invalid or has expired." };
+
+  const user = await db.collection("users").findOne({ _id: doc.userId });
+  if (!user) return { error: "This account is no longer available." };
+
+  await db
+    .collection("users")
+    .updateOne({ _id: user._id }, { $set: { emailVerified: true } });
+  await db
+    .collection("emailVerificationTokens")
+    .deleteMany({ userId: user._id });
+  redirect("/login?verified=1");
+}
+
+export async function resendVerificationAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email." };
+
+  const db = getDb();
+  const user = await db.collection("users").findOne({ email });
+
+  if (user && !user.banned && user.emailVerified === false) {
+    // Only send one verification email per account per minute to avoid flooding.
+    const latest = await db
+      .collection("emailVerificationTokens")
+      .findOne({ userId: user._id }, { sort: { createdAt: -1 } });
+    const lastSentAt = latest ? new Date(latest.createdAt).getTime() : 0;
+    if (Date.now() - lastSentAt >= 60_000) {
+      const token = randomBytes(32).toString("hex");
+      await db
+        .collection("emailVerificationTokens")
+        .deleteMany({ userId: user._id });
+      await db.collection("emailVerificationTokens").insertOne({
+        userId: user._id,
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+      });
+
+      const h = await headers();
+      const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+      const proto =
+        h.get("x-forwarded-proto") ||
+        (process.env.NODE_ENV === "production" ? "https" : "http");
+      const verifyUrl = `${proto}://${host}/verify-email?token=${token}`;
+
+      try {
+        await sendVerificationEmail(user.email, verifyUrl);
+      } catch (error) {
+        console.error("Failed to send verification email:", error);
+      }
+    }
+  }
+
+  // Always return success so the form doesn't reveal whether an account exists.
+  return { ok: true };
 }
 
 export async function loginAction(
@@ -136,6 +227,8 @@ export async function loginAction(
   if (!user || !verifyPassword(password, user.passwordHash))
     return { error: "Invalid username/email or password." };
   if (user.banned) return { error: "This account has been suspended." };
+  if (user.emailVerified === false)
+    return { error: "Please verify your email before logging in. Check your inbox for the confirmation link." };
   await createSession(user._id.toString());
   redirect("/");
 }
@@ -945,6 +1038,7 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
       .filter((p) => p.photoPublicId)
       .map((p) => destroyImage(p.photoPublicId as string).catch(() => {})),
     db.collection("sessions").deleteMany({ userId: oid }),
+    db.collection("emailVerificationTokens").deleteMany({ userId: oid }),
     db
       .collection("friendships")
       .deleteMany({ $or: [{ requesterId: oid }, { addresseeId: oid }] }),

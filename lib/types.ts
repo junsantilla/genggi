@@ -15,6 +15,7 @@ export interface User {
   passwordHash: string;
   role: Role;
   banned: boolean;
+  emailVerified?: boolean;
   createdAt: Date;
 
   displayName: string;

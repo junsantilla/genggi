@@ -7,12 +7,12 @@ import AuthForm from "@/app/components/AuthForm";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>;
+  searchParams: Promise<{ reset?: string; signup?: string; verified?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect("/");
 
-  const { reset } = await searchParams;
+  const { reset, signup, verified } = await searchParams;
 
   return (
     <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
@@ -26,6 +26,23 @@ export default async function LoginPage({
             role="status"
           >
             Password reset! You can now log in with your new password.
+          </div>
+        )}
+        {signup === "1" && (
+          <div
+            className="text-green-700 bg-green-50 border border-green-200 px-2 py-2 text-[12px] font-bold mb-3"
+            role="status"
+          >
+            Account created! Check your email (and spam folder) to confirm
+            your address before logging in.
+          </div>
+        )}
+        {verified === "1" && (
+          <div
+            className="text-green-700 bg-green-50 border border-green-200 px-2 py-2 text-[12px] font-bold mb-3"
+            role="status"
+          >
+            Email verified! You can now log in.
           </div>
         )}
         <AuthForm
