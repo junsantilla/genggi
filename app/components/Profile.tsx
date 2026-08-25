@@ -221,18 +221,6 @@ export default async function Profile({
                                                         </ActionButton>
                                                     </>
                                                 )}
-                                                {friendshipStatus ===
-                                                    "friends" && (
-                                                    <span className="btn w-full text-center opacity-80 cursor-default">
-                                                        Friends{" "}
-                                                        <Link
-                                                            href="/friends"
-                                                            className="text-white underline"
-                                                        >
-                                                            (manage)
-                                                        </Link>
-                                                    </span>
-                                                )}
                                                 <Link
                                                     href={`/messages?to=${user.username}`}
                                                     className="btn w-full text-center no-underline"
