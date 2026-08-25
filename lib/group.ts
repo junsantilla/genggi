@@ -1,6 +1,9 @@
 import { getDb, ObjectId } from "@/lib/db";
 import type { Group, GroupListItem, GroupMember, GroupPost, GroupPostCard, User } from "@/lib/types";
 
+export type MembersCursor = { createdAt: string; _id: string } | null;
+export type MemberListItem = { _id: string; username: string; displayName: string; photo: string | null; location?: string; gender?: string; relationshipStatus?: string; createdAt: string };
+
 type Author = Pick<User, "_id" | "username" | "displayName" | "photo">;
 
 export async function getGroupById(id: string): Promise<Group | null> {
@@ -18,6 +21,16 @@ export async function getGroupMembership(groupId: ObjectId, userId: ObjectId): P
 export async function canAccessGroup(group: Group, userId: string): Promise<boolean> {
   const member = await getGroupMembership(group._id, new ObjectId(userId));
   return member?.status === "approved";
+}
+
+export async function getMembersPage(userId: string | null, cursor: MembersCursor = null) {
+  const filter: Record<string, unknown> = { banned: { $ne: true }, hideFromSearch: { $ne: true } };
+  if (userId) filter._id = { $ne: new ObjectId(userId) };
+  if (cursor) filter.$or = [{ createdAt: { $lt: new Date(cursor.createdAt) } }, { createdAt: new Date(cursor.createdAt), _id: { $lt: new ObjectId(cursor._id) } }];
+  const users = await getDb().collection("users").find(filter).sort({ createdAt: -1, _id: -1 }).limit(30).toArray();
+  const members = users.map((user) => ({ _id: user._id.toString(), username: user.username, displayName: user.displayName, photo: user.photo ?? null, location: user.location, gender: user.gender, relationshipStatus: user.relationshipStatus, createdAt: new Date(user.createdAt).toISOString() }));
+  const last = users.at(-1);
+  return { members, nextCursor: users.length === 30 && last ? { createdAt: new Date(last.createdAt).toISOString(), _id: last._id.toString() } : null };
 }
 
 export async function getGroupsForUser(_userId: string): Promise<GroupListItem[]> {

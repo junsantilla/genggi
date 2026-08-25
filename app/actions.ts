@@ -26,7 +26,7 @@ import {
   toChatboxMessageCard,
 } from "@/lib/chatbox";
 import { getYouTubeVideoId } from "@/lib/utils";
-import { getGroupById, getGroupMembership, canAccessGroup } from "@/lib/group";
+import { getGroupById, getGroupMembership, canAccessGroup, getMembersPage, type MembersCursor } from "@/lib/group";
 import {
   REACTION_TYPES,
   type BulletinReaction,
@@ -656,6 +656,11 @@ export async function deleteTestimonialAction(testimonialId: string): Promise<Ac
   revalidatePath(`/${user.username}`);
   revalidatePath("/admin");
   return { ok: true };
+}
+
+export async function getMoreMembersAction(cursor: MembersCursor): Promise<Awaited<ReturnType<typeof getMembersPage>>> {
+  const user = await getCurrentUser();
+  return getMembersPage(user?._id.toString() ?? null, cursor);
 }
 
 // ---------------------------------------------------------------- Groups
