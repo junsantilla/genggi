@@ -127,7 +127,7 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
                     className="font-bold text-[#2c4d80] text-[13px] mr-auto"
                     title={videoTitle ?? "Profile music"}
                 >
-                    🎵{" "}
+                    {" "}
                     {videoTitle ? truncateTitle(videoTitle) : "Profile music"}
                 </span>
                 {playing ? (

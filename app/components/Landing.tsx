@@ -9,8 +9,8 @@ const FEATURES = [
     ["💬", "Messages", "Inbox & threads"],
     ["⭐", "Testimonials", "Write & approve"],
     ["🎨", "Customize", "Colors & profile"],
-    ["👉", "Pokes", "Get their attention"],
-    ["📌", "Bulletin Board", "Public posts & friends"],
+    ["", "Pokes", "Get their attention"],
+    ["", "Bulletin Board", "Public posts & friends"],
 ];
 
 export default function Landing({ border = "#6699cc" }: { border?: string }) {
@@ -55,11 +55,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                             </div>
 
                             {/* Features */}
-                            <Box
-                                title="✨ Features"
-                                border={border}
-                                bg="#f5f9ff"
-                            >
+                            <Box title="Features" border={border} bg="#f5f9ff">
                                 <div className="grid grid-cols-2 gap-2.5 mb-0.5">
                                     {FEATURES.map(([icon, title, desc]) => (
                                         <div
@@ -84,7 +80,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                         {/* Sign up form */}
                         <div className="w-full sm:w-2/5 p-2.5 sm:pl-[5px]">
                             <Box
-                                title="✨ Create your account"
+                                title="Create your account"
                                 border={border}
                                 bg="#f5f9ff"
                             >
