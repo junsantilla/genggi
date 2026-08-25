@@ -29,7 +29,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                             alt="genggeng"
                             className="h-10 w-10 object-cover rounded"
                         />
-                        <span className="font-bold text-xl sm:text-2xl tracking-tight">
+                        <span className="font-bold text-xl sm:text-xl tracking-tight">
                             genggeng<span className="text-[#ffde00]">.pro</span>
                         </span>
                     </Link>
@@ -40,41 +40,18 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
             {/* Main: welcome + features on the left, sign up on the right, vertically centered */}
             <div className="flex-1 flex items-center py-2">
                 <div className="max-w-[960px] w-full mx-auto">
-                    <div className="flex flex-wrap w-full">
+                    <div className="flex flex-wrap w-full items-center">
                         <div className="w-full sm:w-3/5 p-2.5 sm:pr-[5px]">
-                            {/* Welcome note */}
-                            <div className="border border-[#6699cc] bg-[#DBE9F7] p-2.5 mb-2.5">
-                                <h1 className="font-['Comic_Sans_MS',cursive,sans-serif] text-2xl sm:text-3xl m-0 mb-1 tracking-tight text-[#2c4d80]">
-                                    Welcome to genggeng
-                                    <span className="text-[#cc3399]">.pro</span>
+                            <div className="p-2.5 mb-2.5 mr-10">
+                                <h1 className="text-2xl font-bold sm:text-4xl m-0 mb-1 tracking-tight text-[#2c4d80]">
+                                    Your social profile
                                 </h1>
-                                <p className="text-[13px] leading-relaxed text-gray-700 m-0">
-                                    A fun little social network for nostalgic
-                                    vibes, old memories, and new friends.
+                                <p className="text-lg leading-relaxed text-gray-700 m-0">
+                                    Create a profile that feels like you.
+                                    Customize your space, express your identity,
+                                    and connect with people your way.
                                 </p>
                             </div>
-
-                            {/* Features */}
-                            <Box title="Features" border={border} bg="#f5f9ff">
-                                <div className="grid grid-cols-2 gap-2.5 mb-0.5">
-                                    {FEATURES.map(([icon, title, desc]) => (
-                                        <div
-                                            key={title}
-                                            className="border border-[#6699cc] p-2.5 text-center bg-[#DBE9F7]"
-                                        >
-                                            <div className="text-2xl">
-                                                {icon}
-                                            </div>
-                                            <div className="font-bold text-[#2c4d80] text-[13px]">
-                                                {title}
-                                            </div>
-                                            <div className="text-gray-500 text-[11px]">
-                                                {desc}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </Box>
                         </div>
 
                         {/* Sign up form */}
