@@ -50,6 +50,59 @@ export interface User {
 }
 
 export type BulletinVisibility = "public" | "friends" | "private";
+export type GroupPrivacy = "public" | "private";
+export type GroupMemberStatus = "pending" | "approved";
+
+export interface Group {
+  _id: ObjectId;
+  name: string;
+  privacy: GroupPrivacy;
+  photo: string | null;
+  photoPublicId?: string | null;
+  ownerId: ObjectId;
+  createdAt: Date;
+}
+
+export interface GroupMember {
+  _id: ObjectId;
+  groupId: ObjectId;
+  userId: ObjectId;
+  status: GroupMemberStatus;
+  createdAt: Date;
+}
+
+export interface GroupListItem {
+  _id: string;
+  name: string;
+  privacy: GroupPrivacy;
+  photo: string | null;
+  ownerId: string;
+  createdAt: Date | string;
+}
+
+export interface GroupPost {
+  _id: ObjectId;
+  groupId: ObjectId;
+  authorId: ObjectId;
+  body: string;
+  photo?: string | null;
+  photoPublicId?: string | null;
+  createdAt: Date;
+}
+
+export interface GroupPostCard {
+  _id: string;
+  groupId: string;
+  authorId: string;
+  body: string;
+  photo?: string | null;
+  photoPublicId?: string | null;
+  createdAt: string;
+  author: { _id: string; username: string; displayName: string; photo: string | null };
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
+  comments: BulletinCommentCard[];
+}
 
 export interface BulletinPost {
   _id: ObjectId;

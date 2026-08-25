@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getMoreBulletinPostsAction } from "@/app/actions";
 import type { SerializedBulletinPost } from "@/lib/types";
 import Box from "./Box";
-import BulletinPostCard from "./BulletinPostCard";
+import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
 
 export default function BulletinFeed({
@@ -74,7 +74,7 @@ export default function BulletinFeed({
       ) : (
         <div>
           {posts.map((post) => (
-            <BulletinPostCard
+            <PostCard
               key={post._id}
               post={post}
               currentUserId={currentUserId}

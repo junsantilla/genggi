@@ -1,7 +1,7 @@
 import { toBulletinPostCard } from "@/lib/bulletin";
 import type { BulletinPostWithComments } from "@/lib/types";
 import Box from "./Box";
-import BulletinPostCard from "./BulletinPostCard";
+import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
 
 export default function BulletinBoard({
@@ -31,11 +31,12 @@ export default function BulletinBoard({
       ) : (
         <div>
           {posts.map((post) => (
-            <BulletinPostCard
+            <PostCard
               key={post._id.toString()}
               post={toBulletinPostCard(post)}
               currentUserId={currentUserId}
               currentUsername={currentUsername}
+
             />
           ))}
         </div>
