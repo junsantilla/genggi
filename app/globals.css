@@ -87,6 +87,7 @@ main:has(.landing-page) {
     cursor: pointer;
     border-radius: 0;
     text-align: center;
+    min-height: 32px;
 }
 .btn:hover {
     background: #4a76b8;
@@ -120,6 +121,9 @@ main:has(.landing-page) {
 }
 
 /* Style the native file input's "Choose File" button to match .btn */
+.input {
+    min-height: 32px;
+}
 input[type="file"].btn-file {
     font-size: 12px;
     color: #2c4d80;
