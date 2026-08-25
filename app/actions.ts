@@ -26,6 +26,7 @@ import {
   toChatboxMessageCard,
 } from "@/lib/chatbox";
 import { getYouTubeVideoId } from "@/lib/utils";
+import { getGroupById, getGroupMembership, canAccessGroup } from "@/lib/group";
 import {
   REACTION_TYPES,
   type BulletinReaction,
@@ -38,6 +39,7 @@ import {
   type ChatboxReplyRef,
   type ChatboxVisibility,
   type User,
+  type GroupPrivacy,
 } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string };
@@ -656,6 +658,202 @@ export async function deleteTestimonialAction(testimonialId: string): Promise<Ac
   return { ok: true };
 }
 
+// ---------------------------------------------------------------- Groups
+
+export async function createGroupAction(formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const name = String(formData.get("name") || "").trim();
+  const privacy = String(formData.get("privacy") || "public") as GroupPrivacy;
+  if (!name) return { error: "Group name is required." };
+  if (name.length > 80) return { error: "Group name must be 80 characters or fewer." };
+  if (!["public", "private"].includes(privacy)) return { error: "Invalid group privacy." };
+  const file = formData.get("photo");
+  let photo: { secure_url: string; public_id: string } | null = null;
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 3 * 1024 * 1024 || !file.type.startsWith("image/")) return { error: "Please upload an image under 3MB." };
+    photo = await uploadImage(Buffer.from(await file.arrayBuffer()), `groups/${user.username}`);
+  }
+  const db = getDb();
+  const groupId = new ObjectId();
+  await db.collection("groups").insertOne({ _id: groupId, name, privacy, photo: photo?.secure_url ?? null, photoPublicId: photo?.public_id ?? null, ownerId: user._id, createdAt: new Date() });
+  await db.collection("groupMembers").insertOne({ groupId, userId: user._id, status: "approved", createdAt: new Date() });
+  revalidatePath("/groups");
+  return { ok: true };
+}
+
+export async function deleteGroupAction(groupId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group) return { error: "Group not found." };
+  if (group.ownerId.toString() !== user._id.toString()) return { error: "Only the group creator can delete this group." };
+
+  const db = getDb();
+  const posts = await db.collection("groupPosts").find({ groupId: group._id }).project({ _id: 1, photoPublicId: 1 }).toArray();
+  if (group.photoPublicId) await destroyImage(group.photoPublicId).catch(() => {});
+  await Promise.all(posts.map((post) => post.photoPublicId ? destroyImage(String(post.photoPublicId)).catch(() => {}) : Promise.resolve()));
+  await db.collection("groups").deleteOne({ _id: group._id, ownerId: user._id });
+  await Promise.all([
+    db.collection("groupMembers").deleteMany({ groupId: group._id }),
+    db.collection("groupPosts").deleteMany({ groupId: group._id }),
+    db.collection("groupComments").deleteMany({ groupId: group._id }),
+    db.collection("groupReactions").deleteMany({ groupId: group._id }),
+  ]);
+  revalidatePath("/groups");
+  redirect("/groups");
+}
+
+export async function requestGroupJoinAction(groupId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group) return { error: "Group not found." };
+  if (group.privacy === "public") {
+    await getDb().collection("groupMembers").updateOne(
+      { groupId: group._id, userId: user._id },
+      { $set: { status: "approved" }, $setOnInsert: { groupId: group._id, userId: user._id, createdAt: new Date() } },
+      { upsert: true }
+    );
+    revalidatePath(`/groups/${groupId}`);
+    revalidatePath("/groups");
+    return { ok: true };
+  }
+  const db = getDb();
+  const existing = await getGroupMembership(group._id, user._id);
+  if (existing?.status === "approved") return { ok: true };
+  if (existing?.status === "pending") return { error: "Your join request is pending." };
+  await db.collection("groupMembers").insertOne({ groupId: group._id, userId: user._id, status: "pending", createdAt: new Date() });
+  await notify(
+    group.ownerId.toString(),
+    "group_join_request",
+    user._id.toString(),
+    `${user.displayName} requested to join ${group.name}.`,
+    `/groups/${groupId}`
+  );
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function removeGroupMemberAction(groupId: string, memberId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || group.ownerId.toString() !== user._id.toString()) return { error: "Not allowed." };
+  if (memberId === group.ownerId.toString()) return { error: "The group owner cannot be removed." };
+  await getDb().collection("groupMembers").deleteOne({ groupId: group._id, userId: new ObjectId(memberId), status: "approved" });
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/groups");
+  return { ok: true };
+}
+
+export async function reviewGroupJoinAction(groupId: string, memberId: string, approve: boolean): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || group.ownerId.toString() !== user._id.toString()) return { error: "Not allowed." };
+  const db = getDb();
+  await db.collection("groupMembers").updateOne({ groupId: group._id, userId: new ObjectId(memberId), status: "pending" }, { $set: { status: approve ? "approved" : "rejected" } });
+  await notify(
+    memberId,
+    approve ? "group_join_approved" : "group_join_rejected",
+    user._id.toString(),
+    approve ? `Your request to join ${group.name} was approved.` : `Your request to join ${group.name} was declined.`,
+    `/groups/${groupId}`
+  );
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function reactToGroupPostAction(groupId: string, postId: string, type: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || !(await canAccessGroup(group, user._id.toString()))) return { error: "You don't have access to this group." };
+  if (!(REACTION_TYPES as readonly string[]).includes(type)) return { error: "Invalid reaction." };
+  const db = getDb();
+  const oid = new ObjectId(postId);
+  const existing = await db.collection("groupReactions").findOne({ postId: oid, userId: user._id });
+  if (existing?.type === type) await db.collection("groupReactions").deleteOne({ _id: existing._id });
+  else if (existing) await db.collection("groupReactions").updateOne({ _id: existing._id }, { $set: { type } });
+  else await db.collection("groupReactions").insertOne({ postId: oid, groupId: group._id, userId: user._id, type, createdAt: new Date() });
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function updateGroupPostAction(groupId: string, postId: string, formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || !(await canAccessGroup(group, user._id.toString()))) return { error: "Not allowed." };
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Post cannot be empty." };
+  const result = await getDb().collection("groupPosts").updateOne({ _id: new ObjectId(postId), groupId: group._id, authorId: user._id }, { $set: { body } });
+  if (!result.matchedCount) return { error: "Post not found or you don't own it." };
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function deleteGroupPostAction(groupId: string, postId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group) return { error: "Group not found." };
+  const db = getDb();
+  const post = await db.collection("groupPosts").findOne({ _id: new ObjectId(postId), groupId: group._id });
+  if (!post || (post.authorId.toString() !== user._id.toString() && group.ownerId.toString() !== user._id.toString())) return { error: "Not allowed." };
+  await db.collection("groupPosts").deleteOne({ _id: post._id });
+  await db.collection("groupComments").deleteMany({ postId: post._id });
+  await db.collection("groupReactions").deleteMany({ postId: post._id });
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function updateGroupCommentAction(groupId: string, commentId: string, formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || !(await canAccessGroup(group, user._id.toString()))) return { error: "Not allowed." };
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Comment cannot be empty." };
+  const result = await getDb().collection("groupComments").updateOne({ _id: new ObjectId(commentId), groupId: group._id, authorId: user._id }, { $set: { body } });
+  if (!result.matchedCount) return { error: "Comment not found or you don't own it." };
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function deleteGroupCommentAction(groupId: string, commentId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group) return { error: "Group not found." };
+  const comment = await getDb().collection("groupComments").findOne({ _id: new ObjectId(commentId), groupId: group._id });
+  if (!comment || (comment.authorId.toString() !== user._id.toString() && group.ownerId.toString() !== user._id.toString())) return { error: "Not allowed." };
+  await getDb().collection("groupComments").deleteOne({ _id: comment._id });
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function createGroupCommentAction(groupId: string, postId: string, formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || !(await canAccessGroup(group, user._id.toString()))) return { error: "You don't have access to this group." };
+  const body = String(formData.get("body") || "").trim();
+  if (!body) return { error: "Comment cannot be empty." };
+  if (body.length > 500) return { error: "Comments must be 500 characters or fewer." };
+  await getDb().collection("groupComments").insertOne({ groupId: group._id, postId: new ObjectId(postId), authorId: user._id, body, createdAt: new Date() });
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
+export async function createGroupPostAction(groupId: string, formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const group = await getGroupById(groupId);
+  if (!group || !(await canAccessGroup(group, user._id.toString()))) return { error: "You must be an approved member to post." };
+  const body = String(formData.get("body") || "").trim();
+  const file = formData.get("photo");
+  if (!body && !(file instanceof File && file.size > 0)) return { error: "Add text or a photo to your post." };
+  if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
+  let photo: { secure_url: string; public_id: string } | null = null;
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 3 * 1024 * 1024 || !file.type.startsWith("image/")) return { error: "Please upload an image under 3MB." };
+    photo = await uploadImage(Buffer.from(await file.arrayBuffer()), `groups/${group._id}`);
+  }
+  await getDb().collection("groupPosts").insertOne({ groupId: group._id, authorId: user._id, body, photo: photo?.secure_url ?? null, photoPublicId: photo?.public_id ?? null, createdAt: new Date() });
+  revalidatePath(`/groups/${groupId}`);
+  return { ok: true };
+}
+
 // ---------------------------------------------------------------- Bulletin Board
 
 const BULLETIN_VISIBILITIES: BulletinVisibility[] = ["public", "friends", "private"];
@@ -730,7 +928,9 @@ export async function updateBulletinPostAction(
   const user = await requireUser();
   const body = String(formData.get("body") || "").trim();
   const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
-  if (!body) return { error: "Your post cannot be empty." };
+  const file = formData.get("photo");
+  const hasPhoto = file instanceof File && file.size > 0;
+  if (!body && !hasPhoto) return { error: "Add text or a photo to your post." };
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
 
