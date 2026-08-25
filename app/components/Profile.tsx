@@ -217,14 +217,14 @@ export default async function Profile({
                                                             )}
                                                             className="btn w-full"
                                                         >
-                                                            ✓ Accept Request
+                                                            Accept Request
                                                         </ActionButton>
                                                     </>
                                                 )}
                                                 {friendshipStatus ===
                                                     "friends" && (
                                                     <span className="btn w-full text-center opacity-80 cursor-default">
-                                                        ✓ Friends{" "}
+                                                        Friends{" "}
                                                         <Link
                                                             href="/friends"
                                                             className="text-white underline"
@@ -246,7 +246,7 @@ export default async function Profile({
                                                     )}
                                                     className="btn w-full"
                                                 >
-                                                    👉 Poke
+                                                    Poke
                                                 </ActionButton>
                                                 {iBlockedThem ? (
                                                     <ActionButton
@@ -272,7 +272,7 @@ export default async function Profile({
                                                 )}
                                                 <details className="w-full">
                                                     <summary className="btn w-full text-center cursor-pointer list-none">
-                                                        🚩 Report
+                                                        Report
                                                     </summary>
                                                     <div className="mt-1">
                                                         <BoundForm
@@ -297,7 +297,7 @@ export default async function Profile({
                                                     href="/edit"
                                                     className="btn w-full text-center no-underline block"
                                                 >
-                                                    ✏️ Edit Profile
+                                                    Edit Profile
                                                 </Link>
                                             </div>
                                         )}
