@@ -11,6 +11,7 @@ export default function ActionButton({
   confirmText,
   disabled,
   onSuccess,
+  hideError = false,
 }: {
   action: () => Promise<ActionResult | void>;
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export default function ActionButton({
   confirmText?: string;
   disabled?: boolean;
   onSuccess?: () => void;
+  hideError?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -40,7 +42,7 @@ export default function ActionButton({
       >
         {pending ? "..." : children}
       </button>
-      {error && <span className="block text-red-600 text-[11px] mt-0.5">{error}</span>}
+      {error && !hideError && <span className="block text-red-600 text-[11px] mt-0.5">{error}</span>}
     </span>
   );
 }
