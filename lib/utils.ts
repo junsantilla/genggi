@@ -1,3 +1,10 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 export function timeAgo(date: Date | string | number | undefined | null): string {
   if (!date) return "unknown";
   const ms = Date.now() - new Date(date).getTime();
@@ -40,33 +47,39 @@ export function padViews(n: number): string {
   return n.toString().padStart(6, "0");
 }
 
-export function getYouTubeVideoId(value: string): string | null {
-  const input = value.trim();
-  if (!input) return null;
-  try {
-    const url = new URL(input);
-    if (url.protocol !== "https:") return null;
-    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
-    const allowedHosts = new Set(["youtube.com", "youtu.be", "youtube-nocookie.com", "music.youtube.com"]);
-    if (!allowedHosts.has(hostname)) return null;
+const YOUTUBE_VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/
 
-    if (hostname === "youtu.be") {
-      const id = url.pathname.split("/").filter(Boolean)[0];
-      return isYouTubeVideoId(id) ? id : null;
-    }
-
-    const queryId = url.searchParams.get("v");
-    if (isYouTubeVideoId(queryId)) return queryId;
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    const pathId = pathParts[0] === "embed" || pathParts[0] === "shorts" ? pathParts[1] : null;
-    return isYouTubeVideoId(pathId) ? pathId : null;
-  } catch {
-    return null;
-  }
+export function isYouTubeVideoId(value: unknown): value is string {
+  return typeof value === "string" && YOUTUBE_VIDEO_ID_PATTERN.test(value)
 }
 
-export function isYouTubeVideoId(value: string | null | undefined): value is string {
-  return !!value && /^[A-Za-z0-9_-]{11}$/.test(value);
+export function getYouTubeVideoId(value: string): string | null {
+  const input = value.trim()
+  if (!input) return null
+  if (isYouTubeVideoId(input)) return input
+
+  let url: URL
+  try {
+    url = new URL(input)
+  } catch {
+    return null
+  }
+
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "")
+  let videoId: string | null = null
+
+  if (hostname === "youtu.be") {
+    videoId = url.pathname.split("/").filter(Boolean)[0] ?? null
+  } else if (hostname === "youtube.com" || hostname === "music.youtube.com") {
+    const pathParts = url.pathname.split("/").filter(Boolean)
+    if (url.pathname === "/watch") {
+      videoId = url.searchParams.get("v")
+    } else if (["embed", "shorts", "live"].includes(pathParts[0] ?? "")) {
+      videoId = pathParts[1] ?? null
+    }
+  }
+
+  return videoId && isYouTubeVideoId(videoId) ? videoId : null
 }
 
 export function getYouTubeWatchUrl(videoId: string): string {
