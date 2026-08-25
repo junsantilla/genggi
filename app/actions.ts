@@ -822,7 +822,13 @@ export async function deleteGroupCommentAction(groupId: string, commentId: strin
   const user = await requireUser();
   const group = await getGroupById(groupId);
   if (!group) return { error: "Group not found." };
-  const comment = await getDb().collection("groupComments").findOne({ _id: new ObjectId(commentId), groupId: group._id });
+  let commentOid: ObjectId;
+  try {
+    commentOid = new ObjectId(commentId);
+  } catch {
+    return { error: "Comment not found." };
+  }
+  const comment = await getDb().collection("groupComments").findOne({ _id: commentOid, groupId: group._id });
   if (!comment || (comment.authorId.toString() !== user._id.toString() && group.ownerId.toString() !== user._id.toString())) return { error: "Not allowed." };
   await getDb().collection("groupComments").deleteOne({ _id: comment._id });
   revalidatePath(`/groups/${groupId}`);
