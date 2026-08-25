@@ -49,7 +49,6 @@ export default function BulletinPostForm({
                     name="body"
                     rows={4}
                     maxLength={maxLength}
-                    required
                     value={body}
                     onChange={(e) => {
                         setBody(e.target.value);
@@ -126,7 +125,7 @@ export default function BulletinPostForm({
                 {/* Post button */}
                 <button
                     type="submit"
-                    disabled={pending || !body.trim()}
+                    disabled={pending || (!body.trim() && !fileName)}
                     className="btn min-w-[105px]"
                 >
                     {pending ? "Posting..." : "Post"}

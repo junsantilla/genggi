@@ -664,7 +664,9 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
   const user = await requireUser();
   const body = String(formData.get("body") || "").trim();
   const visibilityValue = String(formData.get("visibility") || "public") as BulletinVisibility;
-  if (!body) return { error: "Your post cannot be empty." };
+  const file = formData.get("photo");
+  const hasPhoto = file instanceof File && file.size > 0;
+  if (!body && !hasPhoto) return { error: "Add text or a photo to your post." };
   if (body.length > 1000) return { error: "Posts must be 1,000 characters or fewer." };
   if (!BULLETIN_VISIBILITIES.includes(visibilityValue)) return { error: "Invalid post visibility." };
 
@@ -683,7 +685,6 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
     }
   }
 
-  const file = formData.get("photo");
   let uploaded: { secure_url: string; public_id: string } | null = null;
   if (file instanceof File && file.size > 0) {
     if (file.size > 3 * 1024 * 1024) return { error: "Image must be under 3MB." };

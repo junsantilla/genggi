@@ -37,7 +37,14 @@ export default function BulletinCommentForm({
         maxLength={500}
         required
         className="input flex-1 min-w-[180px]"
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }
+        }}
         placeholder="Write a comment..."
+        aria-label="Write a comment"
       />
       <button type="submit" disabled={pending} className="btn">
         {pending ? "..." : "Comment"}
