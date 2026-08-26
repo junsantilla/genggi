@@ -31,7 +31,19 @@ export function uploadImage(
   getConfiguredCloudinary();
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
+      {
+        folder,
+        resource_type: "image",
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+        transformation: {
+          width: 1600,
+          height: 1600,
+          crop: "limit",
+          quality: "auto:eco",
+          fetch_format: "auto",
+          flags: "strip_profile",
+        },
+      },
       (error, result) => {
         if (error) reject(error);
         else if (!result) reject(new Error("Cloudinary upload returned no result."));

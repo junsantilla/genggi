@@ -14,6 +14,7 @@ import {
     type SerializedBulletinComment,
 } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import ActionButton from "./ActionButton";
 import BulletinCommentForm from "./BulletinCommentForm";
 import BulletinEditForm from "./BulletinEditForm";
@@ -152,7 +153,7 @@ export default function BulletinPostCard({
                         />
                     ) : (
                         <div className="block text-inherit touch-manipulation">
-                            <p className="whitespace-pre-wrap text-[16px] sm:text-[12px] mt-1 mb-0">
+                            <p className="whitespace-pre-wrap text-[16px] sm:text-[12px] mt-1 mb-0 break-words">
                                 <LinkedText text={postBody} />
                             </p>
                         </div>
@@ -164,9 +165,11 @@ export default function BulletinPostCard({
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={post.photo}
+                                src={optimizeCloudinaryUrl(post.photo, { width: 1200 })}
                                 alt="Post photo"
                                 className="w-full"
+                                loading="lazy"
+                                decoding="async"
                             />
                         </Link>
                     )}

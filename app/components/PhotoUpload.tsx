@@ -3,6 +3,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { uploadPhotoAction, removePhotoAction } from "@/app/actions";
 import UserAvatar from "./UserAvatar";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 
 const MAX_SIZE = 3 * 1024 * 1024;
 
@@ -83,7 +84,7 @@ export default function PhotoUpload({
             {shown ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={shown}
+                src={preview ?? optimizeCloudinaryUrl(shown, { width: 280, height: 280 }) ?? shown}
                 alt={preview ? "New photo preview" : "Current profile photo"}
                 className="w-[140px] h-[140px] object-cover hover:opacity-80"
               />
