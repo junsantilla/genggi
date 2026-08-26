@@ -26,9 +26,11 @@ import UserAvatar from "./UserAvatar";
 export default async function Profile({
     user,
     currentUser,
+    customCssEnabled = true,
 }: {
     user: User;
     currentUser: User | null;
+    customCssEnabled?: boolean;
 }) {
     const db = getDb();
     const uid = user._id.toString();
@@ -56,7 +58,7 @@ export default async function Profile({
     ]);
 
     const theme = user.theme || { border: "#6699cc" };
-    const customCss = user.theme?.customCss?.trim();
+    const customCss = customCssEnabled ? user.theme?.customCss?.trim() : undefined;
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
     const bulletinPosts = canView
