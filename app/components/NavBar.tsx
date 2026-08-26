@@ -78,6 +78,7 @@ export default function NavBar({
                             Notifications
                         </NavLink>
                         <NavLink href="/edit">Edit Profile</NavLink>
+                        <NavLink href="/layouts/generator">Layout Generator</NavLink>
                         {isAdmin && <NavLink href="/admin">Admin</NavLink>}
                         <LogoutButton />
                     </>

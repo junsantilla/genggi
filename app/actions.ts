@@ -428,6 +428,20 @@ export async function updateThemeAction(formData: FormData): Promise<{ ok?: bool
   return { ok: true };
 }
 
+export async function applyProfileCssAction(formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const customCss = String(formData.get("customCss") || "").trim().slice(0, 12000);
+
+  await getDb().collection("users").updateOne(
+    { _id: user._id },
+    { $set: { "theme.customCss": customCss } },
+  );
+  revalidatePath(`/${user.username}`);
+  revalidatePath("/edit");
+  revalidatePath("/layouts/generator");
+  return { ok: true };
+}
+
 export async function updatePrivacyAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   await getDb().collection("users").updateOne(
