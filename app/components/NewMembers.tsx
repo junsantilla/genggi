@@ -52,7 +52,7 @@ export default async function NewMembers({
                             </Link>
                             <Link
                                 href={`/${u.username}`}
-                                className="text-[#003399] no-underline font-bold"
+                                className="text-[#003399] no-underline font-bold break-words"
                             >
                                 {u.displayName}
                             </Link>

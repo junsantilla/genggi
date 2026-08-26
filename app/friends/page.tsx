@@ -106,7 +106,7 @@ export default async function FriendsPage() {
                                     </Link>
                                     <Link
                                         href={`/${f.username}`}
-                                        className="text-[#003399] no-underline font-bold"
+                                        className="text-[#003399] no-underline font-bold break-words"
                                     >
                                         {f.displayName}
                                     </Link>
