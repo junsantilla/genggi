@@ -28,7 +28,7 @@ export async function sendVerificationEmail(
         html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; border: 1px solid #6699cc;">
         <div style="background: #2c4d80; color: #fff; padding: 10px 14px; font-size: 18px; font-weight: bold;">
-          genggeng<span style="color: #ffde00;">.pro</span> — Confirm Your Email
+          genggi.com — Confirm Your Email
         </div>
         <div style="padding: 14px; font-size: 13px; color: #333;">
           <p>Thanks for joining genggi.com! Please confirm your email address to activate your account.</p>
@@ -62,7 +62,7 @@ export async function sendPasswordResetEmail(
         html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; border: 1px solid #6699cc;">
         <div style="background: #2c4d80; color: #fff; padding: 10px 14px; font-size: 18px; font-weight: bold;">
-          genggeng<span style="color: #ffde00;">.pro</span> — Password Reset
+          genggi.com — Password Reset
         </div>
         <div style="padding: 14px; font-size: 13px; color: #333;">
           <p>Someone asked to reset the password for your genggi.com account.</p>
