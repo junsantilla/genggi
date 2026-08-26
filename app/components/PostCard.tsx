@@ -21,6 +21,7 @@ import ActionButton from "./ActionButton";
 import BulletinEditForm from "./BulletinEditForm";
 import GroupEditForm from "./GroupEditForm";
 import { timeAgo } from "@/lib/utils";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import UserAvatar from "./UserAvatar";
 import BulletinCommentForm from "./BulletinCommentForm";
 import LinkedText from "./LinkedText";
@@ -215,9 +216,11 @@ export default function PostCard({
                             className="block mt-1.5"
                         >
                             <img
-                                src={post.photo}
+                                src={optimizeCloudinaryUrl(post.photo, { width: 1200 })}
                                 alt="Post photo"
                                 className="w-full"
+                                loading="lazy"
+                                decoding="async"
                             />
                         </Link>
                     )}

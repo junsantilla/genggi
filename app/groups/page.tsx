@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getGroupsForUser } from "@/lib/group";
 import Box from "@/app/components/Box";
 import CreateGroupForm from "@/app/components/CreateGroupForm";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 
 export default async function GroupsPage() {
     const user = await requireUser();
@@ -31,9 +32,11 @@ export default async function GroupsPage() {
                                 >
                                     {group.photo ? (
                                         <img
-                                            src={group.photo}
+                                            src={optimizeCloudinaryUrl(group.photo, { width: 96, height: 96 })}
                                             alt=""
                                             className="w-12 h-12 object-cover"
+                                            loading="lazy"
+                                            decoding="async"
                                         />
                                     ) : (
                                         <div className="w-12 h-12 bg-[#dbe9f7] flex items-center justify-center text-xl">

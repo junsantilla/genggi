@@ -184,6 +184,7 @@ export default async function Profile({
                                             src={user.photo}
                                             alt={`${user.displayName}'s photo`}
                                             className="profile-photo w-full object-cover mx-auto mb-2 p-1"
+                                            cloudinaryWidth={440}
                                         />
 
                                         {/* Actions */}
@@ -552,11 +553,12 @@ export default async function Profile({
                                                             src={f.photo}
                                                             alt={f.displayName}
                                                             className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
+                                                            cloudinaryWidth={120}
                                                         />
                                                     </Link>
                                                     <Link
                                                         href={`/${f.username}`}
-                                                        className="text-[#003399] no-underline font-bold"
+                                                        className="text-[#003399] no-underline font-bold break-words"
                                                     >
                                                         {f.displayName}
                                                     </Link>

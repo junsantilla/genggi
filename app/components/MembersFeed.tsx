@@ -65,6 +65,7 @@ export default function MembersFeed({
                             src={user.photo}
                             alt={user.displayName}
                             className="w-14 h-14 object-cover"
+                            cloudinaryWidth={112}
                         />
                     </Link>
                     <div className="min-w-0">
