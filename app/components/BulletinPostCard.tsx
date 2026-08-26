@@ -311,7 +311,7 @@ export default function BulletinPostCard({
                                                             null,
                                                             comment._id,
                                                         )}
-                                                        className="text-[#cc0000] underline text-[11px] p-0 border-0 bg-transparent"
+                                                        className="text-[#cc0000] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
                                                         confirmText="Delete this comment?"
                                                         onSuccess={() =>
                                                             setComments((prev) =>
