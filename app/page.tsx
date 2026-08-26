@@ -6,27 +6,27 @@ import BulletinFeed from "@/app/components/BulletinFeed";
 import { getBulletinFeedPage } from "@/lib/bulletin";
 
 export const metadata: Metadata = {
-  title: {
-    absolute: "Welcome to genggeng.pro",
-  },
-  description:
-    "The nostalgic social network. Make a profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",
-  keywords: [
-    "social network",
-    "nostalgia",
-    "profiles",
-    "friends",
-    "messages",
-    "testimonials",
-    "genggeng.pro",
-  ],
-  openGraph: {
-    title: "Welcome to genggeng.pro",
+    title: {
+        absolute: "Welcome to genggi",
+    },
     description:
-      "The nostalgic social network. Make a profile, add friends, send messages, and collect testimonials — just like the good old days.",
-    siteName: "genggeng.pro",
-    type: "website",
-  },
+        "The nostalgic social network. Make a profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",
+    keywords: [
+        "social network",
+        "nostalgia",
+        "profiles",
+        "friends",
+        "messages",
+        "testimonials",
+        "genggi",
+    ],
+    openGraph: {
+        title: "Welcome to genggi",
+        description:
+            "The nostalgic social network. Make a profile, add friends, send messages, and collect testimonials — just like the good old days.",
+        siteName: "genggi",
+        type: "website",
+    },
 };
 
 export default async function Home() {
