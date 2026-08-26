@@ -27,7 +27,7 @@ export async function generateMetadata({
         title: `${post.author.displayName}'s bulletin`,
         description,
         openGraph: {
-            title: `${post.author.displayName}'s bulletin | genggeng.pro`,
+            title: `${post.author.displayName}'s bulletin`,
             description,
             type: "article",
             ...(post.photo ? { images: [{ url: post.photo }] } : {}),
