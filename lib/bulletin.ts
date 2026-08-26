@@ -304,8 +304,8 @@ export async function getProfileBulletinPosts(
   const posts = (await getDb()
     .collection("bulletinPosts")
     .find(filter)
-    .sort({ createdAt: -1 })
-    .limit(BULLETIN_LIMIT)
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(10)
     .toArray()) as unknown as BulletinPost[];
 
   return withReactions(await withComments(await withAuthors(posts)), viewerId);
