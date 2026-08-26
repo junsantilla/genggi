@@ -103,7 +103,7 @@ main:has(.landing-page) {
     border: 1px solid #6699cc;
     background: #f5f9ff;
     padding: 0.3rem 0.5rem;
-    font-size: 13px;
+    font-size: 16px;
     color: #000;
     border-radius: 0;
 }
@@ -191,15 +191,11 @@ summary::-webkit-details-marker {
     display: none;
 }
 
-/* Prevent iOS Safari from auto-zooming when focusing form controls.
-   Zoom is triggered when the font-size is below 16px, so bump text inputs,
-   textareas and selects to 16px on small/touch screens. Desktop keeps 13px. */
-@media (max-width: 639px) {
-    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
-    textarea,
-    select {
-        font-size: 16px;
-    }
+/* Keep editable form controls readable and prevent mobile browser auto-zoom. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea,
+select {
+    font-size: 16px;
 }
 
 /* Profile theme: form controls inside a profile page follow the user's theme */

@@ -47,7 +47,7 @@ export default function PostComposer({
             <div className="relative">
                 <textarea
                     name="body"
-                    rows={4}
+                    rows={3}
                     maxLength={1000}
                     value={body}
                     onChange={(event) => {
