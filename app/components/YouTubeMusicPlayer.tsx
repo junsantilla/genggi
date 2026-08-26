@@ -57,7 +57,6 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
             unlocked = true;
             soundUnlockedRef.current = true;
             document.removeEventListener("pointerdown", unlockSound);
-            document.removeEventListener("mousemove", unlockSound);
             document.removeEventListener("keydown", unlockSound);
             sendCommand("setVolume", [DEFAULT_VOLUME]);
             sendCommand("unMute");
@@ -66,15 +65,14 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
             setPlaying(true);
         };
 
-        // Browsers require interaction before allowing audible playback. Mouse
-        // movement is attempted too, although some browsers only accept a click,
-        // tap, or key press as a valid activation gesture.
+        // Try to enable sound shortly after the player loads. Keep click and
+        // keyboard handlers as fallbacks for browsers requiring user activation.
+        const unlockTimer = window.setTimeout(unlockSound, 1000);
         document.addEventListener("pointerdown", unlockSound);
-        document.addEventListener("mousemove", unlockSound);
         document.addEventListener("keydown", unlockSound);
         return () => {
+            window.clearTimeout(unlockTimer);
             document.removeEventListener("pointerdown", unlockSound);
-            document.removeEventListener("mousemove", unlockSound);
             document.removeEventListener("keydown", unlockSound);
         };
     }, [sendCommand, validVideoId]);
