@@ -30,7 +30,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                             className="h-10 w-10 object-cover rounded"
                         />
                         <span className="font-bold text-xl sm:text-xl tracking-tight">
-                            genggeng<span className="text-[#ffde00]">.pro</span>
+                            genggi
                         </span>
                     </Link>
                     <HomeLoginForm />
