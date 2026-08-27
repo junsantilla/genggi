@@ -23,10 +23,15 @@ export const metadata: Metadata = {
     title: {
         default: "Genggi",
         template: "%s | Genggi",
-    },
-    description:
+    },        description:
         "A nostalgic social network for profiles, friends, messages, and fun.",
+    manifest: "/manifest.webmanifest",
+    icons: {
+        icon: "/images/genggeng-logo4.png",
+        apple: "/images/genggeng-logo4.png",
+    },
 };
+
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
     const user = await getCurrentUser();
