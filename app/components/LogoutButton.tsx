@@ -9,7 +9,7 @@ export default function LogoutButton() {
         <button
             type="button"
             disabled={pending}
-            className="shrink-0 whitespace-nowrap text-left text-[#003399] font-bold no-underline hover:underline py-0.5 cursor-pointer bg-transparent border-0 text-[12px] sm:text-[13px]"
+            className="shrink-0 whitespace-nowrap text-left text-[#003399] font-bold no-underline hover:underline py-0.5 cursor-pointer bg-transparent border-0  sm:text-[13px]"
             onClick={() => startTransition(() => logoutAction())}
         >
             {pending ? "..." : "Logout"}

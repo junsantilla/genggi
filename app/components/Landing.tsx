@@ -93,7 +93,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                                     submitLabel="Create Account"
                                     mathChallenge
                                 />
-                                {/* <p className="text-center text-[12px] text-gray-500 mt-3">
+                                {/* <p className="text-center  text-gray-500 mt-3">
                                     Already have an account?{" "}
                                     <Link
                                         href="/login"

@@ -89,7 +89,7 @@ export default async function MessagesPage({
                             rows={3}
                         />
                     ) : (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             Visit someone&apos;s profile and hit “Send Message”,
                             or type a username below:
                         </p>
@@ -114,7 +114,7 @@ export default async function MessagesPage({
 
                 <Box title={`Inbox (${threads.size} conversations)`}>
                     {threads.size === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             No messages yet.
                         </p>
                     ) : (
@@ -143,7 +143,7 @@ export default async function MessagesPage({
                                             <span className="text-[#003399] font-bold shrink-0">
                                                 {nameOf(otherId)}
                                             </span>
-                                            <span className="text-gray-500 text-[12px] truncate">
+                                            <span className="text-gray-500  truncate">
                                                 {lastFromMe ? "You: " : ""}
                                                 {last.body}
                                             </span>

@@ -84,7 +84,7 @@ export default async function FriendsPage() {
             <div className="p-4 flex flex-col gap-4">
                 <Box title={`Top 8 (${top8.length})`}>
                     {top8.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             You don&apos;t have any friends yet.
                         </p>
                     ) : (
@@ -118,7 +118,7 @@ export default async function FriendsPage() {
 
                 <Box title={`Friend Requests (${incoming.length})`}>
                     {incoming.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             No pending requests.
                         </p>
                     ) : (
@@ -186,9 +186,7 @@ export default async function FriendsPage() {
 
                 <Box title={`Requests Sent (${outgoing.length})`}>
                     {outgoing.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
-                            None pending.
-                        </p>
+                        <p className="text-gray-500 italic ">None pending.</p>
                     ) : (
                         outgoingUsers.map((f) => (
                             <div
@@ -223,14 +221,12 @@ export default async function FriendsPage() {
 
                 <Box title={`Recent Activity (${recent.length})`}>
                     {recent.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
-                            Nothing yet.
-                        </p>
+                        <p className="text-gray-500 italic ">Nothing yet.</p>
                     ) : (
                         recent.map(({ friend, at }) => (
                             <div
                                 key={friend._id.toString()}
-                                className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1 last:border-0 text-[12px]"
+                                className="flex items-center gap-2 border-b border-dotted border-[#99bbdd] py-1 last:border-0 "
                             >
                                 <Link
                                     href={`/${friend.username}`}
@@ -265,7 +261,7 @@ export default async function FriendsPage() {
                     />
                     <div className="mt-2">
                         {friends.length === 0 ? (
-                            <p className="text-gray-500 italic text-[12px]">
+                            <p className="text-gray-500 italic ">
                                 No friends yet.
                             </p>
                         ) : (

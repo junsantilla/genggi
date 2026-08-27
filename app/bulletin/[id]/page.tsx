@@ -55,7 +55,7 @@ export default async function BulletinPostPage({
                     title=" Bulletin Post"
                 />
                 <div className="text-center">
-                    <Link href="/" className="text-[#003399] text-[12px]">
+                    <Link href="/" className="text-[#003399] ">
                         ← Back to Bulletin Board
                     </Link>
                 </div>

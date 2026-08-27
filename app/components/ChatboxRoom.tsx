@@ -228,7 +228,7 @@ export default function ChatboxRoom({
                 style={{ maxHeight: "50vh", minHeight: "300px" }}
             >
                 {messages.length === 0 ? (
-                    <p className="text-gray-500 italic text-[12px] text-center my-auto">
+                    <p className="text-gray-500 italic  text-center my-auto">
                         No messages yet. Break the ice - say hello!
                     </p>
                 ) : (
@@ -347,13 +347,13 @@ export default function ChatboxRoom({
             {/* Replying-to banner */}
             {replyingTo && (
                 <div className="flex items-center gap-2 mt-2 px-2.5 py-1.5 border border-[#6699cc] bg-[#dbe9f7]">
-                    <span className="font-bold text-[12px] text-[#003399] shrink-0">
+                    <span className="font-bold  text-[#003399] shrink-0">
                         ↩️ Replying to{" "}
                         {replyingTo.author._id === viewerId
                             ? "yourself"
                             : replyingTo.author.displayName}
                     </span>
-                    <span className="text-[12px] text-gray-600 truncate min-w-0 flex-1">
+                    <span className=" text-gray-600 truncate min-w-0 flex-1">
                         “{snippet(replyingTo.body, 80)}”
                     </span>
                     <button

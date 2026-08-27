@@ -88,7 +88,7 @@ export default function PostCard({
                     <UserAvatar
                         src={post.author.photo}
                         alt={post.author.displayName}
-                        className="w-[44px] h-[44px] object-cover"
+                        className="block w-[44px] h-[44px] object-cover"
                     />
                 </Link>
                 <div className="flex-1 min-w-0">
@@ -200,7 +200,7 @@ export default function PostCard({
                             )
                         ) : (
                             post.body && (
-                                <p className="whitespace-pre-wrap text-[16px] sm:text-[12px] mt-1 mb-0 break-words">
+                                <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
                                     {isGroup ? (
                                         postBody
                                     ) : (
@@ -216,7 +216,9 @@ export default function PostCard({
                             className="block mt-1.5"
                         >
                             <img
-                                src={optimizeCloudinaryUrl(post.photo, { width: 1200 })}
+                                src={optimizeCloudinaryUrl(post.photo, {
+                                    width: 1200,
+                                })}
                                 alt="Post photo"
                                 className="w-full"
                                 loading="lazy"
@@ -269,7 +271,7 @@ export default function PostCard({
                             return (
                                 <div
                                     key={comment._id}
-                                    className="text-[12px] bg-[#DBE9F7] p-2 mt-1"
+                                    className="bg-[#DBE9F7] p-2 mt-1"
                                 >
                                     <Link
                                         href={`/${comment.author.username}`}
