@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 
 function NavLink({
@@ -40,27 +42,37 @@ export default function NavBar({
     counts: { messages: number; friendRequests: number; notifications: number };
 }) {
     const pathname = usePathname();
+    const [menuOpen, setMenuOpen] = useState(false);
 
-    // Logged-out visitors get a dedicated landing page with its own header
-    // (logo + login form), so the standard navigation bar is hidden there.
     if (!isLoggedIn && pathname === "/") return null;
 
     return (
         <header className="sticky top-0 z-50">
             <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl tracking-tight">
                 <div className="mx-auto max-w-[960px]">
-                    <Link
-                        href="/"
-                        className="no-underline text-white inline-flex items-center"
-                    >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {/* <img
-                            src="/images/genggeng-logo4.png"
-                            alt="genggeng"
-                            className="h-10 w-10 inline-block object-cover rounded mr-1"
-                        />{" "} */}
-                        Genggi
-                    </Link>
+                    <div className="flex items-center justify-between">
+                        <Link
+                            href="/"
+                            className="no-underline text-white inline-flex items-center"
+                        >
+                            Genggi
+                        </Link>
+                        {isLoggedIn && (
+                            <button
+                                type="button"
+                                className="sm:hidden p-1.5"
+                                aria-expanded={menuOpen}
+                                aria-label="Toggle account menu"
+                                onClick={() => setMenuOpen((open) => !open)}
+                            >
+                                {menuOpen ? (
+                                    <X size={20} aria-hidden="true" />
+                                ) : (
+                                    <Menu size={20} aria-hidden="true" />
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
             <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5 text-[12px] sm:text-[13px] overflow-x-auto overscroll-x-contain">
@@ -92,7 +104,7 @@ export default function NavBar({
                                     Notifications
                                 </NavLink>
                             </div>
-                            <div className="flex items-center gap-x-2.5">
+                            <div className="hidden sm:flex items-center gap-x-2.5">
                                 <NavLink href="/edit">Edit Profile</NavLink>
                                 <NavLink href="/layouts/generator">
                                     Layout Generator
@@ -112,6 +124,18 @@ export default function NavBar({
                     )}
                 </div>
             </nav>
+            {isLoggedIn && menuOpen && (
+                <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md sm:hidden">
+                    <div className="flex flex-col items-stretch gap-1">
+                        <NavLink href="/edit">Edit Profile</NavLink>
+                        <NavLink href="/layouts/generator">
+                            Layout Generator
+                        </NavLink>
+                        {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+                        <LogoutButton />
+                    </div>
+                </div>
+            )}
         </header>
     );
 }
