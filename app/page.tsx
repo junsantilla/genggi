@@ -7,7 +7,7 @@ import { getBulletinFeedPage } from "@/lib/bulletin";
 
 export const metadata: Metadata = {
     title: {
-        absolute: "Welcome to genggi",
+        absolute: "Welcome to Genggi",
     },
     description:
         "The nostalgic social network. Make a profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",

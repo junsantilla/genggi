@@ -15,7 +15,7 @@ const FEATURES = [
 
 export default function Landing({ border = "#6699cc" }: { border?: string }) {
     return (
-        <div className="landing-page min-h-[calc(100dvh-66px)] flex flex-col">
+        <div className="landing-page min-h-[calc(100dvh-69px)] flex flex-col">
             {/* Header: full-width bar flush to top, logo on the left, login form on the right */}
             <header className="sticky top-0 z-50 bg-[#2C4D80] text-white border-b border-[#6699cc]">
                 <div className="max-w-[960px] w-full mx-auto flex flex-wrap items-center justify-between gap-2 px-2.5 py-2">
@@ -24,13 +24,13 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                         className="no-underline text-white flex items-center gap-1.5 shrink-0"
                     >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        {/* <img
                             src="/images/genggeng-logo4.png"
                             alt="genggeng"
                             className="h-10 w-10 object-cover rounded"
-                        />
-                        <span className="font-bold text-xl sm:text-xl tracking-tight">
-                            genggi
+                        /> */}
+                        <span className="font-bold text-xl sm:text-2xl tracking-tight">
+                            Genggi
                         </span>
                     </Link>
                     <HomeLoginForm />
