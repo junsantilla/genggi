@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import LogoutButton from "./LogoutButton";
+import PwaInstallButton from "./PwaInstallButton";
 
 function NavLink({
     href,
@@ -56,14 +57,16 @@ export default function NavBar({
                             className="no-underline text-white inline-flex items-center"
                         >
                             <span>Genggi</span>
-                            <span className="ml-2 -translate-y-0.5 rounded bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
+                            <span className="ml-2 -translate-y-0.5 rounded-none bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
                                 Beta
                             </span>
                         </Link>
                         {isLoggedIn && (
-                            <button
+                            <div className="flex items-center gap-1 sm:hidden">
+                                <PwaInstallButton />
+                                <button
                                 type="button"
-                                className="sm:hidden p-1.5"
+                                className="p-1.5"
                                 aria-expanded={menuOpen}
                                 aria-label="Toggle account menu"
                                 onClick={() => setMenuOpen((open) => !open)}
@@ -73,7 +76,8 @@ export default function NavBar({
                                 ) : (
                                     <Menu size={20} aria-hidden="true" />
                                 )}
-                            </button>
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
