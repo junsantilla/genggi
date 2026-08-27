@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default async function ProfileLayoutGeneratorPage() {
   const user = await requireUser();
-  const existingCss = !!user.theme?.customCss?.trim();
+  const initialCss = user.theme?.customCss ?? "";
 
   return (
-    <ProfileGenerator existingCss={existingCss}>
+    <ProfileGenerator initialCss={initialCss}>
       <Profile user={user} currentUser={user} customCssEnabled={false} />
     </ProfileGenerator>
   );
