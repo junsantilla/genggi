@@ -84,7 +84,10 @@ export default function PostCard({
     return (
         <article className="border-b border-dotted border-[#99bbdd] py-2 last:border-0">
             <div className="flex gap-2">
-                <Link href={`/${post.author.username}`} className="shrink-0">
+                <Link
+                    href={`/${post.author.username}`}
+                    className="shrink-0 self-start"
+                >
                     <UserAvatar
                         src={post.author.photo}
                         alt={post.author.displayName}
