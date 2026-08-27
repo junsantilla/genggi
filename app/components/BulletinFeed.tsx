@@ -68,7 +68,7 @@ export default function BulletinFeed({
         <Box title=" Bulletin Board" className="bulletin-board">
             <BulletinPostForm onPosted={onPosted} />
             {posts.length === 0 ? (
-                <p className="text-gray-500 italic text-[12px]">
+                <p className="text-gray-500 italic ">
                     No bulletins yet. Be the first to post!
                 </p>
             ) : (

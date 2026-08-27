@@ -36,7 +36,7 @@ export default async function ChatboxesPage() {
             </div>
             <div className="p-4 flex flex-col gap-4">
                 <Box title="Create a Chatbox">
-                    <p className="text-[12px] text-gray-600 mb-3">
+                    <p className=" text-gray-600 mb-3">
                         Make a chatbox and set it to public (anyone can join) or
                         friends only.
                     </p>
@@ -45,7 +45,7 @@ export default async function ChatboxesPage() {
 
                 <Box title={`Join a Chatbox (${boxes.length})`}>
                     {boxes.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             No chatboxes available yet. Create the first one!
                         </p>
                     ) : (
@@ -98,7 +98,7 @@ export default async function ChatboxesPage() {
                                             </div>
                                         </div>
 
-                                        <span className="text-[#003399] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-bold text-[12px]">
+                                        <span className="text-[#003399] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-bold ">
                                             Join →
                                         </span>
                                     </Link>

@@ -63,7 +63,7 @@ export default async function ThreadPage({
             <div className="p-4 flex flex-col gap-4">
                 <Box title={`Conversation with ${other.displayName}`}>
                     {messages.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             No messages in this conversation yet.
                         </p>
                     ) : (
@@ -83,7 +83,7 @@ export default async function ThreadPage({
                                             className="w-5 h-5 object-cover shrink-0"
                                         />
                                         <span
-                                            className={`font-bold text-[12px] ${mine ? "text-[#cc3399]" : "text-[#003399]"}`}
+                                            className={`font-bold  ${mine ? "text-[#cc3399]" : "text-[#003399]"}`}
                                         >
                                             {mine ? "You" : other.displayName}
                                         </span>
@@ -129,10 +129,7 @@ export default async function ThreadPage({
                 </Box>
 
                 <div className="text-center">
-                    <Link
-                        href="/messages"
-                        className="text-[#003399] text-[12px]"
-                    >
+                    <Link href="/messages" className="text-[#003399] ">
                         ← Back to Inbox
                     </Link>
                 </div>

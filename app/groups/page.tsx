@@ -19,9 +19,7 @@ export default async function GroupsPage() {
                 </Box>
                 <Box title={`Groups (${groups.length})`}>
                     {groups.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
-                            No groups yet.
-                        </p>
+                        <p className="text-gray-500 italic ">No groups yet.</p>
                     ) : (
                         <div className="divide-y divide-dotted divide-[#99bbdd]">
                             {groups.map((group) => (
@@ -32,7 +30,10 @@ export default async function GroupsPage() {
                                 >
                                     {group.photo ? (
                                         <img
-                                            src={optimizeCloudinaryUrl(group.photo, { width: 96, height: 96 })}
+                                            src={optimizeCloudinaryUrl(
+                                                group.photo,
+                                                { width: 96, height: 96 },
+                                            )}
                                             alt=""
                                             className="w-12 h-12 object-cover"
                                             loading="lazy"

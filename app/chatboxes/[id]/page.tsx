@@ -58,7 +58,7 @@ export default async function ChatboxPage({
                 <div className="flex items-center justify-between gap-2 mt-3">
                     <Link
                         href="/chatboxes"
-                        className="text-[#003399] text-[12px] font-bold no-underline hover:underline"
+                        className="text-[#003399]  font-bold no-underline hover:underline"
                     >
                         ← All Chatbox
                     </Link>

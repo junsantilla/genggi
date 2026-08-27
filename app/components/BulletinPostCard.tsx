@@ -53,7 +53,9 @@ export default function BulletinPostCard({
     const [postVisibility, setPostVisibility] = useState(post.visibility);
     const [editingPost, setEditingPost] = useState(false);
     const [postMenuOpen, setPostMenuOpen] = useState(false);
-    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(
+        null,
+    );
 
     const countOf = (type: string) =>
         reactions.find((r) => r.type === type)?.count ?? 0;
@@ -83,7 +85,7 @@ export default function BulletinPostCard({
                     <UserAvatar
                         src={post.author.photo}
                         alt={post.author.displayName}
-                        className="w-[44px] h-[44px] object-cover"
+                        className="block w-[44px] h-[44px] object-cover"
                     />
                 </Link>
                 <div className="flex-1 min-w-0">
@@ -108,7 +110,9 @@ export default function BulletinPostCard({
                                 <button
                                     type="button"
                                     className="border-0 bg-transparent text-[#003399] text-[16px] leading-none px-1 py-0 cursor-pointer hover:bg-[#dbe9f7]"
-                                    onClick={() => setPostMenuOpen((open) => !open)}
+                                    onClick={() =>
+                                        setPostMenuOpen((open) => !open)
+                                    }
                                     aria-label="Open post actions"
                                     aria-expanded={postMenuOpen}
                                     title="Post actions"
@@ -119,7 +123,9 @@ export default function BulletinPostCard({
                                     <>
                                         <div
                                             className="fixed inset-0 z-10"
-                                            onClick={() => setPostMenuOpen(false)}
+                                            onClick={() =>
+                                                setPostMenuOpen(false)
+                                            }
                                         />
                                         <div className="absolute z-20 right-0 top-full mt-1 min-w-[110px] border border-[#6699cc] bg-white p-1 shadow-lg">
                                             <button
@@ -153,7 +159,7 @@ export default function BulletinPostCard({
                         />
                     ) : (
                         <div className="block text-inherit touch-manipulation">
-                            <p className="whitespace-pre-wrap text-[16px] sm:text-[12px] mt-1 mb-0 break-words">
+                            <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
                                 <LinkedText text={postBody} />
                             </p>
                         </div>
@@ -165,7 +171,9 @@ export default function BulletinPostCard({
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={optimizeCloudinaryUrl(post.photo, { width: 1200 })}
+                                src={optimizeCloudinaryUrl(post.photo, {
+                                    width: 1200,
+                                })}
                                 alt="Post photo"
                                 className="w-full"
                                 loading="lazy"
@@ -260,7 +268,7 @@ export default function BulletinPostCard({
                                 return (
                                     <div
                                         key={comment._id}
-                                        className="text-[12px] leading-snug bg-[#DBE9F7] border-b border-[#fff] p-2"
+                                        className=" leading-snug bg-[#DBE9F7] border-b border-[#fff] p-2"
                                     >
                                         <Link
                                             href={`/${comment.author.username}`}
@@ -276,12 +284,18 @@ export default function BulletinPostCard({
                                                 mode="comment"
                                                 itemId={comment._id}
                                                 initialBody={comment.body}
-                                                onCancel={() => setEditingCommentId(null)}
+                                                onCancel={() =>
+                                                    setEditingCommentId(null)
+                                                }
                                                 onSaved={(body) => {
                                                     setComments((prev) =>
                                                         prev.map((item) =>
-                                                            item._id === comment._id
-                                                                ? { ...item, body }
+                                                            item._id ===
+                                                            comment._id
+                                                                ? {
+                                                                      ...item,
+                                                                      body,
+                                                                  }
                                                                 : item,
                                                         ),
                                                     );
@@ -292,43 +306,55 @@ export default function BulletinPostCard({
                                             <>
                                                 {" "}
                                                 <span className="whitespace-pre-wrap">
-                                                    <LinkedText text={comment.body} />
+                                                    <LinkedText
+                                                        text={comment.body}
+                                                    />
                                                 </span>
                                             </>
                                         )}
-                                        {editingCommentId !== comment._id && (isOwnComment || canDelete) && (
-                                            <span className="ml-1 inline-flex gap-1">
-                                                {isOwnComment && (
-                                                    <button
-                                                        type="button"
-                                                        className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
-                                                        onClick={() => setEditingCommentId(comment._id)}
-                                                        aria-label="Edit your comment"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                )}
-                                                {canDelete && (
-                                                    <ActionButton
-                                                        action={deleteBulletinCommentAction.bind(
-                                                            null,
-                                                            comment._id,
-                                                        )}
-                                                        className="text-[#cc0000] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
-                                                        confirmText="Delete this comment?"
-                                                        onSuccess={() =>
-                                                            setComments((prev) =>
-                                                                prev.filter(
-                                                                    (c) => c._id !== comment._id,
-                                                                ),
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </ActionButton>
-                                                )}
-                                            </span>
-                                        )}
+                                        {editingCommentId !== comment._id &&
+                                            (isOwnComment || canDelete) && (
+                                                <span className="ml-1 inline-flex gap-1">
+                                                    {isOwnComment && (
+                                                        <button
+                                                            type="button"
+                                                            className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
+                                                            onClick={() =>
+                                                                setEditingCommentId(
+                                                                    comment._id,
+                                                                )
+                                                            }
+                                                            aria-label="Edit your comment"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    )}
+                                                    {canDelete && (
+                                                        <ActionButton
+                                                            action={deleteBulletinCommentAction.bind(
+                                                                null,
+                                                                comment._id,
+                                                            )}
+                                                            className="text-[#cc0000] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
+                                                            confirmText="Delete this comment?"
+                                                            onSuccess={() =>
+                                                                setComments(
+                                                                    (prev) =>
+                                                                        prev.filter(
+                                                                            (
+                                                                                c,
+                                                                            ) =>
+                                                                                c._id !==
+                                                                                comment._id,
+                                                                        ),
+                                                                )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </ActionButton>
+                                                    )}
+                                                </span>
+                                            )}
                                     </div>
                                 );
                             })}

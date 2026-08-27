@@ -33,7 +33,7 @@ export default async function NewMembers({
     return (
         <Box title="New Members" border={border} bg="#f5f9ff">
             {users.length === 0 ? (
-                <span className="text-gray-500 italic text-[12px]">
+                <span className="text-gray-500 italic ">
                     No members yet — be the first to join!
                 </span>
             ) : (

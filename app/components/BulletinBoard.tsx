@@ -25,7 +25,7 @@ export default function BulletinBoard({
         <Box title={title} className="bulletin-board" border={border} bg={bg}>
             {showComposer && <BulletinPostForm />}
             {posts.length === 0 ? (
-                <p className="text-gray-500 italic text-[12px]">
+                <p className="text-gray-500 italic ">
                     {showComposer
                         ? "No bulletins yet. Be the first to post!"
                         : "No bulletins to show."}

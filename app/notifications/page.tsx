@@ -42,7 +42,7 @@ export default async function NotificationsPage() {
                 <div className="p-4">
                     <Box title={`All Notifications (${notifications.length})`}>
                         {notifications.length === 0 ? (
-                            <p className="text-gray-500 italic text-[12px]">
+                            <p className="text-gray-500 italic ">
                                 You&apos;re all caught up!
                             </p>
                         ) : (

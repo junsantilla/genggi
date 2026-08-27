@@ -120,9 +120,7 @@ export default async function SearchPage({
 
                 <Box title={`Results (${results.length})`}>
                     {results.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
-                            No users found.
-                        </p>
+                        <p className="text-gray-500 italic ">No users found.</p>
                     ) : (
                         results.map((r, i) => (
                             <div

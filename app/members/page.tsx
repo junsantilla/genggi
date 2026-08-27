@@ -16,7 +16,7 @@ export default async function MembersPage() {
                 <Box title="Members">
                     <>
                         {page.members.length === 0 ? (
-                            <p className="text-gray-500 italic text-[12px]">
+                            <p className="text-gray-500 italic ">
                                 No members found.
                             </p>
                         ) : (

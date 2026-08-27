@@ -22,7 +22,7 @@ function NavLink({
         >
             {children}
             {!!count && (
-                <span className="bg-[#cc3399] text-white text-[10px] rounded-full px-1 leading-tight">
+                <span className="bg-[#cc3399] text-white text-[10px] px-1 leading-tight">
                     {count}
                 </span>
             )}
@@ -75,11 +75,12 @@ export default function NavBar({
                     </div>
                 </div>
             </div>
-            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5 text-[12px] sm:text-[13px] overflow-x-auto overscroll-x-contain">
+            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5  sm:text-[13px] overflow-x-auto overscroll-x-contain">
                 <div className="mx-auto flex min-w-max max-w-[960px] items-center justify-between gap-x-6">
                     {isLoggedIn ? (
                         <>
                             <div className="flex items-center gap-x-2.5">
+                                <NavLink href="/">Home</NavLink>
                                 <NavLink href={`/${username}`}>
                                     My Profile
                                 </NavLink>

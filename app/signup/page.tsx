@@ -42,7 +42,7 @@ export default async function SignupPage() {
                     submitLabel="Create Account"
                     mathChallenge
                 />
-                <p className="text-center text-[12px] text-gray-500 mt-3">
+                <p className="text-center  text-gray-500 mt-3">
                     Already have an account?{" "}
                     <Link href="/login" className="text-[#003399] font-bold">
                         Login

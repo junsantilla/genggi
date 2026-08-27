@@ -58,7 +58,9 @@ export default async function Profile({
     ]);
 
     const theme = user.theme || { border: "#6699cc" };
-    const customCss = customCssEnabled ? user.theme?.customCss?.trim() : undefined;
+    const customCss = customCssEnabled
+        ? user.theme?.customCss?.trim()
+        : undefined;
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
     const bulletinPosts = canView
@@ -313,7 +315,7 @@ export default async function Profile({
                                                         Profile views:
                                                     </td>
                                                     <td className="p-0.5 px-1 align-top">
-                                                        <span className="bg-black text-[#0f0] font-mono text-[12px] px-1.5 py-0.5 inline-block border border-[#333]">
+                                                        <span className="bg-black text-[#0f0] font-mono  px-1.5 py-0.5 inline-block border border-[#333]">
                                                             {padViews(
                                                                 user.profileViews,
                                                             )}
@@ -348,7 +350,7 @@ export default async function Profile({
                                         ))}
                                     </div>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         No interests added yet.
                                     </span>
                                 )}
@@ -361,12 +363,12 @@ export default async function Profile({
                                 className="profile-music"
                             >
                                 {user.favoriteSong ? (
-                                    <p className="text-[12px]">
+                                    <p className="">
                                         <b>Favorite song:</b> “
                                         {user.favoriteSong}”
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         No favorite song set.
                                     </span>
                                 )}
@@ -383,7 +385,7 @@ export default async function Profile({
                                         {user.aboutMe}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         Hey everyone!! welcome to my profile
                                         lol. (edit your About Me!)
                                     </span>
@@ -401,7 +403,7 @@ export default async function Profile({
                                         {user.whoIdLikeToMeet}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         People who don&apos;t take life too
                                         seriously.
                                     </span>
@@ -469,7 +471,7 @@ export default async function Profile({
 
                                 {testimonials.length === 0 &&
                                 pendingTestimonials.length === 0 ? (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         No testimonials yet.
                                     </span>
                                 ) : (
@@ -534,7 +536,7 @@ export default async function Profile({
                                 className="profile-friends"
                             >
                                 {topFriends.length === 0 ? (
-                                    <span className="text-gray-500 italic text-[12px]">
+                                    <span className="text-gray-500 italic ">
                                         No friends yet.
                                     </span>
                                 ) : (
@@ -553,7 +555,9 @@ export default async function Profile({
                                                             src={f.photo}
                                                             alt={f.displayName}
                                                             className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
-                                                            cloudinaryWidth={120}
+                                                            cloudinaryWidth={
+                                                                120
+                                                            }
                                                         />
                                                     </Link>
                                                     <Link

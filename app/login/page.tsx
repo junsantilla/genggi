@@ -26,7 +26,7 @@ export default async function LoginPage({
             <div className="p-4">
                 {reset === "1" && (
                     <div
-                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2 text-[12px] font-bold mb-3"
+                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2  font-bold mb-3"
                         role="status"
                     >
                         Password reset! You can now log in with your new
@@ -35,7 +35,7 @@ export default async function LoginPage({
                 )}
                 {signup === "1" && (
                     <div
-                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2 text-[12px] font-bold mb-3"
+                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2  font-bold mb-3"
                         role="status"
                     >
                         Account created! Check your email (and spam folder) to
@@ -44,7 +44,7 @@ export default async function LoginPage({
                 )}
                 {verified === "1" && (
                     <div
-                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2 text-[12px] font-bold mb-3"
+                        className="text-green-700 bg-green-50 border border-green-200 px-2 py-2  font-bold mb-3"
                         role="status"
                     >
                         Email verified! You can now log in.
@@ -66,7 +66,7 @@ export default async function LoginPage({
                     ]}
                     submitLabel="Login"
                 />
-                <p className="text-center text-[12px] text-gray-500 mt-3">
+                <p className="text-center  text-gray-500 mt-3">
                     No account?{" "}
                     <Link href="/signup" className="text-[#003399] font-bold">
                         Create one here

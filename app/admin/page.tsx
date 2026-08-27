@@ -138,7 +138,7 @@ export default async function AdminPage({
                 </Box>
 
                 <Box title="Bulletin Post Limit">
-                    <p className="text-[12px] text-gray-600 mb-1.5">
+                    <p className=" text-gray-600 mb-1.5">
                         Maximum bulletin posts a user can make per hour. Leave
                         blank or set 0 for no limit.
                     </p>
@@ -146,7 +146,7 @@ export default async function AdminPage({
                 </Box>
 
                 <Box title="Delete User by Username">
-                    <p className="text-[12px] text-gray-600 mb-1.5">
+                    <p className=" text-gray-600 mb-1.5">
                         Enter a username to permanently delete the account and
                         all related data (posts, comments, reactions, messages,
                         friendships, chatboxes, reports, etc.).
@@ -155,7 +155,7 @@ export default async function AdminPage({
                 </Box>
 
                 <Box title="Delete User by ID">
-                    <p className="text-[12px] text-gray-600 mb-1.5">
+                    <p className=" text-gray-600 mb-1.5">
                         Paste a user&apos;s ID to permanently delete the account
                         and all related data (posts, comments, reactions,
                         messages, friendships, chatboxes, reports, etc.).
@@ -165,7 +165,7 @@ export default async function AdminPage({
 
                 <Box title={`Reports (${openReports} open)`}>
                     {reports.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             No open reports.
                         </p>
                     ) : (
@@ -179,7 +179,7 @@ export default async function AdminPage({
                                     className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
                                 >
                                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                                        <div className="text-[12px]">
+                                        <div className="">
                                             <b>
                                                 {reported ? (
                                                     <Link
@@ -228,7 +228,7 @@ export default async function AdminPage({
 
                 <Box title={`Pending Testimonials (${testimonials.length})`}>
                     {testimonials.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
+                        <p className="text-gray-500 italic ">
                             Nothing pending.
                         </p>
                     ) : (
@@ -237,7 +237,7 @@ export default async function AdminPage({
                                 key={t._id.toString()}
                                 className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
                             >
-                                <div className="text-[12px]">
+                                <div className="">
                                     For{" "}
                                     <b>
                                         {testiProfile(
@@ -294,16 +294,14 @@ export default async function AdminPage({
                         </button>
                     </form>
                     {users.length === 0 ? (
-                        <p className="text-gray-500 italic text-[12px]">
-                            No users found.
-                        </p>
+                        <p className="text-gray-500 italic ">No users found.</p>
                     ) : (
                         users.map((u) => (
                             <div
                                 key={u._id.toString()}
                                 className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0 flex-wrap"
                             >
-                                <div className="text-[12px]">
+                                <div className="">
                                     <Link
                                         href={`/${u.username}`}
                                         className="text-[#003399] font-bold no-underline"

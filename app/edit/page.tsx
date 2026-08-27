@@ -64,7 +64,7 @@ export default async function EditPage() {
                 <Box title="🔒 Privacy & Safety">
                     <form
                         action={updatePrivacyAction}
-                        className="flex flex-col gap-2 text-[12px]"
+                        className="flex flex-col gap-2 "
                     >
                         <label className="flex items-center gap-2">
                             <input
