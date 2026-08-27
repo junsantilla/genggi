@@ -55,7 +55,10 @@ export default function NavBar({
                             href="/"
                             className="no-underline text-white inline-flex items-center"
                         >
-                            Genggi
+                            <span>Genggi</span>
+                            <span className="ml-2 -translate-y-0.5 rounded bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
+                                Beta
+                            </span>
                         </Link>
                         {isLoggedIn && (
                             <button
