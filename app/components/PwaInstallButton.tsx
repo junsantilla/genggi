@@ -65,7 +65,7 @@ export default function PwaInstallButton() {
 
     return (
         <div className="relative flex items-center">
-            <button
+            {/* <button
                 type="button"
                 onClick={handleInstall}
                 className="sm:hidden shrink-0 whitespace-nowrap text-white font-bold text-[13px] hover:underline py-0.5 px-1 inline-flex items-center gap-1 cursor-pointer"
@@ -74,7 +74,7 @@ export default function PwaInstallButton() {
             >
                 <Download size={13} className="mb-0.5" aria-hidden="true" />
                 Download App
-            </button>
+            </button> */}
             {showInstructions && (
                 <div className="absolute right-0 top-full z-50 mt-1 w-64 border border-[#6699cc] bg-white p-2 text-[12px] font-normal leading-snug text-[#003399] shadow-md">
                     Tap the <strong>Share</strong> button in Safari, then choose
