@@ -80,7 +80,7 @@ export default function BulletinPostCard({
             <div className="flex gap-2">
                 <Link
                     href={`/${post.author.username}`}
-                    className="shrink-0 block"
+                    className="shrink-0 self-start"
                 >
                     <UserAvatar
                         src={post.author.photo}
