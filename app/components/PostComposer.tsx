@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Globe, Lock, Users } from "lucide-react";
 
 type PostResult = { ok?: boolean; error?: string };
 
@@ -20,8 +21,22 @@ export default function PostComposer({
     const [error, setError] = useState("");
     const [pending, setPending] = useState(false);
     const [posted, setPosted] = useState(false);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
     const remaining = 1000 - body.length;
+    const [visibility, setVisibility] = useState("public");
+    const privacyLabel =
+        visibility === "private"
+            ? "Only me"
+            : visibility === "friends"
+              ? "Friends"
+              : "Public";
+    const VisibilityIcon =
+        visibility === "private"
+            ? Lock
+            : visibility === "friends"
+              ? Users
+              : Globe;
 
     return (
         <form
@@ -48,7 +63,7 @@ export default function PostComposer({
             <div className="relative">
                 <textarea
                     name="body"
-                    rows={3}
+                    rows={2}
                     maxLength={1000}
                     value={body}
                     onChange={(event) => {
@@ -66,7 +81,7 @@ export default function PostComposer({
                     {remaining}
                 </span>
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                     <label
                         htmlFor="post-photo"
@@ -90,17 +105,60 @@ export default function PostComposer({
                 </div>
                 <div className="flex items-center gap-2">
                     {showPrivacy && (
-                        <select
-                            name="visibility"
-                            defaultValue="public"
-                            disabled={pending}
-                            className="input w-auto text-[11px] py-1"
-                            aria-label="Post privacy"
-                        >
-                            <option value="public">Public</option>
-                            <option value="friends">Friends</option>
-                            <option value="private">Only me</option>
-                        </select>
+                        <>
+                            <input
+                                type="hidden"
+                                name="visibility"
+                                value={visibility}
+                            />
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    className="flex items-center text-[#003399] font-bold hover:underline p-0.5"
+                                    onClick={() =>
+                                        setPrivacyOpen((open) => !open)
+                                    }
+                                    aria-label={`Post privacy: ${privacyLabel}`}
+                                    aria-expanded={privacyOpen}
+                                    title={`Post privacy: ${privacyLabel}`}
+                                >
+                                    <VisibilityIcon
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                </button>
+                                {privacyOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() =>
+                                                setPrivacyOpen(false)
+                                            }
+                                            aria-hidden="true"
+                                        />
+                                        <div className="absolute right-0 top-full z-20 mt-1 min-w-[120px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md">
+                                            {[
+                                                ["public", "Public"],
+                                                ["friends", "Friends"],
+                                                ["private", "Only me"],
+                                            ].map(([value, label]) => (
+                                                <button
+                                                    key={value}
+                                                    type="button"
+                                                    className="block w-full text-left cursor-pointer text-[#003399] font-bold hover:underline py-0.5"
+                                                    onClick={() => {
+                                                        setVisibility(value);
+                                                        setPrivacyOpen(false);
+                                                    }}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </>
                     )}
                     <button
                         type="submit"
