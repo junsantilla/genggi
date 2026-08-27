@@ -79,7 +79,7 @@ export default function NavBar({
                 <div className="mx-auto flex min-w-max max-w-[960px] items-center justify-between gap-x-6">
                     {isLoggedIn ? (
                         <>
-                            <div className="flex items-center gap-x-2.5">
+                            <div className="flex items-center gap-x-2.5 mr-2.5">
                                 <NavLink href="/">Home</NavLink>
                                 <NavLink href={`/${username}`}>
                                     My Profile

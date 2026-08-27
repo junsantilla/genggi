@@ -21,8 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
     title: {
-        default: "genggi",
-        template: "%s | genggi",
+        default: "Genggi",
+        template: "%s | Genggi",
     },
     description:
         "A nostalgic social network for profiles, friends, messages, and fun.",
@@ -53,9 +53,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 <main className="py-2 min-h-[calc(100dvh-155px)]">
                     {children}
                 </main>
-                <footer className="text-[11px] text-gray-400 py-4 border-t border-gray-200 mt-4 bg-[#f5f9ff]">
+                <footer className="text-gray-400 py-4 border-t border-gray-200 mt-4 bg-[#f5f9ff]">
                     <div className="max-w-[960px] w-full mx-auto px-2.5 flex justify-between space-x-3">
-                        <span>© 2026 genggi — made for nostalgic fun.</span>
+                        <span>© 2026 Genggi</span>
                         <Link
                             href="/report-bug"
                             className="underline hover:text-gray-600"
