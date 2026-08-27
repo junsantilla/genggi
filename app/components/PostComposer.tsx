@@ -57,7 +57,7 @@ export default function PostComposer({
                         setPosted(false);
                     }}
                     disabled={pending}
-                    className="input w-full resize-none pr-16"
+                    className="input w-full resize-none pr-16 bg-white"
                     placeholder={placeholder}
                 />
                 <span

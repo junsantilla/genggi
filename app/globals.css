@@ -101,7 +101,7 @@ main:has(.landing-page) {
 .input {
     width: 100%;
     border: 1px solid #6699cc;
-    background: #f5f9ff;
+    /* background: #dbe9f7; */
     padding: 0.3rem 0.5rem;
     font-size: 16px;
     color: #000;
@@ -201,7 +201,7 @@ select {
 /* Profile theme: form controls inside a profile page follow the user's theme */
 .profile-page .input {
     border-color: var(--profile-border, #6699cc);
-    background: #f5f9ff;
+    background: #dbe9f7;
 }
 .profile-page .input:focus {
     outline-color: var(--profile-border, #6699cc);

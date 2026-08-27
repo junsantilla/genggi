@@ -36,7 +36,7 @@ export default function BulletinCommentForm({
                 rows={1}
                 maxLength={500}
                 required
-                className="input flex-1 min-w-[180px]"
+                className="input flex-1 min-w-[180px] bg-[#DBE9F7]"
                 onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey) {
                         event.preventDefault();

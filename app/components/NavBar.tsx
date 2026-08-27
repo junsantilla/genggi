@@ -47,48 +47,70 @@ export default function NavBar({
 
     return (
         <header className="sticky top-0 z-50">
-            <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl sm:text-center tracking-tight">
-                <Link href="/" className="no-underline text-white">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="/images/genggeng-logo4.png"
-                        alt="genggeng"
-                        className="h-10 w-10 inline-block object-cover rounded"
-                    />{" "}
-                    genggi
-                </Link>
+            <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl tracking-tight">
+                <div className="mx-auto max-w-[960px]">
+                    <Link
+                        href="/"
+                        className="no-underline text-white inline-flex items-center"
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* <img
+                            src="/images/genggeng-logo4.png"
+                            alt="genggeng"
+                            className="h-10 w-10 inline-block object-cover rounded mr-1"
+                        />{" "} */}
+                        Genggi
+                    </Link>
+                </div>
             </div>
-            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5 text-[12px] sm:text-[13px] flex flex-nowrap items-center gap-x-2.5 overflow-x-auto overscroll-x-contain whitespace-nowrap sm:justify-center">
-                {isLoggedIn ? (
-                    <>
-                        <NavLink href="/">Home</NavLink>
-                        <NavLink href={`/${username}`}>My Profile</NavLink>
-                        <NavLink href="/friends" count={counts.friendRequests}>
-                            Friends
-                        </NavLink>
-                        <NavLink href="/messages" count={counts.messages}>
-                            Messages
-                        </NavLink>
-                        <NavLink href="/chatboxes">Chatbox</NavLink>
-                        <NavLink href="/search">Search</NavLink>
-                        <NavLink
-                            href="/notifications"
-                            count={counts.notifications}
-                        >
-                            Notifications
-                        </NavLink>
-                        <NavLink href="/edit">Edit Profile</NavLink>
-                        <NavLink href="/layouts/generator">Layout Generator</NavLink>
-                        {isAdmin && <NavLink href="/admin">Admin</NavLink>}
-                        <LogoutButton />
-                    </>
-                ) : (
-                    <>
-                        <NavLink href="/">Home</NavLink>
-                        <NavLink href="/login">Login</NavLink>
-                        <NavLink href="/signup">Create Account</NavLink>
-                    </>
-                )}
+            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5 text-[12px] sm:text-[13px] overflow-x-auto overscroll-x-contain">
+                <div className="mx-auto flex min-w-max max-w-[960px] items-center justify-between gap-x-6">
+                    {isLoggedIn ? (
+                        <>
+                            <div className="flex items-center gap-x-2.5">
+                                <NavLink href={`/${username}`}>
+                                    My Profile
+                                </NavLink>
+                                <NavLink
+                                    href="/friends"
+                                    count={counts.friendRequests}
+                                >
+                                    Friends
+                                </NavLink>
+                                <NavLink
+                                    href="/messages"
+                                    count={counts.messages}
+                                >
+                                    Messages
+                                </NavLink>
+                                <NavLink href="/chatboxes">Chatbox</NavLink>
+                                <NavLink href="/search">Search</NavLink>
+                                <NavLink
+                                    href="/notifications"
+                                    count={counts.notifications}
+                                >
+                                    Notifications
+                                </NavLink>
+                            </div>
+                            <div className="flex items-center gap-x-2.5">
+                                <NavLink href="/edit">Edit Profile</NavLink>
+                                <NavLink href="/layouts/generator">
+                                    Layout Generator
+                                </NavLink>
+                                {isAdmin && (
+                                    <NavLink href="/admin">Admin</NavLink>
+                                )}
+                                <LogoutButton />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="mx-auto flex items-center gap-x-2.5">
+                            <NavLink href="/">Home</NavLink>
+                            <NavLink href="/login">Login</NavLink>
+                            <NavLink href="/signup">Create Account</NavLink>
+                        </div>
+                    )}
+                </div>
             </nav>
         </header>
     );
