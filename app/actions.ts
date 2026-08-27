@@ -874,7 +874,16 @@ export async function createGroupPostAction(groupId: string, formData: FormData)
     if (file.size > 3 * 1024 * 1024 || !file.type.startsWith("image/")) return { error: "Please upload an image under 3MB." };
     photo = await uploadImage(Buffer.from(await file.arrayBuffer()), `groups/${group._id}`);
   }
-  await getDb().collection("groupPosts").insertOne({ groupId: group._id, authorId: user._id, body, photo: photo?.secure_url ?? null, photoPublicId: photo?.public_id ?? null, createdAt: new Date() });
+  const db = getDb();
+  const recentDuplicate = await db.collection("groupPosts").findOne({
+    groupId: group._id,
+    authorId: user._id,
+    body,
+    photo: photo?.secure_url ?? null,
+    createdAt: { $gt: new Date(Date.now() - 10_000) },
+  });
+  if (recentDuplicate) return { ok: true };
+  await db.collection("groupPosts").insertOne({ groupId: group._id, authorId: user._id, body, photo: photo?.secure_url ?? null, photoPublicId: photo?.public_id ?? null, createdAt: new Date() });
   revalidatePath(`/groups/${groupId}`);
   return { ok: true };
 }
@@ -932,7 +941,16 @@ export async function createBulletinPostAction(formData: FormData): Promise<Acti
     }
   }
 
-  await getDb().collection("bulletinPosts").insertOne({
+  const db = getDb();
+  const recentDuplicate = await db.collection("bulletinPosts").findOne({
+    authorId: user._id,
+    body,
+    visibility: visibilityValue,
+    photo: uploaded?.secure_url ?? null,
+    createdAt: { $gt: new Date(Date.now() - 10_000) },
+  });
+  if (recentDuplicate) return { ok: true };
+  await db.collection("bulletinPosts").insertOne({
     authorId: user._id,
     body,
     visibility: visibilityValue,

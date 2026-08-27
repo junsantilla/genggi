@@ -27,6 +27,7 @@ export default function PostComposer({
         <form
             ref={formRef}
             action={async (formData) => {
+                if (pending) return;
                 setPending(true);
                 setError("");
                 setPosted(false);
