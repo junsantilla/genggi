@@ -2,31 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
-import { timeAgo } from "@/lib/utils";
-import { sendMessageAction, deleteMessageAction } from "@/app/actions";
-import ActionButton from "@/app/components/ActionButton";
+import { MESSAGE_PAGE_SIZE, type Message, type SerializedMessage } from "@/lib/types";
+import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
-import Box from "@/app/components/Box";
+import MessageThread from "@/app/components/MessageThread";
 import UserAvatar from "@/app/components/UserAvatar";
-// import ScrollToBottom from "@/app/components/ScrollToBottom";
-
-// Groups messages under "Today" / "Yesterday" / a full date label,
-// the way most chat apps do, so long threads are easier to scan.
-function dayLabel(date: Date) {
-    const now = new Date();
-    const startOf = (d: Date) =>
-        new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    const diffDays = Math.round(
-        (startOf(now) - startOf(date)) / (1000 * 60 * 60 * 24),
-    );
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    return date.toLocaleDateString(undefined, {
-        month: "long",
-        day: "numeric",
-        year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    });
-}
 
 export default async function ThreadPage({
     params,
@@ -46,7 +26,8 @@ export default async function ThreadPage({
     }
     if (!other) notFound();
 
-    const messages = await db
+    // Load only the latest page; older history is fetched lazily on scroll-up.
+    const latest = (await db
         .collection("messages")
         .find({
             $or: [
@@ -54,19 +35,34 @@ export default async function ThreadPage({
                 { senderId: other._id, recipientId: user._id },
             ],
         })
-        .sort({ createdAt: 1 })
-        .toArray();
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(MESSAGE_PAGE_SIZE + 1)
+        .toArray()) as unknown as Message[];
 
-    const myPhoto = user.photo as string | undefined;
+    const hasMore = latest.length > MESSAGE_PAGE_SIZE;
+    // Reverse so the initial page is in chronological order.
+    const page = latest.slice(0, MESSAGE_PAGE_SIZE).reverse();
+
+    const initialMessages: SerializedMessage[] = page.map((m) => ({
+        _id: m._id.toString(),
+        senderId: m.senderId.toString(),
+        recipientId: m.recipientId.toString(),
+        body: m.body,
+        read: m.read,
+        createdAt: m.createdAt.toISOString(),
+    }));
 
     // Mark incoming messages as read
-    const unreadIds = messages
-        .filter((m) => m.recipientId.toString() === uid && !m.read)
+    const unreadIds = initialMessages
+        .filter((m) => m.recipientId === uid && !m.read)
         .map((m) => m._id);
     if (unreadIds.length > 0) {
         await db
             .collection("messages")
-            .updateMany({ _id: { $in: unreadIds } }, { $set: { read: true } });
+            .updateMany(
+                { _id: { $in: unreadIds.map((s) => new ObjectId(s)) } },
+                { $set: { read: true } },
+            );
     }
 
     return (
@@ -92,101 +88,17 @@ export default async function ThreadPage({
             </div>
 
             {/* Message list — scrolls independently, header & reply box stay put */}
-            <div className="flex-1 overflow-y-auto px-3 py-3 bg-[#eef3fa]">
-                {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 gap-2">
-                        <UserAvatar
-                            src={other.photo}
-                            alt={other.displayName}
-                            className="w-14 h-14 object-cover rounded-full opacity-70"
-                        />
-                        <p className="italic">
-                            No messages yet — say hi to {other.displayName}!
-                        </p>
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-1">
-                        {messages.map((m, i) => {
-                            const mine = m.senderId.toString() === uid;
-                            const created = new Date(m.createdAt);
-                            const prev =
-                                i > 0
-                                    ? new Date(messages[i - 1].createdAt)
-                                    : null;
-                            const showDateDivider =
-                                !prev || dayLabel(prev) !== dayLabel(created);
-                            const isLastMine =
-                                mine &&
-                                (i === messages.length - 1 ||
-                                    messages[i + 1].senderId.toString() !==
-                                        uid);
-
-                            return (
-                                <div key={m._id.toString()}>
-                                    {showDateDivider && (
-                                        <div className="flex items-center gap-2 my-3">
-                                            <div className="h-px bg-[#c3d4e8] flex-1" />
-                                            <span className="text-[11px] text-gray-500 font-semibold px-1">
-                                                {dayLabel(created)}
-                                            </span>
-                                            <div className="h-px bg-[#c3d4e8] flex-1" />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        className={`group flex items-end gap-2 ${mine ? "flex-row-reverse" : ""}`}
-                                    >
-                                        <UserAvatar
-                                            src={mine ? myPhoto : other.photo}
-                                            alt={
-                                                mine ? "You" : other.displayName
-                                            }
-                                            className="w-6 h-6 object-cover rounded-full shrink-0 mb-4"
-                                        />
-
-                                        <div
-                                            className={`max-w-[75%] sm:max-w-[65%] flex flex-col ${mine ? "items-end" : "items-start"}`}
-                                        >
-                                            <div
-                                                className={`px-3 py-1.5 rounded-2xl text-sm whitespace-pre-wrap break-words shadow-sm ${
-                                                    mine
-                                                        ? "bg-[#cc3399] text-white rounded-br-sm"
-                                                        : "bg-white border border-[#c3d4e8] text-[#1a1a1a] rounded-bl-sm"
-                                                }`}
-                                            >
-                                                {m.body}
-                                            </div>
-                                            <div
-                                                className={`flex items-center gap-2 mt-0.5 px-1 text-[10px] text-gray-400 ${mine ? "flex-row-reverse" : ""}`}
-                                            >
-                                                <span
-                                                    title={created.toLocaleString()}
-                                                >
-                                                    {timeAgo(m.createdAt)}
-                                                </span>
-                                                {mine && (
-                                                    <ActionButton
-                                                        action={deleteMessageAction.bind(
-                                                            null,
-                                                            m._id.toString(),
-                                                        )}
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 underline-offset-2 hover:underline"
-                                                        confirmText="Delete this message?"
-                                                    >
-                                                        Delete
-                                                    </ActionButton>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {isLastMine && <div className="h-0.5" />}
-                                </div>
-                            );
-                        })}
-                        {/* <ScrollToBottom count={messages.length} /> */}
-                    </div>
-                )}
-            </div>
+            <MessageThread
+                threadId={other._id.toString()}
+                other={{
+                    displayName: other.displayName,
+                    photo: other.photo,
+                }}
+                myId={uid}
+                myPhoto={user.photo}
+                initialMessages={initialMessages}
+                hasMoreInitial={hasMore}
+            />
 
             {/* Reply box — pinned to the bottom of the thread */}
             <div className="shrink-0 border-t border-[#c3d4e8] bg-white px-3 py-2.5">
@@ -201,4 +113,4 @@ export default async function ThreadPage({
             </div>
         </div>
     );
-}
+}
