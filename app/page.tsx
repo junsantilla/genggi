@@ -10,7 +10,7 @@ export const metadata: Metadata = {
         absolute: "Welcome to Genggi",
     },
     description:
-        "The nostalgic social network. Make a profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",
+        "The nostalgic social network. Make a custom profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",
     keywords: [
         "social network",
         "nostalgia",
