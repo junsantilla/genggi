@@ -569,16 +569,20 @@ export default async function Profile({
                                                 </div>
                                             ))}
                                         </div>
-                                        {isOwner && (
-                                            <div className="text-right mt-1.5">
-                                                <Link
-                                                    href="/friends"
-                                                    className="text-[#003399]"
-                                                >
-                                                    View All Friends »
-                                                </Link>
-                                            </div>
-                                        )}
+                                        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[13px]">
+                                            <Link
+                                                href={`/${user.username}/friends`}
+                                                className="text-[#003399]"
+                                            >
+                                                View All Friends »
+                                            </Link>
+                                            {/* <Link
+                                                href={`/${user.username}/friends`}
+                                                className="text-[#003399]"
+                                            >
+                                                Friends page
+                                            </Link> */}
+                                        </div>
                                     </>
                                 )}
                             </Box>
