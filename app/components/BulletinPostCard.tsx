@@ -85,7 +85,8 @@ export default function BulletinPostCard({
                     <UserAvatar
                         src={post.author.photo}
                         alt={post.author.displayName}
-                        className="block w-[44px] h-[44px] object-cover"
+                        className="block w-[45px] h-[45px] object-cover"
+                        cloudinaryWidth={45}
                     />
                 </Link>
                 <div className="flex-1 min-w-0">
@@ -172,7 +173,8 @@ export default function BulletinPostCard({
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={optimizeCloudinaryUrl(post.photo, {
-                                    width: 1200,
+                                    // Bulletin cards are displayed at roughly this size; avoid downloading originals.
+                                    width: 720,
                                 })}
                                 alt="Post photo"
                                 className="w-full"

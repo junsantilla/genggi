@@ -48,7 +48,7 @@ export default async function NewMembers({
                                     src={u.photo}
                                     alt={u.displayName}
                                     className="w-full aspect-square object-cover mx-auto mb-0.5"
-                                    cloudinaryWidth={240}
+                                    cloudinaryWidth={100}
                                 />
                             </Link>
                             <Link
