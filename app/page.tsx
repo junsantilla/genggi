@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import Landing from "@/app/components/Landing";
 import NewMembers from "@/app/components/NewMembers";
 import BulletinFeed from "@/app/components/BulletinFeed";
+import BackToTop from "@/app/components/BackToTop";
 import { getBulletinFeedPage } from "@/lib/bulletin";
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default async function Home() {
                     </div>
                 </div>
             </div>
+            <BackToTop />
         </div>
     );
 }
