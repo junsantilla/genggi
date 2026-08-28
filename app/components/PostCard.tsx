@@ -175,7 +175,8 @@ export default function PostCard({
                     <UserAvatar
                         src={post.author.photo}
                         alt={post.author.displayName}
-                        className="block w-[44px] h-[44px] object-cover"
+                        className="block w-[45px] h-[45px] object-cover"
+                        cloudinaryWidth={45}
                     />
                 </Link>
                 <div className="flex-1 min-w-0">
