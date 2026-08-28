@@ -6,10 +6,12 @@ import {
     REACTION_TYPES,
     type BulletinCommentCard,
     type BulletinPostCard,
+    type BulletinReactionSummary,
 } from "@/lib/types";
 import {
     reactToBulletinPostAction,
     reactToGroupPostAction,
+    reactToBulletinCommentAction,
     createGroupCommentAction,
     deleteBulletinPostAction,
     deleteBulletinCommentAction,
@@ -58,6 +60,10 @@ export default function PostCard({
     );
     const [menuOpen, setMenuOpen] = useState(false);
     const [open, setOpen] = useState(false);
+    const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+    const [reactingCommentId, setReactingCommentId] = useState<string | null>(
+        null,
+    );
     const [commentBody, setCommentBody] = useState("");
     const [commentPending, setCommentPending] = useState(false);
     const isGroup = Boolean(groupId);
@@ -65,6 +71,82 @@ export default function PostCard({
     const countOf = (type: string) =>
         reactions.find((reaction) => reaction.type === type)?.count ?? 0;
     const canManage = isOwn || currentUsername === "genggengpro";
+    const commentCountOf = (comment: BulletinCommentCard, type: string) =>
+        (comment.reactions ?? []).find((r) => r.type === type)?.count ?? 0;
+    const commentTotalReactions = (comment: BulletinCommentCard) =>
+        (comment.reactions ?? []).reduce((sum, r) => sum + r.count, 0);
+    const optimisticCommentReaction = (
+        comment: BulletinCommentCard,
+        type: string,
+    ): BulletinCommentCard => {
+        const current = comment.reactions ?? [];
+        const my = comment.myReaction ?? null;
+        let next: BulletinReactionSummary[];
+        let nextMy: string | null;
+        if (my === type) {
+            // Toggle off the user's current reaction.
+            next = current
+                .map((r) =>
+                    r.type === type ? { ...r, count: r.count - 1 } : r,
+                )
+                .filter((r) => r.count > 0);
+            nextMy = null;
+        } else {
+            // Remove the old reaction (if any) and add the new one.
+            next = current.map((r) =>
+                r.type === my
+                    ? { ...r, count: r.count - 1 }
+                    : r.type === type
+                      ? { ...r, count: r.count + 1 }
+                      : r,
+            );
+            if (!next.some((r) => r.type === type)) {
+                next = [...next, { type, count: 1 }];
+            }
+            next = next.filter((r) => r.count > 0);
+            nextMy = type;
+        }
+        return { ...comment, reactions: next, myReaction: nextMy };
+    };
+    const reactToComment = async (commentId: string, type: string) => {
+        setOpenCommentId(null);
+        setReactingCommentId(commentId);
+        const previous = comments.find((c) => c._id === commentId);
+        // Optimistic update so the UI reflects the reaction immediately.
+        setComments((prev) =>
+            prev.map((c) =>
+                c._id === commentId ? optimisticCommentReaction(c, type) : c,
+            ),
+        );
+        try {
+            const res = await reactToBulletinCommentAction(commentId, type);
+            if (res && !("error" in res && res.error) && res.reactions) {
+                setComments((prev) =>
+                    prev.map((c) =>
+                        c._id === commentId
+                            ? {
+                                  ...c,
+                                  reactions: res.reactions ?? [],
+                                  myReaction: res.myReaction ?? null,
+                              }
+                            : c,
+                    ),
+                );
+            } else if (previous) {
+                setComments((prev) =>
+                    prev.map((c) => (c._id === commentId ? previous : c)),
+                );
+            }
+        } catch {
+            if (previous) {
+                setComments((prev) =>
+                    prev.map((c) => (c._id === commentId ? previous : c)),
+                );
+            }
+        } finally {
+            setReactingCommentId(null);
+        }
+    };
     const react = async (type: string) => {
         const result = isGroup
             ? await reactToGroupPostAction(groupId!, post._id, type)
@@ -337,8 +419,7 @@ export default function PostCard({
                                         )
                                     ) : (
                                         <>
-                                            <span>
-                                                {" "}
+                                            <div>
                                                 {isGroup ? (
                                                     comment.body
                                                 ) : (
@@ -346,9 +427,103 @@ export default function PostCard({
                                                         text={comment.body}
                                                     />
                                                 )}
-                                            </span>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
+                                            {!isGroup && currentUserId && (
+                                                <span className="relative inline-flex items-center">
+                                                    <button
+                                                        type="button"
+                                                        className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
+                                                        onClick={() =>
+                                                            setOpenCommentId(
+                                                                (id) =>
+                                                                    id ===
+                                                                    comment._id
+                                                                        ? null
+                                                                        : comment._id,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            reactingCommentId ===
+                                                            comment._id
+                                                        }
+                                                        title={
+                                                            comment.myReaction
+                                                                ? "Change or remove your reaction"
+                                                                : "React to this comment"
+                                                        }
+                                                        aria-label="React to this comment"
+                                                    >
+                                                        React
+                                                    </button>
+                                                    {commentTotalReactions(
+                                                        comment,
+                                                    ) > 0 &&
+                                                        openCommentId !==
+                                                            comment._id && (
+                                                            <span className="text-[11px] text-gray-500">
+                                                                {(
+                                                                    comment.reactions ??
+                                                                    []
+                                                                )
+                                                                    .slice(0, 3)
+                                                                    .map(
+                                                                        (r) =>
+                                                                            `${r.type} ${r.count}`,
+                                                                    )
+                                                                    .join(
+                                                                        " · ",
+                                                                    )}
+                                                            </span>
+                                                        )}
+                                                    {openCommentId ===
+                                                        comment._id && (
+                                                        <>
+                                                            <div
+                                                                className="fixed inset-0 z-10"
+                                                                onClick={() =>
+                                                                    setOpenCommentId(
+                                                                        null,
+                                                                    )
+                                                                }
+                                                            />
+                                                            <div className="absolute z-20 bottom-full mb-1.5 left-0 bg-white border border-[#6699cc] p-1.5 flex gap-1 shadow-lg max-w-[calc(100vw-2rem)] flex-wrap">
+                                                                {REACTION_TYPES.map(
+                                                                    (t) => (
+                                                                        <button
+                                                                            key={
+                                                                                t
+                                                                            }
+                                                                            type="button"
+                                                                            className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
+                                                                                comment.myReaction ===
+                                                                                t
+                                                                                    ? "border-[#6699cc] bg-[#dbe9f7]"
+                                                                                    : "border-transparent"
+                                                                            }`}
+                                                                            onClick={() =>
+                                                                                reactToComment(
+                                                                                    comment._id,
+                                                                                    t,
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                reactingCommentId ===
+                                                                                comment._id
+                                                                            }
+                                                                            title={`${t}${commentCountOf(comment, t) > 0 ? ` (${commentCountOf(comment, t)})` : ""}`}
+                                                                        >
+                                                                            {t}
+                                                                        </button>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </span>
+                                            )}
                                             {(ownComment || isOwn) && (
-                                                <span className="ml-1 inline-flex gap-1">
+                                                <span className="inline-flex items-center gap-1.5">
                                                     {ownComment && (
                                                         <button
                                                             type="button"
@@ -395,6 +570,7 @@ export default function PostCard({
                                                     </ActionButton>
                                                 </span>
                                             )}
+                                            </div>
                                         </>
                                     )}
                                 </div>

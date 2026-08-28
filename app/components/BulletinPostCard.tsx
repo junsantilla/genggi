@@ -318,7 +318,7 @@ export default function BulletinPostCard({
                                                     {isOwnComment && (
                                                         <button
                                                             type="button"
-                                                            className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
+                                                            className="text-[#003399] underline text-[11px] cursor-pointer"
                                                             onClick={() =>
                                                                 setEditingCommentId(
                                                                     comment._id,
