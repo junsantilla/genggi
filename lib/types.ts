@@ -128,9 +128,20 @@ export interface BulletinComment {
 
 export interface BulletinCommentWithAuthor extends BulletinComment {
   author: Pick<User, "_id" | "username" | "displayName" | "photo">;
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
 }
 
 export const REACTION_TYPES = ["👍", "❤️", "😂", "😮", "😢", "😡"] as const;
+
+export interface BulletinCommentReaction {
+  _id: ObjectId;
+  commentId: ObjectId;
+  postId: ObjectId;
+  userId: ObjectId;
+  type: string;
+  createdAt: Date;
+}
 
 export interface BulletinReaction {
   _id: ObjectId;
@@ -166,6 +177,9 @@ export interface BulletinCommentCard {
   body: string;
   createdAt: Date | string;
   author: BulletinAuthorCard;
+  // Optional because group comments share this shape but have no reactions.
+  reactions?: BulletinReactionSummary[];
+  myReaction?: string | null;
 }
 
 export interface BulletinPostCard {
@@ -188,6 +202,8 @@ export interface SerializedBulletinComment {
   body: string;
   createdAt: string;
   author: BulletinAuthorCard;
+  reactions?: BulletinReactionSummary[];
+  myReaction?: string | null;
 }
 
 export interface SerializedBulletinPost {

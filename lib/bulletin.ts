@@ -2,6 +2,7 @@ import { getDb, ObjectId } from "@/lib/db";
 import { getFriendIds } from "@/lib/queries";
 import type {
   BulletinComment,
+  BulletinCommentReaction,
   BulletinCommentWithAuthor,
   BulletinPost,
   BulletinPostCard,
@@ -73,7 +74,8 @@ async function withReactions(
 }
 
 async function withComments(
-  posts: BulletinPostWithAuthor[]
+  posts: BulletinPostWithAuthor[],
+  viewerId: string | null
 ): Promise<BulletinPostWithComments[]> {
   if (posts.length === 0) return [];
 
@@ -84,6 +86,22 @@ async function withComments(
     .sort({ createdAt: 1 })
     .limit(BULLETIN_COMMENT_LIMIT)
     .toArray()) as unknown as BulletinComment[];
+
+  const commentIds = comments.map((c) => c._id);
+  const commentReactions =
+    commentIds.length > 0
+      ? ((await getDb()
+          .collection("bulletinCommentReactions")
+          .find({ commentId: { $in: commentIds } })
+          .toArray()) as unknown as BulletinCommentReaction[])
+      : [];
+  const reactionsByComment = new Map<string, BulletinCommentReaction[]>();
+  for (const r of commentReactions) {
+    const key = r.commentId.toString();
+    const list = reactionsByComment.get(key) ?? [];
+    list.push(r);
+    reactionsByComment.set(key, list);
+  }
 
   const commentAuthorIds = [
     ...new Map(comments.map((c) => [c.authorId.toString(), c.authorId])).values(),
@@ -106,7 +124,17 @@ async function withComments(
     if (!author) continue;
     const key = comment.postId.toString();
     const list = commentsByPost.get(key) ?? [];
-    list.push({ ...comment, author });
+    const reactionList = reactionsByComment.get(comment._id.toString()) ?? [];
+    const counts = new Map<string, number>();
+    let myReaction: string | null = null;
+    for (const r of reactionList) {
+      counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+      if (viewerId && r.userId.toString() === viewerId) myReaction = r.type;
+    }
+    const reactions: BulletinReactionSummary[] = [...counts.entries()]
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+    list.push({ ...comment, author, reactions, myReaction });
     commentsByPost.set(key, list);
   }
 
@@ -157,7 +185,7 @@ export async function getHomeBulletinPosts(
     .limit(limit)
     .toArray()) as unknown as BulletinPost[];
 
-  return withReactions(await withComments(await withAuthors(posts)), userId);
+  return withReactions(await withComments(await withAuthors(posts), userId), userId);
 }
 
 export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPostCard {
@@ -187,6 +215,8 @@ export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPost
         displayName: c.author.displayName,
         photo: c.author.photo,
       },
+      reactions: c.reactions,
+      myReaction: c.myReaction,
     })),
   };
 }
@@ -219,6 +249,8 @@ export function serializeBulletinPost(post: BulletinPostWithComments): Serialize
         displayName: c.author.displayName,
         photo: c.author.photo,
       },
+      reactions: c.reactions,
+      myReaction: c.myReaction,
     })),
   };
 }
@@ -280,7 +312,7 @@ export async function getBulletinPostById(
   if (!author) return null;
 
   const [result] = await withReactions(
-    await withComments([{ ...post, author }]),
+    await withComments([{ ...post, author }], viewerId),
     viewerId
   );
   return result ?? null;
@@ -308,5 +340,5 @@ export async function getProfileBulletinPosts(
     .limit(10)
     .toArray()) as unknown as BulletinPost[];
 
-  return withReactions(await withComments(await withAuthors(posts)), viewerId);
+  return withReactions(await withComments(await withAuthors(posts), viewerId), viewerId);
 }

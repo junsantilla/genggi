@@ -35,6 +35,7 @@ import {
 } from "@/lib/group";
 import {
     REACTION_TYPES,
+    type BulletinCommentReaction,
     type BulletinReaction,
     type BulletinReactionSummary,
     type BulletinVisibility,
@@ -1482,6 +1483,99 @@ export async function reactToBulletinPostAction(
     };
 }
 
+export async function reactToBulletinCommentAction(
+    commentId: string,
+    type: string,
+): Promise<
+    ActionResult & {
+        reactions?: BulletinReactionSummary[];
+        myReaction?: string | null;
+    }
+> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid;
+    try {
+        oid = new ObjectId(commentId);
+    } catch {
+        return { error: "Comment not found." };
+    }
+    const comment = await db
+        .collection("bulletinComments")
+        .findOne({ _id: oid });
+    if (!comment) return { error: "Comment not found." };
+    if (!(REACTION_TYPES as readonly string[]).includes(type))
+        return { error: "Invalid reaction." };
+
+    const existing = await db
+        .collection("bulletinCommentReactions")
+        .findOne({ commentId: oid, userId: user._id });
+    const created = !existing;
+    if (existing && existing.type === type) {
+        await db
+            .collection("bulletinCommentReactions")
+            .deleteOne({ _id: existing._id });
+    } else if (existing) {
+        await db
+            .collection("bulletinCommentReactions")
+            .updateOne({ _id: existing._id }, { $set: { type } });
+    } else {
+        await db.collection("bulletinCommentReactions").insertOne({
+            commentId: oid,
+            postId: comment.postId,
+            userId: user._id,
+            type,
+            createdAt: new Date(),
+        });
+    }
+
+    if (created) {
+        const author = await db
+            .collection("users")
+            .findOne({ _id: comment.authorId });
+        if (author && author._id.toString() !== user._id.toString()) {
+            await notify(
+                author._id.toString(),
+                "bulletin_comment_reaction",
+                user._id.toString(),
+                `${user.displayName} reacted ${type} to your comment.`,
+                `/bulletin/${comment.postId.toString()}`,
+            );
+        }
+    }
+
+    const reactions = (await db
+        .collection("bulletinCommentReactions")
+        .find({ commentId: oid })
+        .toArray()) as unknown as BulletinCommentReaction[];
+    const counts = new Map<string, number>();
+    let myReaction: string | null = null;
+    for (const r of reactions) {
+        counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+        if (r.userId.toString() === user._id.toString()) myReaction = r.type;
+    }
+
+    revalidatePath("/");
+    revalidatePath(`/bulletin/${comment.postId.toString()}`);
+    const post = await db
+        .collection("bulletinPosts")
+        .findOne({ _id: comment.postId });
+    if (post) {
+        const postAuthor = await db
+            .collection("users")
+            .findOne({ _id: post.authorId });
+        if (postAuthor) revalidatePath(`/${postAuthor.username}`);
+    }
+
+    return {
+        ok: true,
+        reactions: [...counts.entries()]
+            .map(([t, c]) => ({ type: t, count: c }))
+            .sort((a, b) => b.count - a.count),
+        myReaction,
+    };
+}
+
 export async function getMoreBulletinPostsAction(
     cursor: { createdAt: string; _id: string } | null,
 ): Promise<{
@@ -1511,6 +1605,9 @@ export async function deleteBulletinPostAction(
     }
     await db.collection("bulletinPosts").deleteOne({ _id: post._id });
     await db.collection("bulletinComments").deleteMany({ postId: post._id });
+    await db
+        .collection("bulletinCommentReactions")
+        .deleteMany({ postId: post._id });
     revalidatePath("/");
     const author = await db.collection("users").findOne({ _id: post.authorId });
     if (author) revalidatePath(`/${author.username}`);
@@ -1570,6 +1667,8 @@ export async function createBulletinCommentAction(
                 displayName: user.displayName,
                 photo: user.photo,
             },
+            reactions: [],
+            myReaction: null,
         },
     };
 }
@@ -1600,6 +1699,9 @@ export async function deleteBulletinCommentAction(
         return { error: "Not allowed." };
 
     await db.collection("bulletinComments").deleteOne({ _id: comment._id });
+    await db
+        .collection("bulletinCommentReactions")
+        .deleteMany({ commentId: comment._id });
     revalidatePath("/");
     if (post) {
         const author = await db
@@ -1763,6 +1865,20 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
     }[];
     const postIds = userPosts.map((p) => p._id);
 
+    const userComments = (await db
+        .collection("bulletinComments")
+        .find({
+            $or: [
+                { authorId: oid },
+                ...(postIds.length > 0
+                    ? [{ postId: { $in: postIds } }]
+                    : []),
+            ],
+        })
+        .project({ _id: 1 })
+        .toArray()) as unknown as { _id: ObjectId }[];
+    const commentIds = userComments.map((c) => c._id);
+
     const ownedChatboxes = (await db
         .collection("chatboxes")
         .find({ createdBy: oid })
@@ -1796,6 +1912,14 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
             $or: [
                 { authorId: oid },
                 ...(postIds.length > 0 ? [{ postId: { $in: postIds } }] : []),
+            ],
+        }),
+        db.collection("bulletinCommentReactions").deleteMany({
+            $or: [
+                { userId: oid },
+                ...(commentIds.length > 0
+                    ? [{ commentId: { $in: commentIds } }]
+                    : []),
             ],
         }),
         db
