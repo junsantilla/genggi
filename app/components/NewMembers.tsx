@@ -3,6 +3,7 @@ import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import Box from "./Box";
 import UserAvatar from "./UserAvatar";
+import { displayNameOrUsername } from "@/lib/utils";
 
 export default async function NewMembers({
     limit = 10,
@@ -46,7 +47,7 @@ export default async function NewMembers({
                             <Link href={`/${u.username}`} className="block">
                                 <UserAvatar
                                     src={u.photo}
-                                    alt={u.displayName}
+                                    alt={displayNameOrUsername(u.displayName, u.username)}
                                     className="w-full aspect-square object-cover mx-auto mb-0.5"
                                     cloudinaryWidth={100}
                                 />
@@ -55,7 +56,7 @@ export default async function NewMembers({
                                 href={`/${u.username}`}
                                 className="text-[#003399] no-underline font-bold break-words"
                             >
-                                {u.displayName}
+                                {displayNameOrUsername(u.displayName, u.username)}
                             </Link>
                             <div className="text-gray-500">
                                 {timeAgo(u.createdAt)}

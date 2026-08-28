@@ -1,5 +1,6 @@
 "use client";
 
+import { displayNameOrUsername } from "@/lib/utils";
 import { useState } from "react";
 
 export default function FriendSearch({
@@ -10,7 +11,7 @@ export default function FriendSearch({
     const [q, setQ] = useState("");
     const filtered = friends.filter(
         (f) =>
-            f.displayName.toLowerCase().includes(q.toLowerCase()) ||
+            displayNameOrUsername(f.displayName, f.username).toLowerCase().includes(q.toLowerCase()) ||
             f.username.toLowerCase().includes(q.toLowerCase()),
     );
 

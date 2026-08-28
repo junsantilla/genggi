@@ -6,6 +6,7 @@ import type { SerializedMessage } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import ActionButton from "./ActionButton";
 import UserAvatar from "./UserAvatar";
+import { displayNameOrUsername } from "@/lib/utils";
 
 // Groups messages under "Today" / "Yesterday" / a full date label,
 // the way most chat apps do, so long threads are easier to scan.
@@ -34,7 +35,7 @@ export default function MessageThread({
     hasMoreInitial,
 }: {
     threadId: string;
-    other: { displayName: string; photo: string | null };
+    other: { displayName: string; username: string; photo: string | null };
     myId: string;
     myPhoto: string | null;
     initialMessages: SerializedMessage[];
@@ -116,11 +117,11 @@ export default function MessageThread({
                 <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 gap-2">
                     <UserAvatar
                         src={other.photo}
-                        alt={other.displayName}
+                        alt={displayNameOrUsername(other.displayName, other.username)}
                         className="w-14 h-14 object-cover rounded-full opacity-70"
                     />
                     <p className="italic">
-                        No messages yet — say hi to {other.displayName}!
+                        No messages yet — say hi to {displayNameOrUsername(other.displayName, other.username)}!
                     </p>
                 </div>
             ) : (
@@ -170,7 +171,7 @@ export default function MessageThread({
                                 >
                                     <UserAvatar
                                         src={mine ? myPhoto : other.photo}
-                                        alt={mine ? "You" : other.displayName}
+                                        alt={mine ? "You" : displayNameOrUsername(other.displayName, other.username)}
                                         className="w-6 h-6 object-cover rounded-full shrink-0 mb-4"
                                     />
 
