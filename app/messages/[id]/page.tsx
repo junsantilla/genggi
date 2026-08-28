@@ -96,6 +96,7 @@ export default async function ThreadPage({
                 threadId={other._id.toString()}
                 other={{
                     displayName: other.displayName,
+                    username: other.username,
                     photo: other.photo,
                 }}
                 myId={uid}

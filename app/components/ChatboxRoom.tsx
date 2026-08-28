@@ -9,6 +9,7 @@ import {
 import type { ChatboxMessageCard } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import UserAvatar from "./UserAvatar";
+import { displayNameOrUsername } from "@/lib/utils";
 
 function Avatar({
     photo,
@@ -257,11 +258,11 @@ export default function ChatboxRoom({
                                 ) : (
                                     <Link
                                         href={`/${m.author.username}`}
-                                        title={`View ${m.author.displayName}'s profile`}
+                                        title={`View ${displayNameOrUsername(m.author.displayName, m.author.username)}'s profile`}
                                     >
                                         <Avatar
                                             photo={m.author.photo}
-                                            name={m.author.displayName}
+                                            name={displayNameOrUsername(m.author.displayName, m.author.username)}
                                             size="h-7 w-7 text-[10px]"
                                         />
                                     </Link>
@@ -308,7 +309,7 @@ export default function ChatboxRoom({
                                                 href={`/${m.author.username}`}
                                                 className="font-bold text-[11px] text-[#003399] no-underline hover:underline"
                                             >
-                                                {m.author.displayName}
+                                                {displayNameOrUsername(m.author.displayName, m.author.username)}
                                             </Link>
                                         )}
 
@@ -328,7 +329,7 @@ export default function ChatboxRoom({
                                 <button
                                     type="button"
                                     onClick={() => startReply(m)}
-                                    aria-label={`Reply to ${m.author.displayName}`}
+                                    aria-label={`Reply to ${displayNameOrUsername(m.author.displayName, m.author.username)}`}
                                     title="Reply"
                                     className={`self-center w-7 h-7 shrink-0 flex items-center justify-center text-[15px] border border-[#6699cc] bg-white hover:bg-[#dbe9f7] transition-opacity hover:cursor-pointer ${
                                         pressedId === m._id
@@ -351,7 +352,7 @@ export default function ChatboxRoom({
                         ↩️ Replying to{" "}
                         {replyingTo.author._id === viewerId
                             ? "yourself"
-                            : replyingTo.author.displayName}
+                            : displayNameOrUsername(replyingTo.author.displayName, replyingTo.author.username)}
                     </span>
                     <span className=" text-gray-600 truncate min-w-0 flex-1">
                         “{snippet(replyingTo.body, 80)}”

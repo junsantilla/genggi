@@ -22,6 +22,7 @@ import Box from "./Box";
 import BulletinBoard from "./BulletinBoard";
 import YouTubeMusicPlayer from "./YouTubeMusicPlayer";
 import UserAvatar from "./UserAvatar";
+import { displayNameOrUsername } from "@/lib/utils";
 
 export default async function Profile({
     user,
@@ -133,7 +134,7 @@ export default async function Profile({
         return (
             <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x p-6 text-center text-[13px]">
                 <p className="font-bold text-[#cc3399] text-lg mb-1">
-                    {user.displayName} has blocked you.
+                    {displayNameOrUsername(user.displayName, user.username)} has blocked you.
                 </p>
                 <p className="text-gray-500">
                     You can&apos;t view this profile or interact with this user.
@@ -165,7 +166,7 @@ export default async function Profile({
                             🔒 This profile is private
                         </p>
                         <p className="text-gray-500 text-[13px]">
-                            {user.displayName} only shares their profile with
+                            {displayNameOrUsername(user.displayName, user.username)} only shares their profile with
                             friends. Add them as a friend to view it.
                         </p>
                     </div>
@@ -174,7 +175,7 @@ export default async function Profile({
                         {/* ---------------- Left column ---------------- */}
                         <div className="profile-main-column w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5 sm:pr-[5px]">
                             <Box
-                                title={`${user.displayName} (@${user.username})`}
+                                title={`${displayNameOrUsername(user.displayName, user.username)} (@${user.username})`}
                                 border={theme.border}
                                 bg="#f5f9ff"
                                 className="profile-intro"
@@ -184,7 +185,7 @@ export default async function Profile({
                                     <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
                                         <UserAvatar
                                             src={user.photo}
-                                            alt={`${user.displayName}'s photo`}
+                                            alt={`${displayNameOrUsername(user.displayName, user.username)}'s photo`}
                                             className="profile-photo w-full object-cover mx-auto mb-2 p-1"
                                             cloudinaryWidth={440}
                                         />
@@ -530,7 +531,7 @@ export default async function Profile({
                         <div className="profile-sidebar w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
                             {/* Six most recent friends */}
                             <Box
-                                title={`${user.displayName.split(" ")[0]}'s Friends (recent ${topFriends.length})`}
+                                title={`${displayNameOrUsername(user.displayName, user.username).split(" ")[0]}'s Friends (recent ${topFriends.length})`}
                                 border={theme.border}
                                 bg="#f5f9ff"
                                 className="profile-friends"
@@ -553,7 +554,7 @@ export default async function Profile({
                                                     >
                                                         <UserAvatar
                                                             src={f.photo}
-                                                            alt={f.displayName}
+                                                            alt={displayNameOrUsername(f.displayName, f.username)}
                                                             className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
                                                             cloudinaryWidth={
                                                                 120
@@ -564,7 +565,7 @@ export default async function Profile({
                                                         href={`/${f.username}`}
                                                         className="text-[#003399] no-underline font-bold break-words"
                                                     >
-                                                        {f.displayName}
+                                                        {displayNameOrUsername(f.displayName, f.username)}
                                                     </Link>
                                                 </div>
                                             ))}

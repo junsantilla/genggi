@@ -5,6 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function displayNameOrUsername(
+  displayName: string | null | undefined,
+  username: string | null | undefined,
+): string {
+  const name = displayName?.trim();
+  return name || username?.trim() || "Unknown";
+}
+
 export function timeAgo(date: Date | string | number | undefined | null): string {
   if (!date) return "unknown";
   const ms = Date.now() - new Date(date).getTime();

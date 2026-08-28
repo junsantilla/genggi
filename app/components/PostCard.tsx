@@ -22,7 +22,7 @@ import type { SerializedBulletinComment } from "@/lib/types";
 import ActionButton from "./ActionButton";
 import BulletinEditForm from "./BulletinEditForm";
 import GroupEditForm from "./GroupEditForm";
-import { timeAgo } from "@/lib/utils";
+import { displayNameOrUsername, timeAgo } from "@/lib/utils";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import UserAvatar from "./UserAvatar";
 import BulletinCommentForm from "./BulletinCommentForm";
@@ -174,7 +174,7 @@ export default function PostCard({
                 >
                     <UserAvatar
                         src={post.author.photo}
-                        alt={post.author.displayName}
+                        alt={displayNameOrUsername(post.author.displayName, post.author.username)}
                         className="block w-[45px] h-[45px] object-cover"
                         cloudinaryWidth={45}
                     />
@@ -186,7 +186,7 @@ export default function PostCard({
                                 href={`/${post.author.username}`}
                                 className="block text-[#003399] font-bold no-underline"
                             >
-                                {post.author.displayName}
+                                {displayNameOrUsername(post.author.displayName, post.author.username)}
                             </Link>
                             {isGroup ? (
                                 <span className="block text-gray-500 text-[11px]">
@@ -365,7 +365,7 @@ export default function PostCard({
                                         href={`/${comment.author.username}`}
                                         className="text-[#003399] font-bold"
                                     >
-                                        {comment.author.displayName}
+                                        {displayNameOrUsername(comment.author.displayName, comment.author.username)}
                                     </Link>{" "}
                                     <span className="text-gray-500">
                                         ({timeAgo(comment.createdAt)})

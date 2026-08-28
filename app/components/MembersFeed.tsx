@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getMoreMembersAction } from "@/app/actions";
 import { timeAgo } from "@/lib/utils";
 import UserAvatar from "./UserAvatar";
+import { displayNameOrUsername } from "@/lib/utils";
 
 type Member = {
     _id: string;
@@ -63,7 +64,7 @@ export default function MembersFeed({
                     <Link href={`/${user.username}`} className="flex shrink-0">
                         <UserAvatar
                             src={user.photo}
-                            alt={user.displayName}
+                            alt={displayNameOrUsername(user.displayName, user.username)}
                             className="w-14 h-14 object-cover"
                             cloudinaryWidth={112}
                         />
@@ -73,7 +74,7 @@ export default function MembersFeed({
                             href={`/${user.username}`}
                             className="text-[#003399] font-bold no-underline break-words"
                         >
-                            {user.displayName}
+                            {displayNameOrUsername(user.displayName, user.username)}
                         </Link>
                         <div className="text-gray-500 text-[11px]">
                             {[

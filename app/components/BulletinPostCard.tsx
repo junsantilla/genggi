@@ -13,7 +13,7 @@ import {
     type BulletinPostCard,
     type SerializedBulletinComment,
 } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { displayNameOrUsername, timeAgo } from "@/lib/utils";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import ActionButton from "./ActionButton";
 import BulletinCommentForm from "./BulletinCommentForm";
@@ -84,7 +84,7 @@ export default function BulletinPostCard({
                 >
                     <UserAvatar
                         src={post.author.photo}
-                        alt={post.author.displayName}
+                        alt={displayNameOrUsername(post.author.displayName, post.author.username)}
                         className="block w-[45px] h-[45px] object-cover"
                         cloudinaryWidth={45}
                     />
@@ -96,7 +96,7 @@ export default function BulletinPostCard({
                                 href={`/${post.author.username}`}
                                 className="text-[#003399] font-bold no-underline"
                             >
-                                {post.author.displayName}
+                                {displayNameOrUsername(post.author.displayName, post.author.username)}
                             </Link>
                             <Link
                                 href={`/bulletin/${post._id}`}
@@ -276,7 +276,7 @@ export default function BulletinPostCard({
                                             href={`/${comment.author.username}`}
                                             className="text-[#003399] font-bold no-underline"
                                         >
-                                            {comment.author.displayName}
+                                            {displayNameOrUsername(comment.author.displayName, comment.author.username)}
                                         </Link>{" "}
                                         <span className="text-gray-500">
                                             ({timeAgo(comment.createdAt)})

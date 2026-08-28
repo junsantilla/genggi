@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { displayNameOrUsername } from "@/lib/utils";
 import { requireUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/utils";
 import { getAvailableChatboxes } from "@/lib/chatbox";
@@ -60,7 +61,7 @@ export default async function ChatboxesPage() {
                                     >
                                         <ChatboxAvatar
                                             photo={b.author.photo}
-                                            name={b.author.displayName}
+                                            name={displayNameOrUsername(b.author.displayName, b.author.username)}
                                         />
 
                                         <div className="min-w-0 flex-1">
@@ -87,7 +88,7 @@ export default async function ChatboxesPage() {
                                                 </span>
                                             </div>
                                             <div className="text-gray-500 text-[11px] truncate">
-                                                {b.author.displayName}
+                                                {displayNameOrUsername(b.author.displayName, b.author.username)}
                                                 {b.messageCount > 0
                                                     ? ` · ${b.messageCount} ${
                                                           b.messageCount === 1

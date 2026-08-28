@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { displayNameOrUsername } from "@/lib/utils";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { GENDERS, STATUSES } from "@/lib/utils";
@@ -134,7 +135,7 @@ export default async function SearchPage({
                                     >
                                         <UserAvatar
                                             src={r.photo}
-                                            alt={r.displayName}
+                                            alt={displayNameOrUsername(r.displayName, r.username)}
                                             className="w-9 h-9 object-cover"
                                         />
                                     </Link>
@@ -143,7 +144,7 @@ export default async function SearchPage({
                                             href={`/${r.username}`}
                                             className="text-[#003399] font-bold no-underline"
                                         >
-                                            {r.displayName}
+                                            {displayNameOrUsername(r.displayName, r.username)}
                                         </Link>
                                         <div className="text-gray-500 text-[11px]">
                                             {[
