@@ -45,6 +45,7 @@ export default function MessageThread({
     const [hasMore, setHasMore] = useState(hasMoreInitial);
     const [loadingOlder, setLoadingOlder] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
     const latestSeenRef = useRef<string | null>(
         initialMessages.length > 0
             ? initialMessages[initialMessages.length - 1]._id
@@ -71,8 +72,7 @@ export default function MessageThread({
             return fresh.length > 0 ? [...prev, ...fresh] : prev;
         });
         latestSeenRef.current = lastProp._id;
-        const el = scrollRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
+        requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }));
     }, [initialMessages]);
 
     const loadOlder = async () => {
@@ -223,6 +223,7 @@ export default function MessageThread({
                             </div>
                         );
                     })}
+                    <div ref={bottomRef} aria-hidden="true" />
                 </div>
             )}
         </div>

@@ -11,6 +11,7 @@ import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
 import MessageThread from "@/app/components/MessageThread";
 import UserAvatar from "@/app/components/UserAvatar";
+import MessageComposer from "@/app/components/MessageComposer";
 
 export default async function ThreadPage({
     params,
@@ -106,16 +107,10 @@ export default async function ThreadPage({
             />
 
             {/* Reply box — pinned to the bottom of the thread */}
-            <div className="shrink-0 border-t border-[#c3d4e8] bg-white px-3 py-2.5">
-                <BoundForm
-                    action={sendMessageAction.bind(null, other._id.toString())}
-                    submitLabel="Send"
-                    textarea
-                    name="body"
-                    placeholder={`Message ${other.displayName}...`}
-                    rows={2}
-                />
-            </div>
+            <MessageComposer
+                action={sendMessageAction.bind(null, other._id.toString())}
+                placeholder={`Message ${other.displayName}...`}
+            />
         </div>
     );
 }
