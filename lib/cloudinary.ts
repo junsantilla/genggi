@@ -34,7 +34,9 @@ export function uploadImage(
       {
         folder,
         resource_type: "image",
-        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+        // heic/heif: iPhones shoot in HEIC and Safari doesn't always transcode.
+        // Delivery uses f_auto, so stored HEIC is still served as JPEG/WebP.
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"],
         transformation: {
           width: 1600,
           height: 1600,

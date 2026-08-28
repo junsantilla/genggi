@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getBulletinPostById } from "@/lib/bulletin";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import BulletinBoard from "@/app/components/BulletinBoard";
 
 export async function generateMetadata({
@@ -30,7 +31,18 @@ export async function generateMetadata({
             title: `${post.author.displayName}'s bulletin`,
             description,
             type: "article",
-            ...(post.photo ? { images: [{ url: post.photo }] } : {}),
+            ...(post.photo
+                ? {
+                      images: [
+                          {
+                              url:
+                                  optimizeCloudinaryUrl(post.photo, {
+                                      width: 720,
+                                  }) ?? post.photo,
+                          },
+                      ],
+                  }
+                : {}),
         },
     };
 }
