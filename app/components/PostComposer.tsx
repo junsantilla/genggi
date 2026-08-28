@@ -2,6 +2,10 @@
 
 import { useRef, useState } from "react";
 import { Globe, Lock, Users } from "lucide-react";
+import {
+    compressImageForUpload,
+    MAX_UPLOAD_BYTES,
+} from "@/lib/compress-image";
 
 type PostResult = { ok?: boolean; error?: string };
 
@@ -23,6 +27,9 @@ export default function PostComposer({
     const [posted, setPosted] = useState(false);
     const [privacyOpen, setPrivacyOpen] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const compressedRef = useRef<File | null>(null);
+    const compressPromiseRef = useRef<Promise<void> | null>(null);
     const remaining = 1000 - body.length;
     const [visibility, setVisibility] = useState("public");
     const privacyLabel =
@@ -46,17 +53,30 @@ export default function PostComposer({
                 setPending(true);
                 setError("");
                 setPosted(false);
-                const result = await action(formData);
-                setPending(false);
-                if (result.error) {
-                    setError(result.error);
-                    return;
+                try {
+                    if (compressPromiseRef.current)
+                        await compressPromiseRef.current;
+                    const file = compressedRef.current;
+                    if (file) formData.set("photo", file);
+                    const result = await action(formData);
+                    if (result.error) {
+                        setError(result.error);
+                        return;
+                    }
+                    setBody("");
+                    setFileName("");
+                    setPosted(true);
+                    formRef.current?.reset();
+                    compressedRef.current = null;
+                    compressPromiseRef.current = null;
+                    onPosted?.();
+                } catch {
+                    setError(
+                        "Something went wrong while posting. Please try again."
+                    );
+                } finally {
+                    setPending(false);
                 }
-                setBody("");
-                setFileName("");
-                setPosted(true);
-                formRef.current?.reset();
-                onPosted?.();
             }}
             className="border-b border-[#99bbdd] bg-[#DBE9F7] p-2.5 mb-3"
         >
@@ -96,10 +116,40 @@ export default function PostComposer({
                         accept="image/*"
                         disabled={pending}
                         className="hidden"
+                        ref={fileInputRef}
                         onChange={(event) => {
-                            setFileName(event.target.files?.[0]?.name ?? "");
                             setError("");
                             setPosted(false);
+                            compressedRef.current = null;
+                            compressPromiseRef.current = null;
+                            const f = event.target.files?.[0];
+                            if (!f) {
+                                setFileName("");
+                                return;
+                            }
+                            if (!f.type.startsWith("image/")) {
+                                setFileName("");
+                                if (fileInputRef.current)
+                                    fileInputRef.current.value = "";
+                                setError("Please upload an image file.");
+                                return;
+                            }
+                            setFileName(f.name);
+                            compressPromiseRef.current = compressImageForUpload(f)
+                                .then((compressed) => {
+                                    if (compressed.size > MAX_UPLOAD_BYTES) {
+                                        compressedRef.current = null;
+                                        setFileName("");
+                                        if (fileInputRef.current)
+                                            fileInputRef.current.value = "";
+                                        setError("Image must be under 3MB.");
+                                        return;
+                                    }
+                                    compressedRef.current = compressed;
+                                })
+                                .catch(() => {
+                                    compressedRef.current = null;
+                                });
                         }}
                     />
                 </div>
