@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { timeAgo } from "@/lib/utils";
 import {
@@ -15,6 +16,7 @@ export default function BugReportList({
     reports: {
         _id: string;
         userId?: string | null;
+        username?: string | null;
         body: string;
         createdAt: Date;
         done: boolean;
@@ -49,8 +51,19 @@ export default function BugReportList({
                             {r.body}
                         </p>
                         <div className="text-gray-500 text-[11px] mt-1">
-                            {r.userId ? `User ID: ${r.userId}` : "Anonymous"} ·{" "}
-                            {timeAgo(r.createdAt)}
+                            {r.username ? (
+                                <Link
+                                    href={`/${r.username}`}
+                                    className="text-[#003399] underline"
+                                >
+                                    {r.username}
+                                </Link>
+                            ) : r.userId ? (
+                                `User ID: ${r.userId}`
+                            ) : (
+                                "Anonymous"
+                            )}{" "}
+                            · {timeAgo(r.createdAt)}
                         </div>
                     </div>
                     <ActionButton
