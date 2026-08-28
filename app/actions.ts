@@ -34,13 +34,16 @@ import {
     type MembersCursor,
 } from "@/lib/group";
 import {
+    MESSAGE_PAGE_SIZE,
     REACTION_TYPES,
     type BulletinCommentReaction,
     type BulletinReaction,
     type BulletinReactionSummary,
     type BulletinVisibility,
+    type Message,
     type SerializedBulletinComment,
     type SerializedBulletinPost,
+    type SerializedMessage,
     type ChatboxMessage,
     type ChatboxMessageCard,
     type ChatboxReplyRef,
@@ -732,6 +735,78 @@ export async function deleteMessageAction(
         });
     revalidatePath("/messages");
     return { ok: true };
+}
+
+// Fetches the page of messages older than the given cursor (the oldest message
+// currently loaded in the thread). Used for lazy loading history on scroll-up.
+export async function getOlderMessagesAction(
+    threadId: string,
+    cursor: { createdAt: string; _id: string } | null,
+): Promise<{
+    messages: SerializedMessage[];
+    nextCursor: { createdAt: string; _id: string } | null;
+}> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(threadId);
+    } catch {
+        return { messages: [], nextCursor: null };
+    }
+    const other = await db.collection("users").findOne({ _id: oid });
+    if (!other) return { messages: [], nextCursor: null };
+
+    const query: Record<string, unknown> = {
+        $or: [
+            { senderId: user._id, recipientId: oid },
+            { senderId: oid, recipientId: user._id },
+        ],
+    };
+    if (cursor) {
+        query.$and = [
+            {
+                $or: [
+                    { createdAt: { $lt: new Date(cursor.createdAt) } },
+                    {
+                        createdAt: new Date(cursor.createdAt),
+                        _id: { $lt: new ObjectId(cursor._id) },
+                    },
+                ],
+            },
+        ];
+    }
+
+    const older = (await db
+        .collection("messages")
+        .find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(MESSAGE_PAGE_SIZE + 1)
+        .toArray()) as unknown as Message[];
+
+    const hasMore = older.length > MESSAGE_PAGE_SIZE;
+    // Reverse so the page comes back in chronological order for prepending.
+    const page = older.slice(0, MESSAGE_PAGE_SIZE).reverse();
+
+    const nextCursor =
+        hasMore && page.length > 0
+            ? {
+                  createdAt: page[0].createdAt.toISOString(),
+                  _id: page[0]._id.toString(),
+              }
+            : null;
+
+    return {
+        messages: page.map((m) => ({
+            _id: m._id.toString(),
+            senderId: m.senderId.toString(),
+            recipientId: m.recipientId.toString(),
+            body: m.body,
+            read: m.read,
+            createdAt: m.createdAt.toISOString(),
+        })),
+        nextCursor,
+    };
 }
 
 // ---------------------------------------------------------------- Testimonials

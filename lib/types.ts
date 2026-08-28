@@ -247,6 +247,21 @@ export interface Message {
   createdAt: Date;
 }
 
+// Client-friendly shape for the message thread: ObjectIds and Dates flattened
+// so messages can be passed to client components and returned from server actions.
+export interface SerializedMessage {
+  _id: string;
+  senderId: string;
+  recipientId: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+}
+
+// How many messages the thread loads per page; older ones are fetched lazily
+// when the user scrolls to the top.
+export const MESSAGE_PAGE_SIZE = 50;
+
 export type ChatboxVisibility = "public" | "friends";
 
 export interface Chatbox {

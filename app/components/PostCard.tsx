@@ -429,147 +429,154 @@ export default function PostCard({
                                                 )}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
-                                            {!isGroup && currentUserId && (
-                                                <span className="relative inline-flex items-center">
-                                                    <button
-                                                        type="button"
-                                                        className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
-                                                        onClick={() =>
-                                                            setOpenCommentId(
-                                                                (id) =>
-                                                                    id ===
-                                                                    comment._id
-                                                                        ? null
-                                                                        : comment._id,
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            reactingCommentId ===
-                                                            comment._id
-                                                        }
-                                                        title={
-                                                            comment.myReaction
-                                                                ? "Change or remove your reaction"
-                                                                : "React to this comment"
-                                                        }
-                                                        aria-label="React to this comment"
-                                                    >
-                                                        React
-                                                    </button>
-                                                    {commentTotalReactions(
-                                                        comment,
-                                                    ) > 0 &&
-                                                        openCommentId !==
-                                                            comment._id && (
-                                                            <span className="text-[11px] text-gray-500">
-                                                                {(
-                                                                    comment.reactions ??
-                                                                    []
-                                                                )
-                                                                    .slice(0, 3)
-                                                                    .map(
-                                                                        (r) =>
-                                                                            `${r.type} ${r.count}`,
-                                                                    )
-                                                                    .join(
-                                                                        " · ",
-                                                                    )}
-                                                            </span>
-                                                        )}
-                                                    {openCommentId ===
-                                                        comment._id && (
-                                                        <>
-                                                            <div
-                                                                className="fixed inset-0 z-10"
-                                                                onClick={() =>
-                                                                    setOpenCommentId(
-                                                                        null,
-                                                                    )
-                                                                }
-                                                            />
-                                                            <div className="absolute z-20 bottom-full mb-1.5 left-0 bg-white border border-[#6699cc] p-1.5 flex gap-1 shadow-lg max-w-[calc(100vw-2rem)] flex-wrap">
-                                                                {REACTION_TYPES.map(
-                                                                    (t) => (
-                                                                        <button
-                                                                            key={
-                                                                                t
-                                                                            }
-                                                                            type="button"
-                                                                            className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
-                                                                                comment.myReaction ===
-                                                                                t
-                                                                                    ? "border-[#6699cc] bg-[#dbe9f7]"
-                                                                                    : "border-transparent"
-                                                                            }`}
-                                                                            onClick={() =>
-                                                                                reactToComment(
-                                                                                    comment._id,
-                                                                                    t,
-                                                                                )
-                                                                            }
-                                                                            disabled={
-                                                                                reactingCommentId ===
-                                                                                comment._id
-                                                                            }
-                                                                            title={`${t}${commentCountOf(comment, t) > 0 ? ` (${commentCountOf(comment, t)})` : ""}`}
-                                                                        >
-                                                                            {t}
-                                                                        </button>
-                                                                    ),
-                                                                )}
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </span>
-                                            )}
-                                            {(ownComment || isOwn) && (
-                                                <span className="inline-flex items-center gap-1.5">
-                                                    {ownComment && (
+                                                {!isGroup && currentUserId && (
+                                                    <span className="relative inline-flex items-center">
                                                         <button
                                                             type="button"
-                                                            className="text-[#003399] underline text-[11px] cursor-pointer"
+                                                            className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
                                                             onClick={() =>
-                                                                setEditingCommentId(
-                                                                    comment._id,
+                                                                setOpenCommentId(
+                                                                    (id) =>
+                                                                        id ===
+                                                                        comment._id
+                                                                            ? null
+                                                                            : comment._id,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                reactingCommentId ===
+                                                                comment._id
+                                                            }
+                                                            title={
+                                                                comment.myReaction
+                                                                    ? "Change or remove your reaction"
+                                                                    : "React to this comment"
+                                                            }
+                                                            aria-label="React to this comment"
+                                                        >
+                                                            React
+                                                        </button>
+                                                        {commentTotalReactions(
+                                                            comment,
+                                                        ) > 0 &&
+                                                            openCommentId !==
+                                                                comment._id && (
+                                                                <span className="text-[11px] text-gray-500 ml-1.5">
+                                                                    {(
+                                                                        comment.reactions ??
+                                                                        []
+                                                                    )
+                                                                        .slice(
+                                                                            0,
+                                                                            3,
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                r,
+                                                                            ) =>
+                                                                                `${r.type} ${r.count}`,
+                                                                        )
+                                                                        .join(
+                                                                            " · ",
+                                                                        )}
+                                                                </span>
+                                                            )}
+                                                        {openCommentId ===
+                                                            comment._id && (
+                                                            <>
+                                                                <div
+                                                                    className="fixed inset-0 z-10"
+                                                                    onClick={() =>
+                                                                        setOpenCommentId(
+                                                                            null,
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <div className="absolute z-20 bottom-full mb-1.5 left-0 bg-white border border-[#6699cc] p-1.5 flex gap-1 shadow-lg max-w-[calc(100vw-2rem)] flex-wrap">
+                                                                    {REACTION_TYPES.map(
+                                                                        (t) => (
+                                                                            <button
+                                                                                key={
+                                                                                    t
+                                                                                }
+                                                                                type="button"
+                                                                                className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
+                                                                                    comment.myReaction ===
+                                                                                    t
+                                                                                        ? "border-[#6699cc] bg-[#dbe9f7]"
+                                                                                        : "border-transparent"
+                                                                                }`}
+                                                                                onClick={() =>
+                                                                                    reactToComment(
+                                                                                        comment._id,
+                                                                                        t,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    reactingCommentId ===
+                                                                                    comment._id
+                                                                                }
+                                                                                title={`${t}${commentCountOf(comment, t) > 0 ? ` (${commentCountOf(comment, t)})` : ""}`}
+                                                                            >
+                                                                                {
+                                                                                    t
+                                                                                }
+                                                                            </button>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </span>
+                                                )}
+                                                {(ownComment || isOwn) && (
+                                                    <span className="inline-flex items-center gap-1.5">
+                                                        {ownComment && (
+                                                            <button
+                                                                type="button"
+                                                                className="text-[#003399] underline text-[11px] cursor-pointer"
+                                                                onClick={() =>
+                                                                    setEditingCommentId(
+                                                                        comment._id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
+                                                        <ActionButton
+                                                            action={
+                                                                (isGroup
+                                                                    ? deleteGroupCommentAction.bind(
+                                                                          null,
+                                                                          groupId!,
+                                                                          comment._id,
+                                                                      )
+                                                                    : deleteBulletinCommentAction.bind(
+                                                                          null,
+                                                                          comment._id,
+                                                                      )) as any
+                                                            }
+                                                            className="text-[#cc0000] underline text-[11px] cursor-pointer"
+                                                            confirmText="Delete this comment?"
+                                                            hideError={isGroup}
+                                                            onSuccess={() =>
+                                                                setComments(
+                                                                    (items) =>
+                                                                        items.filter(
+                                                                            (
+                                                                                item,
+                                                                            ) =>
+                                                                                item._id !==
+                                                                                comment._id,
+                                                                        ),
                                                                 )
                                                             }
                                                         >
-                                                            Edit
-                                                        </button>
-                                                    )}
-                                                    <ActionButton
-                                                        action={
-                                                            (isGroup
-                                                                ? deleteGroupCommentAction.bind(
-                                                                      null,
-                                                                      groupId!,
-                                                                      comment._id,
-                                                                  )
-                                                                : deleteBulletinCommentAction.bind(
-                                                                      null,
-                                                                      comment._id,
-                                                                  )) as any
-                                                        }
-                                                        className="text-[#cc0000] underline text-[11px] cursor-pointer"
-                                                        confirmText="Delete this comment?"
-                                                        hideError={isGroup}
-                                                        onSuccess={() =>
-                                                            setComments(
-                                                                (items) =>
-                                                                    items.filter(
-                                                                        (
-                                                                            item,
-                                                                        ) =>
-                                                                            item._id !==
-                                                                            comment._id,
-                                                                    ),
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </ActionButton>
-                                                </span>
-                                            )}
+                                                            Delete
+                                                        </ActionButton>
+                                                    </span>
+                                                )}
                                             </div>
                                         </>
                                     )}
