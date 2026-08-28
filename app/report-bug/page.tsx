@@ -12,18 +12,41 @@ export default async function ReportBugPage() {
     let reports: {
         _id: ObjectId;
         userId?: ObjectId | null;
+        username?: string | null;
         body: string;
         createdAt: Date;
         done: boolean;
     }[] = [];
     if (isAdmin) {
         const db = getDb();
-        reports = (await db
+        const rawReports = (await db
             .collection("bugReports")
             .find({})
             .sort({ createdAt: -1 })
             .limit(50)
             .toArray()) as typeof reports;
+
+        // Resolve report author usernames so the admin list can show who sent
+        // each report with a link to their profile.
+        const userIds = rawReports
+            .map((r) => r.userId)
+            .filter((id): id is ObjectId => !!id);
+        const users = userIds.length
+            ? await db
+                  .collection("users")
+                  .find({ _id: { $in: userIds } })
+                  .project({ _id: 1, username: 1 })
+                  .toArray()
+            : [];
+        const usernameById = new Map(
+            users.map((u) => [u._id.toString(), u.username]),
+        );
+        reports = rawReports.map((r) => ({
+            ...r,
+            username: r.userId
+                ? usernameById.get(r.userId.toString()) ?? null
+                : null,
+        }));
     }
 
     return (
@@ -55,6 +78,7 @@ export default async function ReportBugPage() {
                             reports={reports.map((r) => ({
                                 _id: r._id.toString(),
                                 userId: r.userId?.toString() ?? null,
+                                username: r.username ?? null,
                                 body: r.body,
                                 createdAt: r.createdAt,
                                 done: !!r.done,
