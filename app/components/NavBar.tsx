@@ -65,17 +65,17 @@ export default function NavBar({
                             <div className="flex items-center gap-1 sm:hidden">
                                 <PwaInstallButton />
                                 <button
-                                type="button"
-                                className="p-1.5"
-                                aria-expanded={menuOpen}
-                                aria-label="Toggle account menu"
-                                onClick={() => setMenuOpen((open) => !open)}
-                            >
-                                {menuOpen ? (
-                                    <X size={20} aria-hidden="true" />
-                                ) : (
-                                    <Menu size={20} aria-hidden="true" />
-                                )}
+                                    type="button"
+                                    className="p-1.5"
+                                    aria-expanded={menuOpen}
+                                    aria-label="Toggle account menu"
+                                    onClick={() => setMenuOpen((open) => !open)}
+                                >
+                                    {menuOpen ? (
+                                        <X size={20} aria-hidden="true" />
+                                    ) : (
+                                        <Menu size={20} aria-hidden="true" />
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -117,9 +117,9 @@ export default function NavBar({
                                 <NavLink href="/layouts/generator">
                                     Layout Generator
                                 </NavLink>
-                                {isAdmin && (
+                                {/* {isAdmin && (
                                     <NavLink href="/admin">Admin</NavLink>
-                                )}
+                                )} */}
                                 <LogoutButton />
                             </div>
                         </>
@@ -139,7 +139,7 @@ export default function NavBar({
                         <NavLink href="/layouts/generator">
                             Layout Generator
                         </NavLink>
-                        {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+                        {/* {isAdmin && <NavLink href="/admin">Admin</NavLink>} */}
                         <LogoutButton />
                     </div>
                 </div>
