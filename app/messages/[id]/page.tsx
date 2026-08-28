@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
-import { MESSAGE_PAGE_SIZE, type Message, type SerializedMessage } from "@/lib/types";
+import {
+    MESSAGE_PAGE_SIZE,
+    type Message,
+    type SerializedMessage,
+} from "@/lib/types";
 import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
 import MessageThread from "@/app/components/MessageThread";
@@ -66,7 +70,7 @@ export default async function ThreadPage({
     }
 
     return (
-        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x flex flex-col h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)]">
+        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x flex flex-col h-[calc(100dvh-165px)]">
             {/* Header */}
             <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-3 py-2 flex items-center gap-2 shrink-0">
                 <Link
@@ -113,4 +117,4 @@ export default async function ThreadPage({
             </div>
         </div>
     );
-}
+}
