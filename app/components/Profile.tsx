@@ -324,10 +324,10 @@ export default async function Profile({
                                                 </tr>
                                             </tbody>
                                         </table>
-                                        <YouTubeMusicPlayer
+                                        {/* <YouTubeMusicPlayer
                                             key={user.theme?.youtubeVideoId}
                                             videoId={user.theme?.youtubeVideoId}
-                                        />
+                                        /> */}
                                     </div>
                                 </div>
                             </Box>
