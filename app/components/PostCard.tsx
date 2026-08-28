@@ -58,6 +58,8 @@ export default function PostCard({
     );
     const [menuOpen, setMenuOpen] = useState(false);
     const [open, setOpen] = useState(false);
+    const [commentBody, setCommentBody] = useState("");
+    const [commentPending, setCommentPending] = useState(false);
     const isGroup = Boolean(groupId);
     const isOwn = currentUserId === post.author._id;
     const countOf = (type: string) =>
@@ -362,7 +364,7 @@ export default function PostCard({
                                                     )}
                                                     <ActionButton
                                                         action={
-                                                            isGroup
+                                                            (isGroup
                                                                 ? deleteGroupCommentAction.bind(
                                                                       null,
                                                                       groupId!,
@@ -371,7 +373,7 @@ export default function PostCard({
                                                                 : deleteBulletinCommentAction.bind(
                                                                       null,
                                                                       comment._id,
-                                                                  )
+                                                                  )) as any
                                                         }
                                                         className="text-[#cc0000] underline text-[11px] cursor-pointer"
                                                         confirmText="Delete this comment?"
@@ -405,13 +407,17 @@ export default function PostCard({
                                     const body = String(
                                         formData.get("body") || "",
                                     ).trim();
+                                    if (!body) return;
+                                    setCommentPending(true);
                                     const result =
                                         await createGroupCommentAction(
                                             groupId!,
                                             post._id,
                                             formData,
                                         );
+                                    setCommentPending(false);
                                     if (result.ok) {
+                                        setCommentBody("");
                                         setComments((items) => [
                                             ...items,
                                             {
@@ -435,12 +441,20 @@ export default function PostCard({
                             >
                                 <input
                                     name="body"
+                                    value={commentBody}
+                                    onChange={(e) =>
+                                        setCommentBody(e.target.value)
+                                    }
                                     className="input flex-1 text-[11px]"
                                     placeholder="Write a comment..."
                                     required
+                                    disabled={commentPending}
                                 />
-                                <button className="btn text-[11px]">
-                                    Comment
+                                <button
+                                    className="btn text-[11px]"
+                                    disabled={commentPending}
+                                >
+                                    {commentPending ? "Posting…" : "Comment"}
                                 </button>
                             </form>
                         ) : (
