@@ -111,6 +111,7 @@ export default function NavBar({
                                 >
                                     Notifications
                                 </NavLink>
+                                <NavLink href="/members">Members</NavLink>
                             </div>
                             <div className="hidden sm:flex items-center gap-x-2.5">
                                 <NavLink href="/edit">Edit Profile</NavLink>
