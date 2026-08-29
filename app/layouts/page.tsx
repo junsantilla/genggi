@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getDb } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import LayoutsGallery from "@/app/components/LayoutsGallery";
 
 export const metadata: Metadata = {
@@ -16,12 +17,15 @@ export const metadata: Metadata = {
 };
 
 export default async function LayoutsPage() {
-    const layouts = await getDb()
+    const [layouts, currentUser] = await Promise.all([
+        getDb()
         .collection("layouts")
         .find({})
         .sort({ createdAt: -1 })
         .limit(100)
-        .toArray();
+        .toArray(),
+        getCurrentUser(),
+    ]);
 
     return (
         <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
@@ -30,6 +34,7 @@ export default async function LayoutsPage() {
             </div>
             <div className="p-4">
                 <LayoutsGallery
+            currentUserId={currentUser?._id.toString()}
             initialLayouts={layouts.map((layout) => ({
                 id: layout._id.toString(),
                 name: String(layout.name),
