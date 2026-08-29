@@ -507,6 +507,84 @@ export async function updateThemeAction(
     return { ok: true };
 }
 
+export async function createLayoutAction(
+    _prev: ActionResult,
+    formData: FormData,
+): Promise<ActionResult & { layout?: { id: string; screenshot: string | null } }> {
+    const user = await requireUser();
+    const name = String(formData.get("name") || "").trim().slice(0, 80);
+    const description = String(formData.get("description") || "")
+        .trim()
+        .slice(0, 500);
+    const screenshotFile = formData.get("screenshot");
+    const css = String(formData.get("css") || "").trim().slice(0, 12000);
+
+    if (!name) return { error: "Layout name is required." };
+    if (!(screenshotFile instanceof File) || screenshotFile.size === 0)
+        return { error: "A screenshot is required." };
+    if (!css) return { error: "CSS is required." };
+
+    let screenshot: { secure_url: string; public_id: string } | null = null;
+    if (screenshotFile instanceof File && screenshotFile.size > 0) {
+        if (screenshotFile.size > 5 * 1024 * 1024)
+            return { error: "Screenshot must be under 5MB." };
+        if (!screenshotFile.type.startsWith("image/"))
+            return { error: "Please upload an image screenshot." };
+        try {
+            screenshot = await uploadImage(
+                Buffer.from(await screenshotFile.arrayBuffer()),
+                `layouts/${user.username}`,
+            );
+        } catch {
+            return { error: "Screenshot upload failed. Please try again." };
+        }
+    }
+
+    const layoutId = new ObjectId();
+    await getDb().collection("layouts").insertOne({
+        _id: layoutId,
+        name,
+        description,
+        screenshot: screenshot?.secure_url ?? null,
+        screenshotPublicId: screenshot?.public_id ?? null,
+        css,
+        authorId: user._id,
+        authorUsername: user.username,
+        createdAt: new Date(),
+    });
+    revalidatePath("/layouts");
+    return {
+        ok: true,
+        layout: {
+            id: layoutId.toString(),
+            screenshot: screenshot?.secure_url ?? null,
+        },
+    };
+}
+
+export async function deleteLayoutAction(layoutId: string): Promise<ActionResult> {
+    const user = await requireUser();
+    let objectId: ObjectId;
+    try {
+        objectId = new ObjectId(layoutId);
+    } catch {
+        return { error: "Layout not found." };
+    }
+
+    const db = getDb();
+    const layout = await db.collection("layouts").findOne({ _id: objectId });
+    if (!layout) return { error: "Layout not found." };
+    if (layout.authorId?.toString() !== user._id.toString())
+        return { error: "You can only delete layouts you posted." };
+
+    if (layout.screenshotPublicId)
+        await destroyImage(String(layout.screenshotPublicId)).catch(() => {});
+    await db.collection("layouts").deleteOne({ _id: objectId, authorId: user._id });
+    revalidatePath("/layouts");
+    revalidatePath(`/layouts/${layoutId}`);
+    return { ok: true };
+}
+
 export async function applyProfileCssAction(
     formData: FormData,
 ): Promise<ActionResult> {
