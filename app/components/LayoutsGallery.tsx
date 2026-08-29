@@ -23,8 +23,10 @@ function truncateDescription(description: string): string {
 
 export default function LayoutsGallery({
     initialLayouts,
+    currentUserId,
 }: {
     initialLayouts: Layout[];
+    currentUserId?: string;
 }) {
     const [layouts, setLayouts] = useState(initialLayouts);
     const [modalOpen, setModalOpen] = useState(false);
@@ -165,7 +167,7 @@ export default function LayoutsGallery({
                                     >
                                         View
                                     </Link>
-                                    {layout.authorId && (
+                                    {layout.authorId === currentUserId && (
                                         <button
                                             type="button"
                                             className="btn btn-danger"
