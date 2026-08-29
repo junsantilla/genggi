@@ -115,9 +115,7 @@ export default function NavBar({
                             </div>
                             <div className="hidden sm:flex items-center gap-x-2.5">
                                 <NavLink href="/edit">Edit Profile</NavLink>
-                                <NavLink href="/layouts/generator">
-                                    Layout Generator
-                                </NavLink>
+                                <NavLink href="/layouts">Layouts</NavLink>
                                 {/* {isAdmin && (
                                     <NavLink href="/admin">Admin</NavLink>
                                 )} */}
@@ -127,8 +125,8 @@ export default function NavBar({
                     ) : (
                         <div className="mx-auto flex items-center gap-x-2.5">
                             <NavLink href="/">Home</NavLink>
-                            <NavLink href="/login">Login</NavLink>
-                            <NavLink href="/signup">Create Account</NavLink>
+                            <NavLink href="/">Login</NavLink>
+                            <NavLink href="/">Create Account</NavLink>
                         </div>
                     )}
                 </div>
@@ -137,9 +135,7 @@ export default function NavBar({
                 <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md sm:hidden">
                     <div className="flex flex-col items-stretch gap-1">
                         <NavLink href="/edit">Edit Profile</NavLink>
-                        <NavLink href="/layouts/generator">
-                            Layout Generator
-                        </NavLink>
+                        <NavLink href="/layouts">Layouts</NavLink>
                         {/* {isAdmin && <NavLink href="/admin">Admin</NavLink>} */}
                         <LogoutButton />
                     </div>
