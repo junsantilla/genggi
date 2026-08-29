@@ -48,7 +48,7 @@ export default async function Home() {
                             currentUsername={user.username}
                         />
                     </div>
-                    <div className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
+                    <div className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px] hidden sm:block">
                         <NewMembers limit={9} excludeId={user._id.toString()} />
                     </div>
                 </div>
