@@ -16,7 +16,7 @@ import {
     requireAdmin,
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
-import { uploadImage, destroyImage } from "@/lib/cloudinary";
+import { uploadImage, destroyImage } from "@/lib/r2";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
 import {
@@ -433,14 +433,14 @@ export async function uploadPhotoAction(
     const buf = Buffer.from(await file.arrayBuffer());
     let uploaded;
     try {
-        uploaded = await uploadImage(buf, `profiles/${user.username}`);
+        uploaded = await uploadImage(buf, `profiles/${user.username}`, file.type);
     } catch (error) {
         const message =
             error instanceof Error
                 ? error.message
                 : error && typeof error === "object" && "message" in error
                   ? String(error.message)
-                  : "Unknown Cloudinary error.";
+                  : "Unknown R2 error.";
         console.error("Profile image upload failed:", message);
         return {
             error:
@@ -534,6 +534,7 @@ export async function createLayoutAction(
             screenshot = await uploadImage(
                 Buffer.from(await screenshotFile.arrayBuffer()),
                 `layouts/${user.username}`,
+                screenshotFile.type,
             );
         } catch {
             return { error: "Screenshot upload failed. Please try again." };
@@ -988,6 +989,7 @@ export async function createGroupAction(
         photo = await uploadImage(
             Buffer.from(await file.arrayBuffer()),
             `groups/${user.username}`,
+            file.type,
         );
     }
     const db = getDb();
@@ -1344,6 +1346,7 @@ export async function createGroupPostAction(
         photo = await uploadImage(
             Buffer.from(await file.arrayBuffer()),
             `groups/${group._id}`,
+            file.type,
         );
     }
     const db = getDb();
@@ -1425,6 +1428,7 @@ export async function createBulletinPostAction(
             uploaded = await uploadImage(
                 buf,
                 `bulletin-posts/${user.username}`,
+                file.type,
             );
         } catch (error) {
             const message =
@@ -1432,7 +1436,7 @@ export async function createBulletinPostAction(
                     ? error.message
                     : error && typeof error === "object" && "message" in error
                       ? String(error.message)
-                      : "Unknown Cloudinary error.";
+                      : "Unknown R2 error.";
             console.error("Bulletin image upload failed:", message);
             return {
                 error:

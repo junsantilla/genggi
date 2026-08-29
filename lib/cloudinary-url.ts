@@ -5,8 +5,9 @@ export type CloudinaryImageOptions = {
 };
 
 /**
- * Adds responsive format, quality, and size transformations to Cloudinary
- * image URLs while leaving local or non-Cloudinary URLs unchanged.
+ * Keeps legacy Cloudinary delivery transformations working. R2 and other
+ * image URLs are returned unchanged because R2 itself does not transform
+ * images at delivery time.
  */
 export function optimizeCloudinaryUrl(
   source: string | null | undefined,
