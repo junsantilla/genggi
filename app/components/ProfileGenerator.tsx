@@ -840,11 +840,11 @@ export default function ProfileGenerator({
                                 value={customCss}
                                 onChange={(event) => {
                                     setCustomCss(
-                                        event.target.value.slice(0, 12000),
+                                        event.target.value.slice(0, 20000),
                                     );
                                     setStatus("");
                                 }}
-                                maxLength={12000}
+                                maxLength={20000}
                                 rows={11}
                                 spellCheck={false}
                                 placeholder="/* Add advanced CSS here */\n.profile-page .profile-photo {\n  border-radius: 50%;\n}"
