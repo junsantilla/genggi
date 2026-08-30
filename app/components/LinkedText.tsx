@@ -8,7 +8,9 @@ function cleanUrl(value: string): { href: string; label: string } | null {
   try {
     const url = new URL(href);
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    return { href: url.toString(), label };
+    const isYouTube = url.hostname === "www.youtube.com" || url.hostname === "youtube.com" || url.hostname === "youtu.be";
+    const displayLabel = isYouTube && label.length > 55 ? `${label.slice(0, 55)}...` : label;
+    return { href: url.toString(), label: displayLabel };
   } catch {
     return null;
   }
