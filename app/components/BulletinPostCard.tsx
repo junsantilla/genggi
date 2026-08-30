@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
     deleteBulletinPostAction,
@@ -8,7 +8,6 @@ import {
     reactToBulletinPostAction,
 } from "@/app/actions";
 import {
-    REACTION_TYPES,
     type BulletinCommentCard,
     type BulletinPostCard,
     type SerializedBulletinComment,
@@ -20,6 +19,7 @@ import BulletinCommentForm from "./BulletinCommentForm";
 import BulletinEditForm from "./BulletinEditForm";
 import UserAvatar from "./UserAvatar";
 import LinkedText from "./LinkedText";
+import ReactionPicker from "./ReactionPicker";
 
 const visibilityLabels = {
     public: "public",
@@ -41,6 +41,7 @@ export default function BulletinPostCard({
     const isOwnPost = currentUserId === post.author._id;
     const canModerate = isOwnPost || currentUsername === "genggengpro";
     const [open, setOpen] = useState(false);
+    const reactionMenuRef = useRef<HTMLDivElement>(null);
     const [myReaction, setMyReaction] = useState<string | null>(
         post.myReaction,
     );
@@ -60,6 +61,20 @@ export default function BulletinPostCard({
     const countOf = (type: string) =>
         reactions.find((r) => r.type === type)?.count ?? 0;
     const totalReactions = reactions.reduce((sum, r) => sum + r.count, 0);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!reactionMenuRef.current?.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        return () =>
+            document.removeEventListener("pointerdown", handlePointerDown);
+    }, [open]);
 
     const react = async (type: string) => {
         setOpen(false);
@@ -183,7 +198,7 @@ export default function BulletinPostCard({
                             />
                         </Link>
                     )}
-                    <div className="relative inline-block mt-1.5">
+                    <div ref={reactionMenuRef} className="relative inline-block mt-1.5">
                         <button
                             type="button"
                             className={`btn text-[11px] px-2 py-0.5 ${myReaction ? "" : "btn-ghost"}`}
@@ -218,28 +233,12 @@ export default function BulletinPostCard({
                         )}
                         {open && (
                             <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setOpen(false)}
+                                <ReactionPicker
+                                    myReaction={myReaction}
+                                    reacting={reacting}
+                                    countOf={countOf}
+                                    onReact={react}
                                 />
-                                <div className="absolute z-20 bottom-full mb-1.5 left-0 bg-white border border-[#6699cc] p-1.5 flex gap-1 shadow-lg">
-                                    {REACTION_TYPES.map((t) => (
-                                        <button
-                                            key={t}
-                                            type="button"
-                                            className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
-                                                myReaction === t
-                                                    ? "border-[#6699cc] bg-[#dbe9f7]"
-                                                    : "border-transparent"
-                                            }`}
-                                            onClick={() => react(t)}
-                                            disabled={reacting}
-                                            title={`${t}${countOf(t) > 0 ? ` (${countOf(t)})` : ""}`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
                             </>
                         )}
                     </div>

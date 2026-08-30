@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-    REACTION_TYPES,
     type BulletinCommentCard,
     type BulletinPostCard,
     type BulletinReactionSummary,
@@ -27,6 +26,7 @@ import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import UserAvatar from "./UserAvatar";
 import BulletinCommentForm from "./BulletinCommentForm";
 import LinkedText from "./LinkedText";
+import ReactionPicker from "./ReactionPicker";
 
 type Post = BulletinPostCard & { groupId?: string };
 
@@ -326,18 +326,11 @@ export default function PostCard({
                                     : "React"}
                             </button>
                             {open && (
-                                <div className="absolute z-20 bottom-full mb-1 bg-white border border-[#6699cc] p-1.5 flex gap-1">
-                                    {REACTION_TYPES.map((type) => (
-                                        <button
-                                            key={type}
-                                            type="button"
-                                            className="text-lg"
-                                            onClick={() => react(type)}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
-                                </div>
+                                <ReactionPicker
+                                    myReaction={myReaction}
+                                    countOf={countOf}
+                                    onReact={react}
+                                />
                             )}{" "}
                             {reactions.length > 0 && (
                                 <span className="ml-1.5 text-[11px] text-gray-500">
@@ -493,39 +486,12 @@ export default function PostCard({
                                                                         )
                                                                     }
                                                                 />
-                                                                <div className="absolute z-20 bottom-full mb-1.5 left-0 bg-white border border-[#6699cc] p-1.5 flex gap-1 shadow-lg max-w-[calc(100vw-2rem)] flex-wrap">
-                                                                    {REACTION_TYPES.map(
-                                                                        (t) => (
-                                                                            <button
-                                                                                key={
-                                                                                    t
-                                                                                }
-                                                                                type="button"
-                                                                                className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
-                                                                                    comment.myReaction ===
-                                                                                    t
-                                                                                        ? "border-[#6699cc] bg-[#dbe9f7]"
-                                                                                        : "border-transparent"
-                                                                                }`}
-                                                                                onClick={() =>
-                                                                                    reactToComment(
-                                                                                        comment._id,
-                                                                                        t,
-                                                                                    )
-                                                                                }
-                                                                                disabled={
-                                                                                    reactingCommentId ===
-                                                                                    comment._id
-                                                                                }
-                                                                                title={`${t}${commentCountOf(comment, t) > 0 ? ` (${commentCountOf(comment, t)})` : ""}`}
-                                                                            >
-                                                                                {
-                                                                                    t
-                                                                                }
-                                                                            </button>
-                                                                        ),
-                                                                    )}
-                                                                </div>
+                                                                <ReactionPicker
+                                                                    myReaction={comment.myReaction}
+                                                                    reacting={reactingCommentId === comment._id}
+                                                                    countOf={(type) => commentCountOf(comment, type)}
+                                                                    onReact={(type) => reactToComment(comment._id, type)}
+                                                                />
                                                             </>
                                                         )}
                                                     </span>
