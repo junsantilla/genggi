@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import LogoutButton from "./LogoutButton";
@@ -43,7 +43,15 @@ export default function NavBar({
     counts: { messages: number; friendRequests: number; notifications: number };
 }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [menuOpen, setMenuOpen] = useState(false);
+
+    const goHome = () => {
+        setMenuOpen(false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        router.push("/");
+        router.refresh();
+    };
 
     if (!isLoggedIn && pathname === "/") return null;
 
@@ -87,7 +95,13 @@ export default function NavBar({
                     {isLoggedIn ? (
                         <>
                             <div className="flex items-center gap-x-2.5 mr-2.5">
-                                <NavLink href="/">Home</NavLink>
+                                <button
+                                    type="button"
+                                    onClick={goHome}
+                                    className="shrink-0 whitespace-nowrap text-[#003399] font-bold no-underline hover:underline py-0.5 inline-flex items-center gap-1 cursor-pointer"
+                                >
+                                    Home
+                                </button>
                                 <NavLink href={`/${username}`}>
                                     My Profile
                                 </NavLink>
@@ -124,7 +138,13 @@ export default function NavBar({
                         </>
                     ) : (
                         <div className="mx-auto flex items-center gap-x-2.5">
-                            <NavLink href="/">Home</NavLink>
+                            <button
+                                type="button"
+                                onClick={goHome}
+                                className="shrink-0 whitespace-nowrap text-[#003399] font-bold no-underline hover:underline py-0.5 inline-flex items-center gap-1"
+                            >
+                                Home
+                            </button>
                             <NavLink href="/">Login</NavLink>
                             <NavLink href="/">Create Account</NavLink>
                         </div>
