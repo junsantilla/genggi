@@ -20,6 +20,10 @@ import BulletinEditForm from "./BulletinEditForm";
 import UserAvatar from "./UserAvatar";
 import LinkedText from "./LinkedText";
 import ReactionPicker from "./ReactionPicker";
+import YouTubeLinkEmbed, {
+    findYouTubeVideoId,
+    stripYouTubeLinks,
+} from "./YouTubeLinkEmbed";
 
 const visibilityLabels = {
     public: "public",
@@ -51,6 +55,10 @@ export default function BulletinPostCard({
         post.comments,
     );
     const [postBody, setPostBody] = useState(post.body);
+    const embeddedVideoId = findYouTubeVideoId(postBody);
+    const displayBody = embeddedVideoId
+        ? stripYouTubeLinks(postBody)
+        : postBody;
     const [postVisibility, setPostVisibility] = useState(post.visibility);
     const [editingPost, setEditingPost] = useState(false);
     const [postMenuOpen, setPostMenuOpen] = useState(false);
@@ -176,8 +184,11 @@ export default function BulletinPostCard({
                     ) : (
                         <div className="block text-inherit touch-manipulation">
                             <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
-                                <LinkedText text={postBody} />
+                                <LinkedText text={displayBody} />
                             </p>
+                            {embeddedVideoId && (
+                                <YouTubeLinkEmbed videoId={embeddedVideoId} />
+                            )}
                         </div>
                     )}
                     {post.photo && (

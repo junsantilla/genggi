@@ -27,6 +27,10 @@ import UserAvatar from "./UserAvatar";
 import BulletinCommentForm from "./BulletinCommentForm";
 import LinkedText from "./LinkedText";
 import ReactionPicker from "./ReactionPicker";
+import YouTubeLinkEmbed, {
+    findYouTubeVideoId,
+    stripYouTubeLinks,
+} from "./YouTubeLinkEmbed";
 
 type Post = BulletinPostCard & { groupId?: string };
 
@@ -53,6 +57,10 @@ export default function PostCard({
         post.comments,
     );
     const [postBody, setPostBody] = useState(post.body);
+    const embeddedVideoId = findYouTubeVideoId(postBody);
+    const displayBody = embeddedVideoId
+        ? stripYouTubeLinks(postBody)
+        : postBody;
     const [postVisibility, setPostVisibility] = useState(post.visibility);
     const [editingPost, setEditingPost] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState<string | null>(
@@ -287,15 +295,18 @@ export default function PostCard({
                                 />
                             )
                         ) : (
-                            post.body && (
+                            post.body && displayBody.trim() && (
                                 <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
                                     {isGroup ? (
-                                        postBody
+                                        displayBody
                                     ) : (
-                                        <LinkedText text={postBody} />
+                                        <LinkedText text={displayBody} />
                                     )}
                                 </p>
                             )
+                        )}
+                        {!editingPost && embeddedVideoId && (
+                            <YouTubeLinkEmbed videoId={embeddedVideoId} />
                         )}
                     </div>
                     {post.photo && (
