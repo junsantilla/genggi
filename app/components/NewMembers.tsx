@@ -38,35 +38,40 @@ export default async function NewMembers({
                     No members yet — be the first to join!
                 </span>
             ) : (
-                <div className="grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                <div className="divide-y divide-[#d5e2f2]">
                     {users.map((u) => (
                         <div
                             key={u._id.toString()}
-                            className="text-center text-[11px] friend-bg p-2.5"
+                            className="flex items-center gap-2 py-1.5 first:pt-0 last:pb-0 text-[11px]"
                         >
-                            <Link href={`/${u.username}`} className="block">
+                            <Link href={`/${u.username}`} className="shrink-0">
                                 <UserAvatar
                                     src={u.photo}
                                     alt={displayNameOrUsername(u.displayName, u.username)}
-                                    className="w-full aspect-square object-cover mx-auto mb-0.5"
+                                    className="w-10 h-10 object-cover"
                                     cloudinaryWidth={100}
                                 />
                             </Link>
-                            <Link
-                                href={`/${u.username}`}
-                                className="text-[#003399] no-underline font-bold break-words"
-                            >
-                                {displayNameOrUsername(u.displayName, u.username)}
-                            </Link>
-                            <div className="text-gray-500">
-                                {timeAgo(u.createdAt)}
+                            <div className="min-w-0">
+                                <Link
+                                    href={`/${u.username}`}
+                                    className="text-[#003399] no-underline font-bold break-words"
+                                >
+                                    {displayNameOrUsername(u.displayName, u.username)}
+                                </Link>
+                                <div className="text-gray-500">
+                                    {timeAgo(u.createdAt)}
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-            <div className="text-center mt-2">
-                <Link href="/members" className="btn no-underline">
+            <div className="text-left mt-2">
+                <Link
+                    href="/members"
+                    className="text-[#003399] no-underline hover:underline"
+                >
                     View All Members »
                 </Link>
             </div>
