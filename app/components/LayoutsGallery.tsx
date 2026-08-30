@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { createLayoutAction, deleteLayoutAction } from "@/app/actions";
+import {
+    applyLayoutAction,
+    createLayoutAction,
+    deleteLayoutAction,
+} from "@/app/actions";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 
 type Layout = {
@@ -33,6 +37,7 @@ export default function LayoutsGallery({
     const [error, setError] = useState("");
     const [pending, startTransition] = useTransition();
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [applyingId, setApplyingId] = useState<string | null>(null);
 
     function removeLayout(layout: Layout) {
         if (!window.confirm(`Delete “${layout.name}”?`)) return;
@@ -45,6 +50,25 @@ export default function LayoutsGallery({
                     current.filter((item) => item.id !== layout.id),
                 );
             setDeletingId(null);
+        });
+    }
+
+    function applyLayout(layout: Layout) {
+        const confirmed = window.confirm(
+            `Warning: using “${layout.name}” will replace your current profile CSS. Your existing theme styling will be lost unless you save a copy first. Continue?`,
+        );
+        if (!confirmed) return;
+
+        setError("");
+        setApplyingId(layout.id);
+        startTransition(async () => {
+            const result = await applyLayoutAction(layout.id);
+            if (result.error) setError(result.error);
+            else
+                window.alert(
+                    `“${layout.name}” is now applied to your profile.`,
+                );
+            setApplyingId(null);
         });
     }
 
@@ -160,13 +184,26 @@ export default function LayoutsGallery({
                                         {layout.authorUsername}
                                     </Link>
                                 </p>
-                                <div className="mt-2 flex gap-1.5">
+                                <div className="mt-2 flex flex-wrap gap-1.5">
                                     <Link
                                         href={`/layouts/${layout.id}`}
                                         className="btn no-underline"
                                     >
                                         View
                                     </Link>
+                                    {currentUserId && (
+                                        <button
+                                            type="button"
+                                            className="btn"
+                                            onClick={() => applyLayout(layout)}
+                                            disabled={applyingId === layout.id}
+                                            title="Warning: replaces your current profile CSS"
+                                        >
+                                            {applyingId === layout.id
+                                                ? "Applying..."
+                                                : "Use Layout"}
+                                        </button>
+                                    )}
                                     {layout.authorId === currentUserId && (
                                         <button
                                             type="button"

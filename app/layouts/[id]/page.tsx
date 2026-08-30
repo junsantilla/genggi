@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ObjectId, getDb } from "@/lib/db";
 import Box from "@/app/components/Box";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
+import { getCurrentUser } from "@/lib/auth";
+import UseLayoutButton from "@/app/components/UseLayoutButton";
 
 export async function generateMetadata({
     params,
@@ -52,9 +54,10 @@ export default async function LayoutDetailPage({
     } catch {
         notFound();
     }
-    const layout = await getDb()
-        .collection("layouts")
-        .findOne({ _id: layoutId });
+    const [layout, currentUser] = await Promise.all([
+        getDb().collection("layouts").findOne({ _id: layoutId }),
+        getCurrentUser(),
+    ]);
     if (!layout) notFound();
 
     return (
@@ -90,6 +93,14 @@ export default async function LayoutDetailPage({
                             layout.description || "No description provided.",
                         )}
                     </p>
+                    <div className="mt-3 flex items-start gap-2">
+                        {currentUser && (
+                            <UseLayoutButton
+                                layoutId={id}
+                                layoutName={String(layout.name)}
+                            />
+                        )}
+                    </div>
                     <p className="mt-2 text-xs text-gray-500">
                         Posted by{" "}
                         <Link

@@ -586,6 +586,35 @@ export async function deleteLayoutAction(layoutId: string): Promise<ActionResult
     return { ok: true };
 }
 
+export async function applyLayoutAction(
+    layoutId: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    let objectId: ObjectId;
+    try {
+        objectId = new ObjectId(layoutId);
+    } catch {
+        return { error: "Layout not found." };
+    }
+
+    const db = getDb();
+    const layout = await db.collection("layouts").findOne({ _id: objectId });
+    if (!layout) return { error: "Layout not found." };
+
+    const customCss = String(layout.css || "").trim().slice(0, 20000);
+    if (!customCss) return { error: "This layout does not contain any CSS." };
+
+    await db.collection("users").updateOne(
+        { _id: user._id },
+        { $set: { "theme.customCss": customCss } },
+    );
+    revalidatePath(`/${user.username}`);
+    revalidatePath("/edit");
+    revalidatePath("/layouts");
+    revalidatePath("/layouts/generator");
+    return { ok: true };
+}
+
 export async function applyProfileCssAction(
     formData: FormData,
 ): Promise<ActionResult> {
