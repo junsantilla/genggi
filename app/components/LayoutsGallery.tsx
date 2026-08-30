@@ -245,7 +245,7 @@ export default function LayoutsGallery({
                                     name="css"
                                     className="input"
                                     rows={8}
-                                    maxLength={12000}
+                                    maxLength={20000}
                                     required
                                     spellCheck={false}
                                     placeholder=".profile-page { ... }"

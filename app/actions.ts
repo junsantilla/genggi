@@ -496,7 +496,7 @@ export async function updateThemeAction(
         border: String(formData.get("border") || "#6699cc"),
         customCss: String(formData.get("customCss") || "")
             .trim()
-            .slice(0, 12000),
+            .slice(0, 20000),
         youtubeVideoId,
     };
     await getDb()
@@ -517,7 +517,7 @@ export async function createLayoutAction(
         .trim()
         .slice(0, 500);
     const screenshotFile = formData.get("screenshot");
-    const css = String(formData.get("css") || "").trim().slice(0, 12000);
+    const css = String(formData.get("css") || "").trim().slice(0, 20000);
 
     if (!name) return { error: "Layout name is required." };
     if (!(screenshotFile instanceof File) || screenshotFile.size === 0)
@@ -592,7 +592,7 @@ export async function applyProfileCssAction(
     const user = await requireUser();
     const customCss = String(formData.get("customCss") || "")
         .trim()
-        .slice(0, 12000);
+        .slice(0, 20000);
 
     await getDb()
         .collection("users")

@@ -77,7 +77,7 @@ export default function ThemeForm({
                 <textarea
                     name="customCss"
                     defaultValue={customCss || ""}
-                    maxLength={12000}
+                    maxLength={20000}
                     rows={12}
                     spellCheck={false}
                     className="input font-mono  leading-relaxed"
