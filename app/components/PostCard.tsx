@@ -58,9 +58,7 @@ export default function PostCard({
     );
     const [postBody, setPostBody] = useState(post.body);
     const embeddedVideoId = findYouTubeVideoId(postBody);
-    const displayBody = embeddedVideoId
-        ? stripYouTubeLinks(postBody)
-        : postBody;
+    const displayBody = postBody;
     const [postVisibility, setPostVisibility] = useState(post.visibility);
     const [editingPost, setEditingPost] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState<string | null>(
