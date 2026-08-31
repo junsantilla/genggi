@@ -32,7 +32,7 @@ export default function Landing({ border = "#6699cc" }: { border?: string }) {
                         <span className="font-bold text-xl sm:text-2xl tracking-tight">
                             Genggi
                         </span>
-                        <span className="ml-2 -translate-y-0.5 rounded-none bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
+                        <span className="-translate-y-0.5 rounded-none bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
                             Beta
                         </span>
                     </Link>
