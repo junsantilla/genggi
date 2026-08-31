@@ -19,9 +19,9 @@ export default function ReactionPicker({
                 <button
                     key={type}
                     type="button"
-                    className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-[#dbe9f7] ${
+                    className={`text-[18px] leading-none px-1 py-0.5 border cursor-pointer hover:bg-secondary ${
                         myReaction === type
-                            ? "border-[#6699cc] bg-[#dbe9f7]"
+                            ? "border-[#6699cc] bg-secondary"
                             : "border-transparent"
                     }`}
                     onClick={() => onReact(type)}

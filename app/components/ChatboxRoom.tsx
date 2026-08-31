@@ -262,7 +262,10 @@ export default function ChatboxRoom({
                                     >
                                         <Avatar
                                             photo={m.author.photo}
-                                            name={displayNameOrUsername(m.author.displayName, m.author.username)}
+                                            name={displayNameOrUsername(
+                                                m.author.displayName,
+                                                m.author.username,
+                                            )}
                                             size="h-7 w-7 text-[10px]"
                                         />
                                     </Link>
@@ -309,7 +312,10 @@ export default function ChatboxRoom({
                                                 href={`/${m.author.username}`}
                                                 className="font-bold text-[11px] text-[#003399] no-underline hover:underline"
                                             >
-                                                {displayNameOrUsername(m.author.displayName, m.author.username)}
+                                                {displayNameOrUsername(
+                                                    m.author.displayName,
+                                                    m.author.username,
+                                                )}
                                             </Link>
                                         )}
 
@@ -331,7 +337,7 @@ export default function ChatboxRoom({
                                     onClick={() => startReply(m)}
                                     aria-label={`Reply to ${displayNameOrUsername(m.author.displayName, m.author.username)}`}
                                     title="Reply"
-                                    className={`self-center w-7 h-7 shrink-0 flex items-center justify-center text-[15px] border border-[#6699cc] bg-white hover:bg-[#dbe9f7] transition-opacity hover:cursor-pointer ${
+                                    className={`self-center w-7 h-7 shrink-0 flex items-center justify-center text-[15px] border border-[#6699cc] bg-white hover:bg-secondary transition-opacity hover:cursor-pointer ${
                                         pressedId === m._id
                                             ? "opacity-100"
                                             : "opacity-0 group-hover:opacity-100"
@@ -347,12 +353,15 @@ export default function ChatboxRoom({
 
             {/* Replying-to banner */}
             {replyingTo && (
-                <div className="flex items-center gap-2 mt-2 px-2.5 py-1.5 border border-[#6699cc] bg-[#dbe9f7]">
+                <div className="flex items-center gap-2 mt-2 px-2.5 py-1.5 border border-[#6699cc] bg-secondary">
                     <span className="font-bold  text-[#003399] shrink-0">
                         ↩️ Replying to{" "}
                         {replyingTo.author._id === viewerId
                             ? "yourself"
-                            : displayNameOrUsername(replyingTo.author.displayName, replyingTo.author.username)}
+                            : displayNameOrUsername(
+                                  replyingTo.author.displayName,
+                                  replyingTo.author.username,
+                              )}
                     </span>
                     <span className=" text-gray-600 truncate min-w-0 flex-1">
                         “{snippet(replyingTo.body, 80)}”

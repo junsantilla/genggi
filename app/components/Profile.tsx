@@ -134,7 +134,8 @@ export default async function Profile({
         return (
             <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x p-6 text-center text-[13px]">
                 <p className="font-bold text-[#cc3399] text-lg mb-1">
-                    {displayNameOrUsername(user.displayName, user.username)} has blocked you.
+                    {displayNameOrUsername(user.displayName, user.username)} has
+                    blocked you.
                 </p>
                 <p className="text-gray-500">
                     You can&apos;t view this profile or interact with this user.
@@ -166,8 +167,12 @@ export default async function Profile({
                             🔒 This profile is private
                         </p>
                         <p className="text-gray-500 text-[13px]">
-                            {displayNameOrUsername(user.displayName, user.username)} only shares their profile with
-                            friends. Add them as a friend to view it.
+                            {displayNameOrUsername(
+                                user.displayName,
+                                user.username,
+                            )}{" "}
+                            only shares their profile with friends. Add them as
+                            a friend to view it.
                         </p>
                     </div>
                 ) : (
@@ -344,7 +349,7 @@ export default async function Profile({
                                         {user.interests.map((i) => (
                                             <span
                                                 key={i}
-                                                className="bg-[#dbe9f7] border border-[#6699cc] px-1.5 py-0.5 text-[11px] rounded"
+                                                className="bg-secondary border border-[#6699cc] px-1.5 py-0.5 text-[11px] rounded"
                                             >
                                                 {i}
                                             </span>
@@ -554,7 +559,10 @@ export default async function Profile({
                                                     >
                                                         <UserAvatar
                                                             src={f.photo}
-                                                            alt={displayNameOrUsername(f.displayName, f.username)}
+                                                            alt={displayNameOrUsername(
+                                                                f.displayName,
+                                                                f.username,
+                                                            )}
                                                             className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
                                                             cloudinaryWidth={
                                                                 120
@@ -565,7 +573,10 @@ export default async function Profile({
                                                         href={`/${f.username}`}
                                                         className="text-[#003399] no-underline font-bold break-words"
                                                     >
-                                                        {displayNameOrUsername(f.displayName, f.username)}
+                                                        {displayNameOrUsername(
+                                                            f.displayName,
+                                                            f.username,
+                                                        )}
                                                     </Link>
                                                 </div>
                                             ))}

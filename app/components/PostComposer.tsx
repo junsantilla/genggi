@@ -2,10 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Globe, Lock, Users } from "lucide-react";
-import {
-    compressImageForUpload,
-    MAX_UPLOAD_BYTES,
-} from "@/lib/compress-image";
+import { compressImageForUpload, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
 
 type PostResult = { ok?: boolean; error?: string };
 
@@ -72,13 +69,13 @@ export default function PostComposer({
                     onPosted?.();
                 } catch {
                     setError(
-                        "Something went wrong while posting. Please try again."
+                        "Something went wrong while posting. Please try again.",
                     );
                 } finally {
                     setPending(false);
                 }
             }}
-            className="border-b border-[#99bbdd] bg-[#DBE9F7] p-2.5 mb-3"
+            className="border-b border-[#99bbdd] bg-secondary p-2.5 mb-3"
         >
             <div className="relative">
                 <textarea
@@ -135,7 +132,9 @@ export default function PostComposer({
                                 return;
                             }
                             setFileName(f.name);
-                            compressPromiseRef.current = compressImageForUpload(f)
+                            compressPromiseRef.current = compressImageForUpload(
+                                f,
+                            )
                                 .then((compressed) => {
                                     if (compressed.size > MAX_UPLOAD_BYTES) {
                                         compressedRef.current = null;
@@ -186,7 +185,7 @@ export default function PostComposer({
                                             }
                                             aria-hidden="true"
                                         />
-                                        <div className="absolute right-0 top-full z-20 mt-1 min-w-[120px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md">
+                                        <div className="absolute right-0 top-full z-20 mt-1 min-w-[120px] border border-[#6699cc] bg-secondary p-2 shadow-md">
                                             {[
                                                 ["public", "Public"],
                                                 ["friends", "Friends"],

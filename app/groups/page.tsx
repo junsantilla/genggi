@@ -40,7 +40,7 @@ export default async function GroupsPage() {
                                             decoding="async"
                                         />
                                     ) : (
-                                        <div className="w-12 h-12 bg-[#dbe9f7] flex items-center justify-center text-xl">
+                                        <div className="w-12 h-12 bg-secondary flex items-center justify-center text-xl">
                                             👥
                                         </div>
                                     )}

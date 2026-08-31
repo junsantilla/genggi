@@ -101,7 +101,7 @@ export default function LayoutsGallery({
 
     return (
         <div className="mx-auto w-full max-w-[960px]">
-            <div className="mb-3 flex items-center justify-between border border-[#6699cc] bg-[#dbe9f7] p-2">
+            <div className="mb-3 flex items-center justify-between border border-[#6699cc] bg-secondary p-2">
                 <div>
                     <h1 className="text-lg font-bold text-[#2c4d80]">
                         Layouts Gallery

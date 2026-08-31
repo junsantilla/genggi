@@ -120,7 +120,7 @@ async function ProfileFriendsList({ profile }: { profile: User }) {
                             <Link
                                 key={friend._id.toString()}
                                 href={`/${friend.username}`}
-                                className="group min-w-0 border border-[#b8cde5] bg-[#f5f9ff] p-2 text-center no-underline transition-colors hover:border-[#6699cc] hover:bg-[#dbe9f7]"
+                                className="group min-w-0 border border-[#b8cde5] bg-[#f5f9ff] p-2 text-center no-underline transition-colors hover:border-[#6699cc] hover:bg-secondary"
                             >
                                 <UserAvatar
                                     src={friend.photo}

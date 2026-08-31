@@ -57,7 +57,7 @@ export default function NavBar({
 
     return (
         <header className="sticky top-0 z-50">
-            <div className="bg-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl tracking-tight">
+            <div className="bg-background text-white px-2.5 py-1.5 font-bold text-xl sm:text-2xl tracking-tight">
                 <div className="mx-auto max-w-[960px]">
                     <div className="flex items-center justify-between">
                         <Link
@@ -90,7 +90,7 @@ export default function NavBar({
                     </div>
                 </div>
             </div>
-            <nav className="nav-scrollbar-hidden bg-[#dbe9f7] border-b border-[#6699cc] px-2.5 py-1.5  sm:text-[13px] overflow-x-auto overscroll-x-contain">
+            <nav className="nav-scrollbar-hidden bg-secondary border-b border-[#6699cc] px-2.5 py-1.5  sm:text-[13px] overflow-x-auto overscroll-x-contain">
                 <div className="mx-auto flex min-w-max max-w-[960px] items-center justify-between gap-x-6">
                     {isLoggedIn ? (
                         <>
@@ -152,7 +152,7 @@ export default function NavBar({
                 </div>
             </nav>
             {isLoggedIn && menuOpen && (
-                <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md sm:hidden">
+                <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-secondary p-2 shadow-md sm:hidden">
                     <div className="flex flex-col items-stretch gap-1">
                         <NavLink href="/edit">Edit Profile</NavLink>
                         <NavLink href="/layouts">Layouts</NavLink>

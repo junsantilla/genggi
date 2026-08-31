@@ -61,7 +61,10 @@ export default async function ChatboxesPage() {
                                     >
                                         <ChatboxAvatar
                                             photo={b.author.photo}
-                                            name={displayNameOrUsername(b.author.displayName, b.author.username)}
+                                            name={displayNameOrUsername(
+                                                b.author.displayName,
+                                                b.author.username,
+                                            )}
                                         />
 
                                         <div className="min-w-0 flex-1">
@@ -78,7 +81,7 @@ export default async function ChatboxesPage() {
                                                     className={`px-1 text-[10px] font-bold ${
                                                         b.visibility ===
                                                         "public"
-                                                            ? "bg-[#dbe9f7] text-[#2c4d80]"
+                                                            ? "bg-secondary text-[#2c4d80]"
                                                             : "bg-[#f3e6f7] text-[#8a2b9a]"
                                                     }`}
                                                 >
@@ -88,7 +91,10 @@ export default async function ChatboxesPage() {
                                                 </span>
                                             </div>
                                             <div className="text-gray-500 text-[11px] truncate">
-                                                {displayNameOrUsername(b.author.displayName, b.author.username)}
+                                                {displayNameOrUsername(
+                                                    b.author.displayName,
+                                                    b.author.username,
+                                                )}
                                                 {b.messageCount > 0
                                                     ? ` · ${b.messageCount} ${
                                                           b.messageCount === 1

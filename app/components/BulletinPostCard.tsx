@@ -105,7 +105,10 @@ export default function BulletinPostCard({
                 >
                     <UserAvatar
                         src={post.author.photo}
-                        alt={displayNameOrUsername(post.author.displayName, post.author.username)}
+                        alt={displayNameOrUsername(
+                            post.author.displayName,
+                            post.author.username,
+                        )}
                         className="block w-[45px] h-[45px] object-cover"
                         cloudinaryWidth={45}
                     />
@@ -117,7 +120,10 @@ export default function BulletinPostCard({
                                 href={`/${post.author.username}`}
                                 className="text-[#003399] font-bold no-underline"
                             >
-                                {displayNameOrUsername(post.author.displayName, post.author.username)}
+                                {displayNameOrUsername(
+                                    post.author.displayName,
+                                    post.author.username,
+                                )}
                             </Link>
                             <Link
                                 href={`/bulletin/${post._id}`}
@@ -131,7 +137,7 @@ export default function BulletinPostCard({
                             <div className="relative inline-block">
                                 <button
                                     type="button"
-                                    className="border-0 bg-transparent text-[#003399] text-[16px] leading-none px-1 py-0 cursor-pointer hover:bg-[#dbe9f7]"
+                                    className="border-0 bg-transparent text-[#003399] text-[16px] leading-none px-1 py-0 cursor-pointer hover:bg-secondary"
                                     onClick={() =>
                                         setPostMenuOpen((open) => !open)
                                     }
@@ -152,7 +158,7 @@ export default function BulletinPostCard({
                                         <div className="absolute z-20 right-0 top-full mt-1 min-w-[110px] border border-[#6699cc] bg-white p-1 shadow-lg">
                                             <button
                                                 type="button"
-                                                className="block w-full px-2 py-1 text-left text-[11px] text-[#003399] hover:bg-[#dbe9f7]"
+                                                className="block w-full px-2 py-1 text-left text-[11px] text-[#003399] hover:bg-secondary"
                                                 onClick={() => {
                                                     setPostMenuOpen(false);
                                                     setEditingPost(true);
@@ -207,7 +213,10 @@ export default function BulletinPostCard({
                             />
                         </Link>
                     )}
-                    <div ref={reactionMenuRef} className="relative inline-block mt-1.5">
+                    <div
+                        ref={reactionMenuRef}
+                        className="relative inline-block mt-1.5"
+                    >
                         <button
                             type="button"
                             className={`btn text-[11px] px-2 py-0.5 ${myReaction ? "" : "btn-ghost"}`}
@@ -278,13 +287,16 @@ export default function BulletinPostCard({
                                 return (
                                     <div
                                         key={comment._id}
-                                        className=" leading-snug bg-[#DBE9F7] border-b border-[#fff] p-2"
+                                        className=" leading-snug bg-secondary border-b border-[#fff] p-2"
                                     >
                                         <Link
                                             href={`/${comment.author.username}`}
                                             className="text-[#003399] font-bold no-underline"
                                         >
-                                            {displayNameOrUsername(comment.author.displayName, comment.author.username)}
+                                            {displayNameOrUsername(
+                                                comment.author.displayName,
+                                                comment.author.username,
+                                            )}
                                         </Link>{" "}
                                         <span className="text-gray-500">
                                             ({timeAgo(comment.createdAt)})
