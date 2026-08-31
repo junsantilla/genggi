@@ -120,6 +120,8 @@ export default async function Profile({
 
     const brief: [string, string][] = [
         ["Status:", user.relationshipStatus || "—"],
+        ["Mood:", user.mood || "—"],
+        ["Away message:", user.awayMessage || "—"],
         ["Here for:", user.hereFor || "—"],
         ["Orientation:", user.orientation || "—"],
         ["Hometown:", user.location || "—"],
