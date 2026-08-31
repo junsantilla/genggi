@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { DEV_PROXY, genggiMail } from "@/lib/genggi";
 
 // Default to Resend's shared testing sender so emails work before a custom
 // domain is verified. Set RESEND_FROM to something like
@@ -18,6 +19,9 @@ export async function sendVerificationEmail(
     to: string,
     verifyUrl: string,
 ): Promise<void> {
+    // In local dev without RESEND_API_KEY, send through the production
+    // Genggi API so verification emails reach real inboxes.
+    if (DEV_PROXY) return genggiMail("verify", to, verifyUrl);
     const resend = getResend();
     if (!resend) return;
     const { error } = await resend.emails.send({
@@ -52,6 +56,7 @@ export async function sendPasswordResetEmail(
     to: string,
     resetUrl: string,
 ): Promise<void> {
+    if (DEV_PROXY) return genggiMail("reset", to, resetUrl);
     const resend = getResend();
     if (!resend) return;
     const { error } = await resend.emails.send({

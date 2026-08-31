@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Genggi
 
-## Getting Started
+A nostalgic social network for profiles, friends, messages, and fun — built with [Next.js](https://nextjs.org).
 
-First, run the development server:
+## Local development
+
+Contributors can run the app locally **without any production secrets**.
 
 ```bash
+git clone <repo>
+cd genggeng-pro
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Local development does **not** connect directly to the production database or
+Cloudflare R2, so you never need `MONGODB_URI`, the `R2_*` credentials,
+`RESEND_API_KEY`, or `AUTH_SECRET` on your machine.
 
-## Learn More
+Instead, the local Next.js server routes every database, R2, and email
+operation through the production Genggi API, which holds the real secrets:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+Local Next.js  ->  Genggi production API (https://genggi.com)  ->  Production DB / R2
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This is handled automatically by `lib/genggi.ts`. In production (where the
+secrets are present) the same code connects directly — there is no behaviour
+difference for end users.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### The one value you need locally
 
-## Deploy on Vercel
+The only thing a contributor needs is a shared dev token that authenticates
+the local server to the Genggi API's internal `/api/internal/*` routes:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. On the **production deployment**, set `GENGGI_API_TOKEN` to a long random
+   string.
+2. Give the same string to each contributor to put in their `.env.local`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   cp .env.example .env.local
+   # then edit .env.local and fill in GENGGI_API_TOKEN
+   ```
+
+`GENGGI_API_TOKEN` grants privileged access, so keep it server-side only and
+**never** prefix it with `NEXT_PUBLIC_` (that would expose it to browsers).
+All `.env*` files except the committed `.env.example` template are
+`.gitignore`d.
+
+### Optional overrides
+
+- `GENGGI_API_URL` — point local dev at a different API base URL (defaults to
+  `https://genggi.com`).
+
+## Tests
+
+```bash
+npm test
+```
+
+## Learn more
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Deploy on Vercel](https://vercel.com/new)
