@@ -62,7 +62,7 @@ export default function NavBar({
                     <div className="flex items-center justify-between">
                         <Link
                             href="/"
-                            className="no-underline text-white inline-flex items-center"
+                            className="no-underline text-white flex items-center gap-1.5 shrink-0"
                         >
                             <span>Genggi</span>
                             <span className="-translate-y-0.5 rounded-none bg-[#cc3399] px-1 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
