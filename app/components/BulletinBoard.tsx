@@ -1,5 +1,5 @@
 import { toBulletinPostCard } from "@/lib/bulletin";
-import type { BulletinPostWithComments } from "@/lib/types";
+import type { BulletinPostWithMentions } from "@/lib/types";
 import Box from "./Box";
 import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
@@ -13,7 +13,7 @@ export default function BulletinBoard({
     border,
     bg,
 }: {
-    posts: BulletinPostWithComments[];
+    posts: BulletinPostWithMentions[];
     currentUserId?: string;
     currentUsername?: string;
     showComposer?: boolean;

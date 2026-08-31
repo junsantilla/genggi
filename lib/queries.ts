@@ -1,4 +1,5 @@
 import { getDb, ObjectId } from "./db";
+import type { MentionFriend } from "./types";
 
 export async function isBlocked(blockerId: string, blockedId: string): Promise<boolean> {
   const db = getDb();
@@ -47,6 +48,35 @@ export async function getFriendIds(userId: string): Promise<ObjectId[]> {
   return fs.map((f) =>
     f.requesterId.toString() === userId ? f.addresseeId : f.requesterId
   );
+}
+
+// Friend-shaped subset used to power the @mention autocomplete in the bulletin
+// post composer. Only friends are returned, never arbitrary users.
+export async function getFriendSuggestions(userId: string): Promise<MentionFriend[]> {
+  const friendIds = await getFriendIds(userId);
+  if (friendIds.length === 0) return [];
+
+  const users = await getDb()
+    .collection("users")
+    .find({ _id: { $in: friendIds } })
+    .project({
+      _id: 1,
+      username: 1,
+      displayName: 1,
+      firstName: 1,
+      lastName: 1,
+      photo: 1,
+    })
+    .toArray();
+
+  return users.map((user) => ({
+    _id: user._id.toString(),
+    username: user.username,
+    displayName: user.displayName,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    photo: user.photo,
+  }));
 }
 
 export async function notify(

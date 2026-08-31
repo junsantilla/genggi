@@ -16,6 +16,7 @@ import {
     requireAdmin,
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
+import { resolveMentionedUserIds } from "@/lib/mentions";
 import { uploadImage, destroyImage } from "@/lib/r2";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
@@ -1476,6 +1477,14 @@ export async function createBulletinPostAction(
         }
     }
 
+    // Resolve @username mentions in the body to the ids of friends only. The
+    // body is the source of truth: whatever is typed there is what gets stored,
+    // so the client can't tag non-friends by sending forged data.
+    const mentionedUserIds = await resolveMentionedUserIds(
+        user._id.toString(),
+        body,
+    );
+
     const db = getDb();
     const recentDuplicate = await db.collection("bulletinPosts").findOne({
         authorId: user._id,
@@ -1485,14 +1494,33 @@ export async function createBulletinPostAction(
         createdAt: { $gt: new Date(Date.now() - 10_000) },
     });
     if (recentDuplicate) return { ok: true };
-    await db.collection("bulletinPosts").insertOne({
+    const insertResult = await db.collection("bulletinPosts").insertOne({
         authorId: user._id,
         body,
         visibility: visibilityValue,
         photo: uploaded?.secure_url ?? null,
         photoPublicId: uploaded?.public_id ?? null,
         createdAt: new Date(),
+        mentionedUserIds,
     });
+
+    // Notify each friend mentioned in the post. A notification failure must
+    // never block the post from being created.
+    if (mentionedUserIds.length > 0) {
+        const postUrl = `/bulletin/${insertResult.insertedId.toString()}`;
+        await Promise.all(
+            mentionedUserIds.map((mentionedId) =>
+                notify(
+                    mentionedId.toString(),
+                    "bulletin_mention",
+                    user._id.toString(),
+                    `${user.displayName} mentioned you in a bulletin post.`,
+                    postUrl,
+                ).catch(() => {}),
+            ),
+        );
+    }
+
     revalidatePath("/");
     revalidatePath(`/${user.username}`);
     return { ok: true };
@@ -1524,15 +1552,56 @@ export async function updateBulletinPostAction(
         return { error: "Post not found." };
     }
 
+    // Recompute mentions on edit so they always match the current body.
+    const mentionedUserIds = await resolveMentionedUserIds(
+        user._id.toString(),
+        body,
+    );
+
     const db = getDb();
-    const result = await db
+    const existingPost = await db
+        .collection("bulletinPosts")
+        .findOne({ _id: oid, authorId: user._id });
+    if (!existingPost)
+        return { error: "Post not found or you don't own it." };
+
+    // Only notify friends who are newly mentioned by this edit, so saving a
+    // post doesn't re-notify people who were already mentioned.
+    const previousMentioned = new Set(
+        (existingPost.mentionedUserIds ?? []).map((id: ObjectId) =>
+            id.toString(),
+        ),
+    );
+    const newlyMentioned = mentionedUserIds.filter(
+        (id) => !previousMentioned.has(id.toString()),
+    );
+
+    await db
         .collection("bulletinPosts")
         .updateOne(
             { _id: oid, authorId: user._id },
-            { $set: { body, visibility: visibilityValue } },
+            {
+                $set: {
+                    body,
+                    visibility: visibilityValue,
+                    mentionedUserIds,
+                },
+            },
         );
-    if (result.matchedCount === 0)
-        return { error: "Post not found or you don't own it." };
+
+    if (newlyMentioned.length > 0) {
+        await Promise.all(
+            newlyMentioned.map((mentionedId) =>
+                notify(
+                    mentionedId.toString(),
+                    "bulletin_mention",
+                    user._id.toString(),
+                    `${user.displayName} mentioned you in a bulletin post.`,
+                    `/bulletin/${postId}`,
+                ).catch(() => {}),
+            ),
+        );
+    }
 
     revalidatePath("/");
     revalidatePath(`/${user.username}`);

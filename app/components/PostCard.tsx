@@ -298,7 +298,10 @@ export default function PostCard({
                                     {isGroup ? (
                                         displayBody
                                     ) : (
-                                        <LinkedText text={displayBody} />
+                                        <LinkedText
+                                            text={displayBody}
+                                            mentions={post.mentions}
+                                        />
                                     )}
                                 </p>
                             )
