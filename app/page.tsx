@@ -8,7 +8,7 @@ import { getBulletinFeedPage } from "@/lib/bulletin";
 
 export const metadata: Metadata = {
     title: {
-        absolute: "Welcome to Genggi",
+        absolute: "Genggi",
     },
     description:
         "The nostalgic social network. Make a custom profile, add friends, send messages, poke people, and collect testimonials — just like the good old days.",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         "genggi",
     ],
     openGraph: {
-        title: "Welcome to genggi",
+        title: "Genggi",
         description:
             "The nostalgic social network. Make a profile, add friends, send messages, and collect testimonials — just like the good old days.",
         siteName: "genggi",
