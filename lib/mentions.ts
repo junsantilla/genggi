@@ -1,6 +1,7 @@
 import { getDb } from "./db";
 import type { ObjectId } from "./db";
 import { getFriendIds } from "./queries";
+import type { BulletinMentionRef } from "./types";
 
 // Matches @username tokens where the "@" starts a word (start of string or
 // preceded by whitespace) so emails like a@b.com are ignored. Usernames follow
@@ -17,13 +18,15 @@ export function extractMentionedUsernames(body: string): string[] {
   return [...usernames];
 }
 
-// Resolves @username mentions in a post body to the user ids of friends of the
-// author. Non-friends and unknown usernames are silently dropped, so the client
-// can never tag someone who isn't a friend.
-export async function resolveMentionedUserIds(
+type MentionedUser = { _id: ObjectId; username: string };
+
+// Resolves @username mentions in a body to the friends of the author. Unknown
+// usernames and non-friends are silently dropped, so the client can never tag
+// someone who isn't a friend.
+export async function findMentionedUsers(
   authorId: string,
   body: string,
-): Promise<ObjectId[]> {
+): Promise<MentionedUser[]> {
   const usernames = extractMentionedUsernames(body);
   if (usernames.length === 0) return [];
 
@@ -32,13 +35,28 @@ export async function resolveMentionedUserIds(
   const friendIdSet = new Set(friendIds.map((id) => id.toString()));
 
   const db = getDb();
-  const users = await db
+  const users = (await db
     .collection("users")
     .find({ username: { $in: usernames } })
     .project({ _id: 1, username: 1 })
-    .toArray();
+    .toArray()) as unknown as MentionedUser[];
 
-  return users
-    .filter((user) => friendIdSet.has(user._id.toString()))
-    .map((user) => user._id);
+  return users.filter((user) => friendIdSet.has(user._id.toString()));
+}
+
+export async function resolveMentionedUserIds(
+  authorId: string,
+  body: string,
+): Promise<ObjectId[]> {
+  return (await findMentionedUsers(authorId, body)).map((user) => user._id);
+}
+
+export async function resolveMentionRefs(
+  authorId: string,
+  body: string,
+): Promise<BulletinMentionRef[]> {
+  return (await findMentionedUsers(authorId, body)).map((user) => ({
+    userId: user._id.toString(),
+    username: user.username,
+  }));
 }

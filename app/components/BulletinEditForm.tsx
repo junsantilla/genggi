@@ -5,7 +5,13 @@ import {
   updateBulletinCommentAction,
   updateBulletinPostAction,
 } from "@/app/actions";
-import type { BulletinVisibility } from "@/lib/types";
+import type {
+  BulletinMentionRef,
+  BulletinVisibility,
+  MentionFriend,
+} from "@/lib/types";
+import { useMentionAutocomplete } from "./useMentionAutocomplete";
+import MentionSuggestions from "./MentionSuggestions";
 
 export default function BulletinEditForm({
   mode,
@@ -14,13 +20,19 @@ export default function BulletinEditForm({
   initialVisibility,
   onCancel,
   onSaved,
+  friends,
 }: {
   mode: "post" | "comment";
   itemId: string;
   initialBody: string;
   initialVisibility?: BulletinVisibility;
   onCancel: () => void;
-  onSaved: (body: string, visibility?: BulletinVisibility) => void;
+  onSaved: (
+    body: string,
+    visibility?: BulletinVisibility,
+    mentions?: BulletinMentionRef[],
+  ) => void;
+  friends?: MentionFriend[];
 }) {
   const [body, setBody] = useState(initialBody);
   const [visibility, setVisibility] = useState<BulletinVisibility>(
@@ -30,6 +42,21 @@ export default function BulletinEditForm({
   const [pending, setPending] = useState(false);
   const maxLength = mode === "post" ? 1000 : 500;
   const remaining = maxLength - body.length;
+
+  const {
+    rootRef,
+    textareaRef,
+    mention,
+    activeIndex,
+    setActiveIndex,
+    visibleResults,
+    truncated,
+    hasMentions,
+    handleKeyDown,
+    syncMention,
+    insertMention,
+    closeMention,
+  } = useMentionAutocomplete({ friends, value: body, setValue: setBody });
 
   return (
     <form
@@ -42,6 +69,7 @@ export default function BulletinEditForm({
             error?: string;
             body?: string;
             visibility?: BulletinVisibility;
+            mentions?: BulletinMentionRef[];
           } =
             mode === "post"
               ? await updateBulletinPostAction(itemId, { error: "" }, formData)
@@ -52,7 +80,12 @@ export default function BulletinEditForm({
             return;
           }
 
-          onSaved(result.body ?? body, result.visibility ?? visibility);
+          closeMention();
+          onSaved(
+            result.body ?? body,
+            result.visibility ?? visibility,
+            result.mentions,
+          );
         } catch {
           setError("Could not save your changes. Please try again.");
         } finally {
@@ -78,28 +111,54 @@ export default function BulletinEditForm({
           {remaining} left
         </span>
       </div>
-      <textarea
-        id={`edit-${mode}-${itemId}`}
-        name="body"
-        value={body}
-        onChange={(event) => {
-          setBody(event.target.value);
-          setError("");
-        }}
-        onKeyDown={(event) => {
-          if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-            event.preventDefault();
-            event.currentTarget.form?.requestSubmit();
+      <div className="relative" ref={rootRef}>
+        <textarea
+          id={`edit-${mode}-${itemId}`}
+          name="body"
+          value={body}
+          ref={textareaRef}
+          onChange={(event) => {
+            setBody(event.target.value);
+            setError("");
+            syncMention(event.target);
+          }}
+          onSelect={(event) => syncMention(event.currentTarget)}
+          onClick={(event) => syncMention(event.currentTarget)}
+          onKeyDown={(event) => {
+            if (handleKeyDown(event)) return;
+            if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
+          maxLength={maxLength}
+          rows={mode === "post" ? 4 : 2}
+          disabled={pending}
+          required
+          autoFocus
+          className="input w-full resize-y"
+          aria-describedby={error ? `edit-error-${mode}-${itemId}` : undefined}
+          role={hasMentions ? "combobox" : undefined}
+          aria-expanded={mention ? "true" : "false"}
+          aria-controls={mention ? "mention-suggestions" : undefined}
+          aria-activedescendant={
+            mention && visibleResults.length > 0
+              ? `mention-option-${activeIndex}`
+              : undefined
           }
-        }}
-        maxLength={maxLength}
-        rows={mode === "post" ? 4 : 2}
-        disabled={pending}
-        required
-        autoFocus
-        className="input w-full resize-y"
-        aria-describedby={error ? `edit-error-${mode}-${itemId}` : undefined}
-      />
+          aria-autocomplete="list"
+        />
+        {hasMentions && mention && (
+          <MentionSuggestions
+            mention={mention}
+            results={visibleResults}
+            truncated={truncated}
+            activeIndex={activeIndex}
+            onSelect={insertMention}
+            onHover={setActiveIndex}
+          />
+        )}
+      </div>
       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
         {mode === "post" ? (
           <label className="flex items-center gap-1 text-[11px] text-gray-600">
