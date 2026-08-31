@@ -148,12 +148,16 @@ export interface BulletinComment {
   authorId: ObjectId;
   body: string;
   createdAt: Date;
+  // Friends mentioned via @username in the comment body, validated on the
+  // server at create/update time.
+  mentionedUserIds?: ObjectId[];
 }
 
 export interface BulletinCommentWithAuthor extends BulletinComment {
   author: Pick<User, "_id" | "username" | "displayName" | "photo">;
   reactions: BulletinReactionSummary[];
   myReaction: string | null;
+  mentionRefs: BulletinMentionRef[];
 }
 
 export const REACTION_TYPES = ["👍", "❤️", "😂", "😮", "😢", "😡"] as const;
@@ -204,6 +208,8 @@ export interface BulletinCommentCard {
   // Optional because group comments share this shape but have no reactions.
   reactions?: BulletinReactionSummary[];
   myReaction?: string | null;
+  // Validated @mentions resolved to usernames for rendering profile links.
+  mentions?: BulletinMentionRef[];
 }
 
 export interface BulletinPostCard {
@@ -231,6 +237,7 @@ export interface SerializedBulletinComment {
   author: BulletinAuthorCard;
   reactions?: BulletinReactionSummary[];
   myReaction?: string | null;
+  mentions?: BulletinMentionRef[];
 }
 
 export interface SerializedBulletinPost {

@@ -3,7 +3,12 @@ import Link from "next/link";
 import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
 import type { User } from "@/lib/types";
-import { getFriendshipStatus, isBlocked, areFriends } from "@/lib/queries";
+import {
+    getFriendshipStatus,
+    getFriendSuggestions,
+    isBlocked,
+    areFriends,
+} from "@/lib/queries";
 import { timeAgo, padViews } from "@/lib/utils";
 import {
     sendFriendRequestAction,
@@ -64,9 +69,12 @@ export default async function Profile({
         : undefined;
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
-    const bulletinPosts = canView
-        ? await getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null)
-        : [];
+    const [bulletinPosts, friendSuggestions] = canView
+        ? await Promise.all([
+              getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null),
+              me ? getFriendSuggestions(me) : Promise.resolve([]),
+          ])
+        : [[], []];
 
     // Six most recent friends
     const friendDocs = await db
@@ -417,6 +425,7 @@ export default async function Profile({
                                 currentUsername={currentUser?.username}
                                 title={`Bulletin Board`}
                                 border={theme.border}
+                                friends={friendSuggestions}
                             />
 
                             {/* Testimonials */}

@@ -16,7 +16,10 @@ import {
     requireAdmin,
 } from "@/lib/auth";
 import { isBlocked, areFriends, notify } from "@/lib/queries";
-import { resolveMentionedUserIds } from "@/lib/mentions";
+import {
+    resolveMentionRefs,
+    resolveMentionedUserIds,
+} from "@/lib/mentions";
 import { uploadImage, destroyImage } from "@/lib/r2";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
@@ -38,6 +41,7 @@ import {
     MESSAGE_PAGE_SIZE,
     REACTION_TYPES,
     type BulletinCommentReaction,
+    type BulletinMentionRef,
     type BulletinReaction,
     type BulletinReactionSummary,
     type BulletinVisibility,
@@ -1613,7 +1617,7 @@ export async function updateBulletinCommentAction(
     commentId: string,
     _prev: ActionResult,
     formData: FormData,
-): Promise<ActionResult & { body?: string }> {
+): Promise<ActionResult & { body?: string; mentions?: BulletinMentionRef[] }> {
     const user = await requireUser();
     const body = String(formData.get("body") || "").trim();
     if (!body) return { error: "Comment cannot be empty." };
@@ -1634,12 +1638,48 @@ export async function updateBulletinCommentAction(
     });
     if (!comment) return { error: "Comment not found or you don't own it." };
 
+    // Recompute mentions on edit so they always match the current body, and
+    // only notify friends who are newly mentioned by this edit.
+    const mentionRefs = await resolveMentionRefs(
+        user._id.toString(),
+        body,
+    );
+    const previousMentioned = new Set(
+        (comment.mentionedUserIds ?? []).map((id: ObjectId) =>
+            id.toString(),
+        ),
+    );
+    const newlyMentioned = mentionRefs.filter(
+        (ref) => !previousMentioned.has(ref.userId),
+    );
+
     await db
         .collection("bulletinComments")
         .updateOne(
             { _id: comment._id, authorId: user._id },
-            { $set: { body } },
+            {
+                $set: {
+                    body,
+                    mentionedUserIds: mentionRefs.map(
+                        (ref) => new ObjectId(ref.userId),
+                    ),
+                },
+            },
         );
+
+    if (newlyMentioned.length > 0) {
+        await Promise.all(
+            newlyMentioned.map((ref) =>
+                notify(
+                    ref.userId,
+                    "bulletin_mention",
+                    user._id.toString(),
+                    `${user.displayName} mentioned you in a comment.`,
+                    `/bulletin/${comment.postId.toString()}`,
+                ).catch(() => {}),
+            ),
+        );
+    }
 
     revalidatePath("/");
     revalidatePath(`/bulletin/${comment.postId.toString()}`);
@@ -1652,7 +1692,7 @@ export async function updateBulletinCommentAction(
             .findOne({ _id: post.authorId });
         if (postAuthor) revalidatePath(`/${postAuthor.username}`);
     }
-    return { ok: true, body };
+    return { ok: true, body, mentions: mentionRefs };
 }
 
 export async function reactToBulletinPostAction(
@@ -1885,12 +1925,23 @@ export async function createBulletinCommentAction(
         .findOne({ _id: new ObjectId(postId) });
     if (!post) return { error: "Post not found." };
 
+    // Resolve @username mentions in the comment body to friends only. The body
+    // is the source of truth, so the client can't tag non-friends.
+    const mentionRefs = await resolveMentionRefs(
+        user._id.toString(),
+        body,
+    );
+    const mentionedUserIds = mentionRefs.map(
+        (ref) => new ObjectId(ref.userId),
+    );
+
     const createdAt = new Date();
     const inserted = await db.collection("bulletinComments").insertOne({
         postId: post._id,
         authorId: user._id,
         body,
         createdAt,
+        mentionedUserIds,
     });
 
     const author = await db.collection("users").findOne({ _id: post.authorId });
@@ -1901,6 +1952,22 @@ export async function createBulletinCommentAction(
             user._id.toString(),
             `${user.displayName} commented on your bulletin post.`,
             `/bulletin/${postId}`,
+        );
+    }
+
+    // Notify each friend mentioned in the comment. A notification failure must
+    // never block the comment from being created.
+    if (mentionRefs.length > 0) {
+        await Promise.all(
+            mentionRefs.map((ref) =>
+                notify(
+                    ref.userId,
+                    "bulletin_mention",
+                    user._id.toString(),
+                    `${user.displayName} mentioned you in a comment.`,
+                    `/bulletin/${postId}`,
+                ).catch(() => {}),
+            ),
         );
     }
 
@@ -1924,6 +1991,7 @@ export async function createBulletinCommentAction(
             },
             reactions: [],
             myReaction: null,
+            mentions: mentionRefs,
         },
     };
 }

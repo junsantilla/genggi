@@ -34,7 +34,7 @@ const friends: MentionFriend[] = [
 function renderComposer(friendList: MentionFriend[] = friends) {
   const action = vi.fn().mockResolvedValue({ ok: true });
   render(<PostComposer action={action} friends={friendList} showPrivacy />);
-  const textarea = screen.getByRole("combobox");
+  const textarea = screen.getByPlaceholderText("What's on your mind?");
   return { action, textarea };
 }
 

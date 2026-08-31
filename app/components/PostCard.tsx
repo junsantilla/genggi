@@ -17,7 +17,11 @@ import {
     deleteGroupPostAction,
     deleteGroupCommentAction,
 } from "@/app/actions";
-import type { SerializedBulletinComment } from "@/lib/types";
+import type {
+    BulletinMentionRef,
+    MentionFriend,
+    SerializedBulletinComment,
+} from "@/lib/types";
 import ActionButton from "./ActionButton";
 import BulletinEditForm from "./BulletinEditForm";
 import GroupEditForm from "./GroupEditForm";
@@ -42,6 +46,7 @@ export default function PostCard({
     onPostDeleted,
     canInteract = true,
     hideComments = false,
+    friends,
 }: {
     post: Post;
     groupId?: string;
@@ -50,6 +55,9 @@ export default function PostCard({
     onPostDeleted?: (postId: string) => void;
     canInteract?: boolean;
     hideComments?: boolean;
+    // Friends of the current user, used to power @mentions in the post/comment
+    // composers. Group posts don't pass this (group members aren't friends).
+    friends?: MentionFriend[];
 }) {
     const [reactions, setReactions] = useState(post.reactions);
     const [myReaction, setMyReaction] = useState(post.myReaction);
@@ -283,6 +291,7 @@ export default function PostCard({
                                     itemId={post._id}
                                     initialBody={postBody}
                                     initialVisibility={postVisibility}
+                                    friends={friends}
                                     onCancel={() => setEditingPost(false)}
                                     onSaved={(body, visibility) => {
                                         setPostBody(body);
@@ -404,10 +413,15 @@ export default function PostCard({
                                                 mode="comment"
                                                 itemId={comment._id}
                                                 initialBody={comment.body}
+                                                friends={friends}
                                                 onCancel={() =>
                                                     setEditingCommentId(null)
                                                 }
-                                                onSaved={(body) => {
+                                                onSaved={(
+                                                    body,
+                                                    _visibility,
+                                                    mentions,
+                                                ) => {
                                                     setComments((items) =>
                                                         items.map((item) =>
                                                             item._id ===
@@ -415,6 +429,11 @@ export default function PostCard({
                                                                 ? {
                                                                       ...item,
                                                                       body,
+                                                                      ...(mentions
+                                                                          ? {
+                                                                                mentions,
+                                                                            }
+                                                                          : {}),
                                                                   }
                                                                 : item,
                                                         ),
@@ -431,6 +450,9 @@ export default function PostCard({
                                                 ) : (
                                                     <LinkedText
                                                         text={comment.body}
+                                                        mentions={
+                                                            comment.mentions
+                                                        }
                                                     />
                                                 )}
                                             </div>
@@ -623,6 +645,7 @@ export default function PostCard({
                             currentUserId && (
                                 <BulletinCommentForm
                                     postId={post._id}
+                                    friends={friends}
                                     onPosted={(
                                         comment: SerializedBulletinComment,
                                     ) =>

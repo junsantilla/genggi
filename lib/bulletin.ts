@@ -160,6 +160,27 @@ async function withComments(
     commentAuthors.map((author) => [author._id.toString(), author])
   );
 
+  // Resolve each comment's stored mentionedUserIds to usernames so the front
+  // end can render profile links for validated comment mentions.
+  const commentMentionIds = [
+    ...new Map(
+      comments.flatMap((comment) =>
+        (comment.mentionedUserIds ?? []).map((id) => [id.toString(), id] as const)
+      )
+    ).values(),
+  ];
+  const commentMentionUsers =
+    commentMentionIds.length > 0
+      ? ((await getDb()
+          .collection("users")
+          .find({ _id: { $in: commentMentionIds } })
+          .project({ _id: 1, username: 1 })
+          .toArray()) as unknown as Pick<User, "_id" | "username">[])
+      : [];
+  const commentMentionUsernameById = new Map(
+    commentMentionUsers.map((user) => [user._id.toString(), user.username])
+  );
+
   const commentsByPost = new Map<string, BulletinCommentWithAuthor[]>();
   for (const comment of comments) {
     const author = commentAuthorById.get(comment.authorId.toString());
@@ -176,7 +197,13 @@ async function withComments(
     const reactions: BulletinReactionSummary[] = [...counts.entries()]
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count);
-    list.push({ ...comment, author, reactions, myReaction });
+    const mentionRefs: BulletinMentionRef[] = (comment.mentionedUserIds ?? [])
+      .map((id): BulletinMentionRef | null => {
+        const username = commentMentionUsernameById.get(id.toString());
+        return username ? { userId: id.toString(), username } : null;
+      })
+      .filter((ref): ref is BulletinMentionRef => ref !== null);
+    list.push({ ...comment, author, reactions, myReaction, mentionRefs });
     commentsByPost.set(key, list);
   }
 
@@ -261,6 +288,7 @@ export function toBulletinPostCard(post: BulletinPostWithMentions): BulletinPost
       },
       reactions: c.reactions,
       myReaction: c.myReaction,
+      mentions: c.mentionRefs,
     })),
     mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
     mentions: post.mentionRefs,
@@ -297,6 +325,7 @@ export function serializeBulletinPost(post: BulletinPostWithMentions): Serialize
       },
       reactions: c.reactions,
       myReaction: c.myReaction,
+      mentions: c.mentionRefs,
     })),
     mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
     mentions: post.mentionRefs,
