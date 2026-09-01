@@ -2,13 +2,11 @@
 
 import { useRef, useState } from "react";
 import { Globe, Lock, Users } from "lucide-react";
-import {
-    compressImageForUpload,
-    MAX_UPLOAD_BYTES,
-} from "@/lib/compress-image";
+import { compressImageForUpload, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
 import type { MentionFriend } from "@/lib/types";
 import { useMentionAutocomplete } from "./useMentionAutocomplete";
 import MentionSuggestions from "./MentionSuggestions";
+import { Button } from "@/components/ui/button";
 
 type PostResult = { ok?: boolean; error?: string };
 
@@ -94,7 +92,7 @@ export default function PostComposer({
                     onPosted?.();
                 } catch {
                     setError(
-                        "Something went wrong while posting. Please try again."
+                        "Something went wrong while posting. Please try again.",
                     );
                 } finally {
                     setPending(false);
@@ -123,9 +121,7 @@ export default function PostComposer({
                     placeholder={placeholder}
                     role={hasMentions ? "combobox" : undefined}
                     aria-expanded={mention ? "true" : "false"}
-                    aria-controls={
-                        mention ? "mention-suggestions" : undefined
-                    }
+                    aria-controls={mention ? "mention-suggestions" : undefined}
                     aria-activedescendant={
                         mention && visibleResults.length > 0
                             ? `mention-option-${activeIndex}`
@@ -151,12 +147,12 @@ export default function PostComposer({
             </div>
             <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                    <label
+                    {/* <label
                         htmlFor="post-photo"
                         className="btn cursor-pointer max-h-[27px]"
                     >
                         {fileName ? "Change photo" : "Add photo"}
-                    </label>
+                    </label> */}
                     <input
                         id="post-photo"
                         type="file"
@@ -183,7 +179,9 @@ export default function PostComposer({
                                 return;
                             }
                             setFileName(f.name);
-                            compressPromiseRef.current = compressImageForUpload(f)
+                            compressPromiseRef.current = compressImageForUpload(
+                                f,
+                            )
                                 .then((compressed) => {
                                     if (compressed.size > MAX_UPLOAD_BYTES) {
                                         compressedRef.current = null;
@@ -200,6 +198,16 @@ export default function PostComposer({
                                 });
                         }}
                     />
+
+                    <Button
+                        type="button"
+                        // variant="outline"
+                        disabled={pending}
+                        className="cursor-pointer bg-secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {fileName ? fileName : "Choose photo"}
+                    </Button>
                 </div>
                 <div className="flex items-center gap-2">
                     {showPrivacy && (
@@ -258,13 +266,13 @@ export default function PostComposer({
                             </div>
                         </>
                     )}
-                    <button
+                    <Button
                         type="submit"
                         disabled={pending || (!body.trim() && !fileName)}
-                        className="btn min-w-[105px]"
+                        className="bg-secondary cursor-pointer"
                     >
                         {pending ? "Posting..." : "Post"}
-                    </button>
+                    </Button>
                 </div>
             </div>
             {fileName && (
