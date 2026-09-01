@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMoreBulletinPostsAction } from "@/app/actions";
 import type { MentionFriend, SerializedBulletinPost } from "@/lib/types";
-import Box from "./Box";
 import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
+import BulletinBox from "./BulletinBox";
 
 export default function BulletinFeed({
     initialPosts,
@@ -67,7 +67,7 @@ export default function BulletinFeed({
     }, []);
 
     return (
-        <Box title=" Bulletin Board" className="bulletin-board">
+        <BulletinBox title=" Bulletin Board" className="bulletin-board border">
             <BulletinPostForm onPosted={onPosted} friends={friends} />
             {posts.length === 0 ? (
                 <p className="text-gray-500 italic ">
@@ -101,6 +101,6 @@ export default function BulletinFeed({
                     <span>You&apos;re all caught up 🎉</span>
                 )}
             </div>
-        </Box>
+        </BulletinBox>
     );
 }
