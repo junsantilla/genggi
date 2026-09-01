@@ -12,6 +12,7 @@ import {
 import { timeAgo, padViews } from "@/lib/utils";
 import {
     sendFriendRequestAction,
+    cancelFriendRequestAction,
     respondFriendRequestAction,
     pokeAction,
     blockUserAction,
@@ -49,6 +50,7 @@ export default async function Profile({
         iBlockedThem,
         isFriend,
         incomingRequest,
+        outgoingRequest,
     ] = await Promise.all([
         me ? getFriendshipStatus(me, uid) : Promise.resolve("none" as const),
         me ? isBlocked(uid, me) : Promise.resolve(false),
@@ -58,6 +60,13 @@ export default async function Profile({
             ? db.collection("friendships").findOne({
                   requesterId: user._id,
                   addresseeId: currentUser!._id,
+                  status: "pending",
+              })
+            : Promise.resolve(null),
+        me
+            ? db.collection("friendships").findOne({
+                  requesterId: currentUser!._id,
+                  addresseeId: user._id,
                   status: "pending",
               })
             : Promise.resolve(null),
@@ -215,9 +224,16 @@ export default async function Profile({
                                                 )}
                                                 {friendshipStatus ===
                                                     "pending_out" && (
-                                                    <span className="btn w-full text-center opacity-70 cursor-default">
-                                                        ⏳ Request Pending
-                                                    </span>
+                                                    <ActionButton
+                                                        action={cancelFriendRequestAction.bind(
+                                                            null,
+                                                            outgoingRequest?._id.toString() || "",
+                                                        )}
+                                                        className="btn btn-danger w-full"
+                                                        confirmText={`Cancel your friend request to ${user.displayName}?`}
+                                                    >
+                                                        Cancel Request
+                                                    </ActionButton>
                                                 )}
                                                 {friendshipStatus ===
                                                     "pending_in" && (

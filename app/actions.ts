@@ -761,6 +761,27 @@ export async function respondFriendRequestAction(
     return { ok: true };
 }
 
+export async function cancelFriendRequestAction(
+    friendshipId: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    let requestId: ObjectId;
+    try {
+        requestId = new ObjectId(friendshipId);
+    } catch {
+        return { error: "Request not found." };
+    }
+    const result = await db.collection("friendships").deleteOne({
+        _id: requestId,
+        requesterId: user._id,
+        status: "pending",
+    });
+    if (!result.deletedCount) return { error: "Request not found." };
+    revalidatePath("/friends");
+    return { ok: true };
+}
+
 export async function removeFriendAction(
     friendshipId: string,
 ): Promise<ActionResult> {
