@@ -2,7 +2,6 @@ export default function BulletinBox({
     title,
     children,
     border = "#6699cc",
-    bg = "#f5f9ff",
     className = "",
 }: {
     title: string;
@@ -21,12 +20,7 @@ export default function BulletinBox({
             >
                 {title}
             </div>
-            <div
-                className="box-content p-1.5 px-0 sm:px-2"
-                style={{ background: bg }}
-            >
-                {children}
-            </div>
+            <div className="box-content p-1.5 px-0 sm:px-2">{children}</div>
         </div>
     );
 }
