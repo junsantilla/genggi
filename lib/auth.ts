@@ -4,7 +4,18 @@ import { randomBytes, createHmac, timingSafeEqual, scryptSync } from "node:crypt
 import { getDb, ObjectId } from "./db";
 import type { User } from "./types";
 
-const SECRET = process.env.AUTH_SECRET || "dev-secret-change-me";
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET?.trim();
+
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET must be set in production.");
+  }
+
+  // Development remains usable without local setup, but this value must never
+  // be accepted by a production process.
+  return secret || "dev-only-secret-not-for-production";
+}
+
 const SESSION_COOKIE = "session";
 const SESSION_DAYS = 30;
 
@@ -23,7 +34,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 function sign(token: string): string {
-  return createHmac("sha256", SECRET).update(token).digest("hex");
+  return createHmac("sha256", getAuthSecret()).update(token).digest("hex");
 }
 
 export async function createSession(userId: string): Promise<void> {

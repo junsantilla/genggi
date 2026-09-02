@@ -22,7 +22,7 @@ export default function PhotoUpload({
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const shown = preview ?? photoUrl;
+  const shown = preview ?? photoUrl ?? "/images/avatar.png";
 
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -79,13 +79,13 @@ export default function PhotoUpload({
             type="button"
             onClick={pickFile}
             className="shrink-0 p-0 border-0 bg-transparent cursor-pointer"
-            title={shown ? "Click to change photo" : "Click to add a photo"}
+            title={preview || photoUrl ? "Click to change photo" : "Click to add a photo"}
           >
             {shown ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview ?? optimizeCloudinaryUrl(shown, { width: 280, height: 280 }) ?? shown}
-                alt={preview ? "New photo preview" : "Current profile photo"}
+                alt={preview ? "New photo preview" : photoUrl ? "Current profile photo" : "Default avatar"}
                 className="w-[140px] h-[140px] object-cover hover:opacity-80"
               />
             ) : (

@@ -122,19 +122,19 @@ export default async function Profile({
       .toArray()
     : [];
 
-  const testiAuthorIds = [...testimonials, ...pendingTestimonials].map(
-    (t) => t.authorId,
-  );
-  const testiAuthors =
-    testiAuthorIds.length > 0
-      ? await db
-        .collection("users")
-        .find({ _id: { $in: testiAuthorIds } })
-        .toArray()
-      : [];
-  const authorName = (id: ObjectId) =>
-    testiAuthors.find((a) => a._id.toString() === id.toString())
-      ?.displayName || "Someone";
+    const brief: [string, string][] = [
+        ["Status:", user.relationshipStatus || "—"],
+        ["Mood:", user.mood || "—"],
+        ["Away message:", user.awayMessage || "—"],
+        ["Here for:", user.hereFor || "—"],
+        ["Orientation:", user.orientation || "—"],
+        ["Hometown:", user.location || "—"],
+        ["Body type:", user.bodyType || "—"],
+        ["Zodiac:", user.zodiac || "—"],
+        ["Occupation:", user.occupation || "—"],
+        ["Gender:", user.gender || "—"],
+        ["Last active:", timeAgo(user.lastActive)],
+    ];
 
   const brief: [string, string][] = [
     ["Status:", user.relationshipStatus || "—"],
@@ -150,16 +150,165 @@ export default async function Profile({
 
   if (blockedByProfile) {
     return (
-      <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x p-6 text-center text-[13px]">
-        <p className="font-bold text-[#cc3399] text-lg mb-1">
-          {displayNameOrUsername(user.displayName, user.username)} has blocked you.
-        </p>
-        <p className="text-gray-500">
-          You can&apos;t view this profile or interact with this user.
-        </p>
-      </div>
-    );
-  }
+        <div
+            className="profile-page w-full py-2"
+            style={
+                {
+                    "--profile-border": theme.border || "#6699cc",
+                } as CSSProperties
+            }
+        >
+            {safeCustomCss && (
+                <style dangerouslySetInnerHTML={{ __html: safeCustomCss }} />
+            )}
+            <div
+                id="wrap"
+                className="profile-content max-w-[960px] w-full mx-auto bg-white border sm:border-x"
+                style={{ borderColor: theme.border }}
+            >
+                {!canView ? (
+                    <div className="p-6 text-center">
+                        <p className="font-bold text-[#2c4d80] text-lg mb-1">
+                            🔒 This profile is private
+                        </p>
+                        <p className="text-gray-500 text-[13px]">
+                            {displayNameOrUsername(user.displayName, user.username)} only shares their profile with
+                            friends. Add them as a friend to view it.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap w-full">
+                        {/* ---------------- Left column ---------------- */}
+                        <div className="profile-main-column w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5 sm:pr-[5px]">
+                            <Box
+                                title={`${displayNameOrUsername(user.displayName, user.username)} (@${user.username})`}
+                                border={theme.border}
+                                bg="#f5f9ff"
+                                className="profile-intro"
+                            >
+                                <div className="flex flex-wrap">
+                                    {/* Left: photo, name, username, buttons */}
+                                    <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
+                                        <UserAvatar
+                                            src={user.photo || "/images/avatar.png"}
+                                            alt={`${displayNameOrUsername(user.displayName, user.username)}'s photo`}
+                                            className="profile-photo w-full object-cover mx-auto mb-2 p-1"
+                                            cloudinaryWidth={440}
+                                        />
+
+                                        {/* Actions */}
+                                        {!isOwner && me && (
+                                            <div className="profile-actions flex flex-col gap-1 max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                                                {friendshipStatus ===
+                                                    "none" && (
+                                                    <ActionButton
+                                                        action={sendFriendRequestAction.bind(
+                                                            null,
+                                                            uid,
+                                                        )}
+                                                        className="btn w-full"
+                                                    >
+                                                        + Add as Friend
+                                                    </ActionButton>
+                                                )}
+                                                {friendshipStatus ===
+                                                    "pending_out" && (
+                                                    <ActionButton
+                                                        action={cancelFriendRequestAction.bind(
+                                                            null,
+                                                            outgoingRequest?._id.toString() || "",
+                                                        )}
+                                                        className="btn btn-danger w-full"
+                                                        confirmText={`Cancel your friend request to ${user.displayName}?`}
+                                                    >
+                                                        Cancel Request
+                                                    </ActionButton>
+                                                )}
+                                                {friendshipStatus ===
+                                                    "pending_in" && (
+                                                    <>
+                                                        <ActionButton
+                                                            action={respondFriendRequestAction.bind(
+                                                                null,
+                                                                incomingRequest?._id.toString() ||
+                                                                    "",
+                                                                true,
+                                                            )}
+                                                            className="btn w-full"
+                                                        >
+                                                            Accept Request
+                                                        </ActionButton>
+                                                    </>
+                                                )}
+                                                <Link
+                                                    href={`/messages?to=${user.username}`}
+                                                    className="btn w-full text-center no-underline"
+                                                >
+                                                    Send Message
+                                                </Link>
+                                                <ActionButton
+                                                    action={pokeAction.bind(
+                                                        null,
+                                                        uid,
+                                                    )}
+                                                    className="btn w-full"
+                                                >
+                                                    Poke
+                                                </ActionButton>
+                                                {iBlockedThem ? (
+                                                    <ActionButton
+                                                        action={unblockUserAction.bind(
+                                                            null,
+                                                            uid,
+                                                        )}
+                                                        className="btn w-full"
+                                                    >
+                                                        Unblock
+                                                    </ActionButton>
+                                                ) : (
+                                                    <ActionButton
+                                                        action={blockUserAction.bind(
+                                                            null,
+                                                            uid,
+                                                        )}
+                                                        className="btn w-full"
+                                                        confirmText="Block this user? They won't be able to interact with you."
+                                                    >
+                                                        Block User
+                                                    </ActionButton>
+                                                )}
+                                                <details className="w-full">
+                                                    <summary className="btn w-full text-center cursor-pointer list-none">
+                                                        Report
+                                                    </summary>
+                                                    <div className="mt-1">
+                                                        <BoundForm
+                                                            action={reportUserAction.bind(
+                                                                null,
+                                                                uid,
+                                                            )}
+                                                            submitLabel="Submit Report"
+                                                            textarea
+                                                            name="reason"
+                                                            placeholder="Reason for reporting this user"
+                                                            rows={2}
+                                                        />
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        )}
+
+                                        {isOwner && (
+                                            <div className="profile-actions max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                                                <Link
+                                                    href="/edit"
+                                                    className="btn w-full text-center no-underline block"
+                                                >
+                                                    Edit Profile
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
 
   return (
     <div
@@ -496,114 +645,57 @@ export default async function Profile({
                   </div>
                 )}
 
-                {testimonials.length === 0 &&
-                  pendingTestimonials.length === 0 ? (
-                  <span className="text-gray-500 italic ">
-                    No testimonials yet.
-                  </span>
-                ) : (
-                  testimonials.map((t) => (
-                    <div
-                      key={t._id.toString()}
-                      className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
-                    >
-                      <span className="text-[#cc3399] font-bold">
-                        {authorName(t.authorId)}
-                      </span>{" "}
-                      <span className="text-gray-500 text-[11px]">
-                        wrote {timeAgo(t.createdAt)}
-                      </span>
-                      <br />
-                      {t.body}
-                      {isOwner && (
-                        <div className="mt-1">
-                          <ActionButton
-                            action={deleteTestimonialAction.bind(
-                              null,
-                              t._id.toString(),
-                            )}
-                            className="btn btn-danger"
-                          >
-                            Delete
-                          </ActionButton>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-
-                {!isOwner && me && (
-                  <div className="mt-2 border-t border-[#99bbdd] pt-2">
-                    <p className="font-bold text-[11px] text-[#2c4d80] mb-1">
-                      Leave a testimonial:
-                    </p>
-                    <BoundForm
-                      action={writeTestimonialAction.bind(
-                        null,
-                        uid,
-                      )}
-                      submitLabel="Post Testimonial"
-                      textarea
-                      name="body"
-                      placeholder="Say something nice!"
-                      rows={2}
-                    />
-                  </div>
-                )}
-              </Box>
-            </div>
-
-            {/* ---------------- Right column ---------------- */}
-            <div className="profile-sidebar w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
-              {/* Six most recent friends */}
-              <Box
-                title={`${displayNameOrUsername(user.displayName, user.username).split(" ")[0]}'s Friends (recent ${topFriends.length})`}
-                border={theme.border}
-                bg="#f5f9ff"
-                className="profile-friends"
-              >
-                {topFriends.length === 0 ? (
-                  <span className="text-gray-500 italic ">
-                    No friends yet.
-                  </span>
-                ) : (
-                  <>
-                    <div className="profile-friends-grid grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
-                      {topFriends.map((f) => (
-                        <div
-                          key={f._id.toString()}
-                          className="profile-friend-card min-w-0 text-center text-[11px]"
-                        >
-                          <Link
-                            href={`/${f.username}`}
-                            className="block"
-                          >
-                            <UserAvatar
-                              src={f.photo}
-                              alt={displayNameOrUsername(f.displayName, f.username)}
-                              className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
-                              cloudinaryWidth={
-                                120
-                              }
-                            />
-                          </Link>
-                          <Link
-                            href={`/${f.username}`}
-                            className="text-[#003399] no-underline font-bold break-words"
-                          >
-                            {displayNameOrUsername(f.displayName, f.username)}
-                          </Link>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[13px]">
-                      <Link
-                        href={`/${user.username}/friends`}
-                        className="text-[#003399]"
-                      >
-                        View All Friends »
-                      </Link>
-                      {/* <Link
+                        {/* ---------------- Right column ---------------- */}
+                        <div className="profile-sidebar w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
+                            {/* Six most recent friends */}
+                            <Box
+                                title={`${displayNameOrUsername(user.displayName, user.username).split(" ")[0]}'s Friends (recent ${topFriends.length})`}
+                                border={theme.border}
+                                bg="#f5f9ff"
+                                className="profile-friends"
+                            >
+                                {topFriends.length === 0 ? (
+                                    <span className="text-gray-500 italic ">
+                                        No friends yet.
+                                    </span>
+                                ) : (
+                                    <>
+                                        <div className="profile-friends-grid grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                                            {topFriends.map((f) => (
+                                                <div
+                                                    key={f._id.toString()}
+                                                    className="profile-friend-card min-w-0 text-center text-[11px]"
+                                                >
+                                                    <Link
+                                                        href={`/${f.username}`}
+                                                        className="block"
+                                                    >
+                                                        <UserAvatar
+                                                            src={f.photo || "/images/avatar.png"}
+                                                            alt={displayNameOrUsername(f.displayName, f.username)}
+                                                            className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
+                                                            cloudinaryWidth={
+                                                                120
+                                                            }
+                                                        />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/${f.username}`}
+                                                        className="text-[#003399] no-underline font-bold break-words"
+                                                    >
+                                                        {displayNameOrUsername(f.displayName, f.username)}
+                                                    </Link>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[13px]">
+                                            <Link
+                                                href={`/${user.username}/friends`}
+                                                className="text-[#003399]"
+                                            >
+                                                View All Friends »
+                                            </Link>
+                                            {/* <Link
                                                 href={`/${user.username}/friends`}
                                                 className="text-[#003399]"
                                             >

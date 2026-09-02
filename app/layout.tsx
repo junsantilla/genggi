@@ -23,7 +23,8 @@ export const metadata: Metadata = {
     title: {
         default: "Genggi",
         template: "%s | Genggi",
-    },        description:
+    },
+    description:
         "A nostalgic social network for profiles, friends, messages, and fun.",
     manifest: "/manifest.webmanifest",
     icons: {
@@ -31,7 +32,6 @@ export const metadata: Metadata = {
         apple: "/images/genggeng-logo4.png",
     },
 };
-
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
     const user = await getCurrentUser();
@@ -55,7 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     isAdmin={isAdmin}
                     counts={counts}
                 />
-                <main className="py-2 min-h-[calc(100dvh-155px)]">
+                <main className={user ? "py-2 min-h-[calc(100dvh-52px)]" : ""}>
                     {children}
                 </main>
                 <Footer />
