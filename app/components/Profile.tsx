@@ -3,10 +3,16 @@ import Link from "next/link";
 import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
 import type { User } from "@/lib/types";
-import { getFriendshipStatus, isBlocked, areFriends } from "@/lib/queries";
+import {
+    getFriendshipStatus,
+    getFriendSuggestions,
+    isBlocked,
+    areFriends,
+} from "@/lib/queries";
 import { timeAgo, padViews } from "@/lib/utils";
 import {
     sendFriendRequestAction,
+    cancelFriendRequestAction,
     respondFriendRequestAction,
     pokeAction,
     blockUserAction,
@@ -44,6 +50,7 @@ export default async function Profile({
         iBlockedThem,
         isFriend,
         incomingRequest,
+        outgoingRequest,
     ] = await Promise.all([
         me ? getFriendshipStatus(me, uid) : Promise.resolve("none" as const),
         me ? isBlocked(uid, me) : Promise.resolve(false),
@@ -56,6 +63,13 @@ export default async function Profile({
                   status: "pending",
               })
             : Promise.resolve(null),
+        me
+            ? db.collection("friendships").findOne({
+                  requesterId: currentUser!._id,
+                  addresseeId: user._id,
+                  status: "pending",
+              })
+            : Promise.resolve(null),
     ]);
 
     const theme = user.theme || { border: "#6699cc" };
@@ -64,9 +78,12 @@ export default async function Profile({
         : undefined;
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
-    const bulletinPosts = canView
-        ? await getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null)
-        : [];
+    const [bulletinPosts, friendSuggestions] = canView
+        ? await Promise.all([
+              getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null),
+              me ? getFriendSuggestions(me) : Promise.resolve([]),
+          ])
+        : [[], []];
 
     // Six most recent friends
     const friendDocs = await db
@@ -209,9 +226,16 @@ export default async function Profile({
                                                 )}
                                                 {friendshipStatus ===
                                                     "pending_out" && (
-                                                    <span className="btn w-full text-center opacity-70 cursor-default">
-                                                        ⏳ Request Pending
-                                                    </span>
+                                                    <ActionButton
+                                                        action={cancelFriendRequestAction.bind(
+                                                            null,
+                                                            outgoingRequest?._id.toString() || "",
+                                                        )}
+                                                        className="btn btn-danger w-full"
+                                                        confirmText={`Cancel your friend request to ${user.displayName}?`}
+                                                    >
+                                                        Cancel Request
+                                                    </ActionButton>
                                                 )}
                                                 {friendshipStatus ===
                                                     "pending_in" && (
@@ -419,6 +443,7 @@ export default async function Profile({
                                 currentUsername={currentUser?.username}
                                 title={`Bulletin Board`}
                                 border={theme.border}
+                                friends={friendSuggestions}
                             />
 
                             {/* Testimonials */}

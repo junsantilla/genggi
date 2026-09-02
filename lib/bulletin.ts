@@ -4,10 +4,12 @@ import type {
   BulletinComment,
   BulletinCommentReaction,
   BulletinCommentWithAuthor,
+  BulletinMentionRef,
   BulletinPost,
   BulletinPostCard,
   BulletinPostWithAuthor,
   BulletinPostWithComments,
+  BulletinPostWithMentions,
   BulletinReaction,
   BulletinReactionSummary,
   SerializedBulletinPost,
@@ -36,6 +38,46 @@ async function withAuthors(posts: BulletinPost[]): Promise<BulletinPostWithAutho
     const author = authorById.get(post.authorId.toString());
     return author ? [{ ...post, author }] : [];
   });
+}
+
+// Resolves each post's stored mentionedUserIds to usernames so the front end
+// can render profile links for validated mentions only.
+async function withMentions<T extends BulletinPostWithComments>(
+  posts: T[]
+): Promise<BulletinPostWithMentions[]> {
+  if (posts.length === 0) return [];
+
+  const allIds = [
+    ...new Map(
+      posts.flatMap((post) =>
+        (post.mentionedUserIds ?? []).map((id) => [id.toString(), id] as const)
+      )
+    ).values(),
+  ];
+  if (allIds.length === 0) {
+    return posts.map((post) => ({ ...post, mentionRefs: [] }));
+  }
+
+  const users = (await getDb()
+    .collection("users")
+    .find({ _id: { $in: allIds } })
+    .project({ _id: 1, username: 1 })
+    .toArray()) as unknown as Pick<User, "_id" | "username">[];
+  const usernameById = new Map(
+    users.map((user) => [user._id.toString(), user.username])
+  );
+
+  return posts.map((post) => ({
+    ...post,
+    mentionRefs: (post.mentionedUserIds ?? [])
+      .map((id): BulletinMentionRef | null => {
+        const username = usernameById.get(id.toString());
+        return username
+          ? { userId: id.toString(), username }
+          : null;
+      })
+      .filter((ref): ref is BulletinMentionRef => ref !== null),
+  }));
 }
 
 async function withReactions(
@@ -118,6 +160,27 @@ async function withComments(
     commentAuthors.map((author) => [author._id.toString(), author])
   );
 
+  // Resolve each comment's stored mentionedUserIds to usernames so the front
+  // end can render profile links for validated comment mentions.
+  const commentMentionIds = [
+    ...new Map(
+      comments.flatMap((comment) =>
+        (comment.mentionedUserIds ?? []).map((id) => [id.toString(), id] as const)
+      )
+    ).values(),
+  ];
+  const commentMentionUsers =
+    commentMentionIds.length > 0
+      ? ((await getDb()
+          .collection("users")
+          .find({ _id: { $in: commentMentionIds } })
+          .project({ _id: 1, username: 1 })
+          .toArray()) as unknown as Pick<User, "_id" | "username">[])
+      : [];
+  const commentMentionUsernameById = new Map(
+    commentMentionUsers.map((user) => [user._id.toString(), user.username])
+  );
+
   const commentsByPost = new Map<string, BulletinCommentWithAuthor[]>();
   for (const comment of comments) {
     const author = commentAuthorById.get(comment.authorId.toString());
@@ -134,7 +197,13 @@ async function withComments(
     const reactions: BulletinReactionSummary[] = [...counts.entries()]
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count);
-    list.push({ ...comment, author, reactions, myReaction });
+    const mentionRefs: BulletinMentionRef[] = (comment.mentionedUserIds ?? [])
+      .map((id): BulletinMentionRef | null => {
+        const username = commentMentionUsernameById.get(id.toString());
+        return username ? { userId: id.toString(), username } : null;
+      })
+      .filter((ref): ref is BulletinMentionRef => ref !== null);
+    list.push({ ...comment, author, reactions, myReaction, mentionRefs });
     commentsByPost.set(key, list);
   }
 
@@ -150,7 +219,7 @@ export async function getHomeBulletinPosts(
   userId: string,
   cursor?: { createdAt: Date; _id: ObjectId } | null,
   limit = BULLETIN_LIMIT
-): Promise<BulletinPostWithComments[]> {
+): Promise<BulletinPostWithMentions[]> {
   const db = getDb();
   const userObjectId = new ObjectId(userId);
   const friendIds = await getFriendIds(userId);
@@ -185,10 +254,12 @@ export async function getHomeBulletinPosts(
     .limit(limit)
     .toArray()) as unknown as BulletinPost[];
 
-  return withReactions(await withComments(await withAuthors(posts), userId), userId);
+  return withMentions(
+    await withReactions(await withComments(await withAuthors(posts), userId), userId)
+  );
 }
 
-export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPostCard {
+export function toBulletinPostCard(post: BulletinPostWithMentions): BulletinPostCard {
   return {
     _id: post._id.toString(),
     authorId: post.authorId.toString(),
@@ -217,11 +288,14 @@ export function toBulletinPostCard(post: BulletinPostWithComments): BulletinPost
       },
       reactions: c.reactions,
       myReaction: c.myReaction,
+      mentions: c.mentionRefs,
     })),
+    mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
+    mentions: post.mentionRefs,
   };
 }
 
-export function serializeBulletinPost(post: BulletinPostWithComments): SerializedBulletinPost {
+export function serializeBulletinPost(post: BulletinPostWithMentions): SerializedBulletinPost {
   return {
     _id: post._id.toString(),
     authorId: post.authorId.toString(),
@@ -251,7 +325,10 @@ export function serializeBulletinPost(post: BulletinPostWithComments): Serialize
       },
       reactions: c.reactions,
       myReaction: c.myReaction,
+      mentions: c.mentionRefs,
     })),
+    mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
+    mentions: post.mentionRefs,
   };
 }
 
@@ -281,7 +358,7 @@ export async function getBulletinFeedPage(
 export async function getBulletinPostById(
   postId: string,
   viewerId: string
-): Promise<BulletinPostWithComments | null> {
+): Promise<BulletinPostWithMentions | null> {
   const db = getDb();
   let oid;
   try {
@@ -311,9 +388,11 @@ export async function getBulletinPostById(
     )) as unknown as Author | null;
   if (!author) return null;
 
-  const [result] = await withReactions(
-    await withComments([{ ...post, author }], viewerId),
-    viewerId
+  const [result] = await withMentions(
+    await withReactions(
+      await withComments([{ ...post, author }], viewerId),
+      viewerId
+    )
   );
   return result ?? null;
 }
@@ -323,7 +402,7 @@ export async function getProfileBulletinPosts(
   isOwner: boolean,
   isFriend: boolean,
   viewerId: string | null = null
-): Promise<BulletinPostWithComments[]> {
+): Promise<BulletinPostWithMentions[]> {
   const visibility = isOwner
     ? undefined
     : isFriend
@@ -340,5 +419,7 @@ export async function getProfileBulletinPosts(
     .limit(10)
     .toArray()) as unknown as BulletinPost[];
 
-  return withReactions(await withComments(await withAuthors(posts), viewerId), viewerId);
+  return withMentions(
+    await withReactions(await withComments(await withAuthors(posts), viewerId), viewerId)
+  );
 }

@@ -2,10 +2,11 @@
 
 import { useRef, useState } from "react";
 import { Globe, Lock, Users } from "lucide-react";
-import {
-    compressImageForUpload,
-    MAX_UPLOAD_BYTES,
-} from "@/lib/compress-image";
+import { compressImageForUpload, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
+import type { MentionFriend } from "@/lib/types";
+import { useMentionAutocomplete } from "./useMentionAutocomplete";
+import MentionSuggestions from "./MentionSuggestions";
+import { Button } from "@/components/ui/button";
 
 type PostResult = { ok?: boolean; error?: string };
 
@@ -14,11 +15,14 @@ export default function PostComposer({
     onPosted,
     placeholder = "What's on your mind?",
     showPrivacy = false,
+    friends,
 }: {
     action: (formData: FormData) => Promise<PostResult>;
     onPosted?: () => void;
     placeholder?: string;
     showPrivacy?: boolean;
+    // When provided, typing "@" opens a friend-mention autocomplete.
+    friends?: MentionFriend[];
 }) {
     const [body, setBody] = useState("");
     const [fileName, setFileName] = useState("");
@@ -45,6 +49,21 @@ export default function PostComposer({
               ? Users
               : Globe;
 
+    const {
+        rootRef,
+        textareaRef,
+        mention,
+        activeIndex,
+        setActiveIndex,
+        visibleResults,
+        truncated,
+        hasMentions,
+        handleKeyDown,
+        syncMention,
+        insertMention,
+        closeMention,
+    } = useMentionAutocomplete({ friends, value: body, setValue: setBody });
+
     return (
         <form
             ref={formRef}
@@ -66,13 +85,14 @@ export default function PostComposer({
                     setBody("");
                     setFileName("");
                     setPosted(true);
+                    closeMention();
                     formRef.current?.reset();
                     compressedRef.current = null;
                     compressPromiseRef.current = null;
                     onPosted?.();
                 } catch {
                     setError(
-                        "Something went wrong while posting. Please try again."
+                        "Something went wrong while posting. Please try again.",
                     );
                 } finally {
                     setPending(false);
@@ -80,35 +100,59 @@ export default function PostComposer({
             }}
             className="border-b border-[#99bbdd] bg-[#DBE9F7] p-2.5 mb-3"
         >
-            <div className="relative">
+            <div className="relative" ref={rootRef}>
                 <textarea
                     name="body"
                     rows={2}
                     maxLength={1000}
                     value={body}
+                    ref={textareaRef}
                     onChange={(event) => {
                         setBody(event.target.value);
                         setError("");
                         setPosted(false);
+                        syncMention(event.target);
                     }}
+                    onSelect={(event) => syncMention(event.currentTarget)}
+                    onClick={(event) => syncMention(event.currentTarget)}
+                    onKeyDown={handleKeyDown}
                     disabled={pending}
                     className="input w-full resize-none pr-16 bg-white"
                     placeholder={placeholder}
+                    role={hasMentions ? "combobox" : undefined}
+                    aria-expanded={mention ? "true" : "false"}
+                    aria-controls={mention ? "mention-suggestions" : undefined}
+                    aria-activedescendant={
+                        mention && visibleResults.length > 0
+                            ? `mention-option-${activeIndex}`
+                            : undefined
+                    }
+                    aria-autocomplete="list"
                 />
                 <span
                     className={`absolute right-2 bottom-2 text-[10px] ${remaining < 100 ? "text-orange-600 font-bold" : "text-gray-400"}`}
                 >
                     {remaining}
                 </span>
+                {hasMentions && mention && (
+                    <MentionSuggestions
+                        mention={mention}
+                        results={visibleResults}
+                        truncated={truncated}
+                        activeIndex={activeIndex}
+                        onSelect={insertMention}
+                        onHover={setActiveIndex}
+                    />
+                )}
             </div>
             <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                    <label
+                    {/* <label
                         htmlFor="post-photo"
                         className="btn cursor-pointer max-h-[27px]"
                     >
                         {fileName ? "Change photo" : "Add photo"}
-                    </label>
+                    </label> */}
                     <input
                         id="post-photo"
                         type="file"
@@ -135,7 +179,9 @@ export default function PostComposer({
                                 return;
                             }
                             setFileName(f.name);
-                            compressPromiseRef.current = compressImageForUpload(f)
+                            compressPromiseRef.current = compressImageForUpload(
+                                f,
+                            )
                                 .then((compressed) => {
                                     if (compressed.size > MAX_UPLOAD_BYTES) {
                                         compressedRef.current = null;
@@ -152,6 +198,16 @@ export default function PostComposer({
                                 });
                         }}
                     />
+
+                    <Button
+                        type="button"
+                        // variant="outline"
+                        disabled={pending}
+                        className="cursor-pointer bg-secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {fileName ? fileName : "Choose photo"}
+                    </Button>
                 </div>
                 <div className="flex items-center gap-2">
                     {showPrivacy && (
@@ -210,13 +266,13 @@ export default function PostComposer({
                             </div>
                         </>
                     )}
-                    <button
+                    <Button
                         type="submit"
                         disabled={pending || (!body.trim() && !fileName)}
-                        className="btn min-w-[105px]"
+                        className="bg-secondary cursor-pointer"
                     >
                         {pending ? "Posting..." : "Post"}
-                    </button>
+                    </Button>
                 </div>
             </div>
             {fileName && (

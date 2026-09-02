@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getBulletinPostById } from "@/lib/bulletin";
+import { getFriendSuggestions } from "@/lib/queries";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-url";
 import BulletinBoard from "@/app/components/BulletinBoard";
 
@@ -54,7 +55,10 @@ export default async function BulletinPostPage({
 }) {
     const user = await requireUser();
     const { id } = await params;
-    const post = await getBulletinPostById(id, user._id.toString());
+    const [post, friends] = await Promise.all([
+        getBulletinPostById(id, user._id.toString()),
+        getFriendSuggestions(user._id.toString()),
+    ]);
     if (!post) notFound();
 
     return (
@@ -65,6 +69,7 @@ export default async function BulletinPostPage({
                     currentUserId={user._id.toString()}
                     currentUsername={user.username}
                     title=" Bulletin Post"
+                    friends={friends}
                 />
                 <div className="text-center">
                     <Link href="/" className="text-[#003399] ">

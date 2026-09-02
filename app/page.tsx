@@ -5,6 +5,7 @@ import NewMembers from "@/app/components/NewMembers";
 import BulletinFeed from "@/app/components/BulletinFeed";
 import BackToTop from "@/app/components/BackToTop";
 import { getBulletinFeedPage } from "@/lib/bulletin";
+import { getFriendSuggestions } from "@/lib/queries";
 
 export const metadata: Metadata = {
     title: {
@@ -34,7 +35,10 @@ export default async function Home() {
     const user = await getCurrentUser();
     if (!user) return <Landing />;
 
-    const feed = await getBulletinFeedPage(user._id.toString(), null);
+    const [feed, friends] = await Promise.all([
+        getBulletinFeedPage(user._id.toString(), null),
+        getFriendSuggestions(user._id.toString()),
+    ]);
 
     return (
         <div className="max-w-[960px] w-full mx-auto">
@@ -46,6 +50,7 @@ export default async function Home() {
                             hasMore={feed.nextCursor !== null}
                             currentUserId={user._id.toString()}
                             currentUsername={user.username}
+                            friends={friends}
                         />
                     </div>
                     <div className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px] hidden sm:block">
