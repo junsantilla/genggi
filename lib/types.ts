@@ -112,10 +112,34 @@ export interface BulletinPost {
   photo?: string | null;
   photoPublicId?: string | null;
   createdAt: Date;
+  // User ids of friends mentioned via @username in the body, validated on the
+  // server at create/update time so the client can't tag non-friends.
+  mentionedUserIds?: ObjectId[];
+}
+
+// Friend-shaped subset used by the @mention autocomplete in the post composer.
+export interface MentionFriend {
+  _id: string;
+  username: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  photo: string | null;
 }
 
 export interface BulletinPostWithAuthor extends BulletinPost {
   author: Pick<User, "_id" | "username" | "displayName" | "photo">;
+}
+
+// A validated @mention: the mentioned user's id and username, used to render
+// profile links for mentions in post bodies.
+export interface BulletinMentionRef {
+  userId: string;
+  username: string;
+}
+
+export interface BulletinPostWithMentions extends BulletinPostWithComments {
+  mentionRefs: BulletinMentionRef[];
 }
 
 export interface BulletinComment {
@@ -124,12 +148,16 @@ export interface BulletinComment {
   authorId: ObjectId;
   body: string;
   createdAt: Date;
+  // Friends mentioned via @username in the comment body, validated on the
+  // server at create/update time.
+  mentionedUserIds?: ObjectId[];
 }
 
 export interface BulletinCommentWithAuthor extends BulletinComment {
   author: Pick<User, "_id" | "username" | "displayName" | "photo">;
   reactions: BulletinReactionSummary[];
   myReaction: string | null;
+  mentionRefs: BulletinMentionRef[];
 }
 
 export const REACTION_TYPES = ["👍", "❤️", "😂", "😮", "😢", "😡"] as const;
@@ -180,6 +208,8 @@ export interface BulletinCommentCard {
   // Optional because group comments share this shape but have no reactions.
   reactions?: BulletinReactionSummary[];
   myReaction?: string | null;
+  // Validated @mentions resolved to usernames for rendering profile links.
+  mentions?: BulletinMentionRef[];
 }
 
 export interface BulletinPostCard {
@@ -193,6 +223,9 @@ export interface BulletinPostCard {
   reactions: BulletinReactionSummary[];
   myReaction: string | null;
   comments: BulletinCommentCard[];
+  mentionedUserIds?: string[];
+  // Validated @mentions resolved to usernames for rendering profile links.
+  mentions?: BulletinMentionRef[];
 }
 
 export interface SerializedBulletinComment {
@@ -204,6 +237,7 @@ export interface SerializedBulletinComment {
   author: BulletinAuthorCard;
   reactions?: BulletinReactionSummary[];
   myReaction?: string | null;
+  mentions?: BulletinMentionRef[];
 }
 
 export interface SerializedBulletinPost {
@@ -217,6 +251,8 @@ export interface SerializedBulletinPost {
   reactions: BulletinReactionSummary[];
   myReaction: string | null;
   comments: SerializedBulletinComment[];
+  mentionedUserIds?: string[];
+  mentions?: BulletinMentionRef[];
 }
 
 export interface Session {

@@ -1,5 +1,8 @@
 import { toBulletinPostCard } from "@/lib/bulletin";
-import type { BulletinPostWithComments } from "@/lib/types";
+import type {
+    BulletinPostWithMentions,
+    MentionFriend,
+} from "@/lib/types";
 import Box from "./Box";
 import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
@@ -12,14 +15,17 @@ export default function BulletinBoard({
     title = "Bulletin Board",
     border,
     bg,
+    friends,
 }: {
-    posts: BulletinPostWithComments[];
+    posts: BulletinPostWithMentions[];
     currentUserId?: string;
     currentUsername?: string;
     showComposer?: boolean;
     title?: string;
     border?: string;
     bg?: string;
+    // Friends of the viewer, used for @mentions in the comment composer.
+    friends?: MentionFriend[];
 }) {
     return (
         <Box title={title} className="bulletin-board" border={border} bg={bg}>
@@ -38,6 +44,7 @@ export default function BulletinBoard({
                             post={toBulletinPostCard(post)}
                             currentUserId={currentUserId}
                             currentUsername={currentUsername}
+                            friends={friends}
                         />
                     ))}
                 </div>

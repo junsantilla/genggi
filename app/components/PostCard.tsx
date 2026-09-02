@@ -17,7 +17,11 @@ import {
     deleteGroupPostAction,
     deleteGroupCommentAction,
 } from "@/app/actions";
-import type { SerializedBulletinComment } from "@/lib/types";
+import type {
+    BulletinMentionRef,
+    MentionFriend,
+    SerializedBulletinComment,
+} from "@/lib/types";
 import ActionButton from "./ActionButton";
 import BulletinEditForm from "./BulletinEditForm";
 import GroupEditForm from "./GroupEditForm";
@@ -42,6 +46,7 @@ export default function PostCard({
     onPostDeleted,
     canInteract = true,
     hideComments = false,
+    friends,
 }: {
     post: Post;
     groupId?: string;
@@ -50,6 +55,9 @@ export default function PostCard({
     onPostDeleted?: (postId: string) => void;
     canInteract?: boolean;
     hideComments?: boolean;
+    // Friends of the current user, used to power @mentions in the post/comment
+    // composers. Group posts don't pass this (group members aren't friends).
+    friends?: MentionFriend[];
 }) {
     const [reactions, setReactions] = useState(post.reactions);
     const [myReaction, setMyReaction] = useState(post.myReaction);
@@ -180,7 +188,10 @@ export default function PostCard({
                 >
                     <UserAvatar
                         src={post.author.photo}
-                        alt={displayNameOrUsername(post.author.displayName, post.author.username)}
+                        alt={displayNameOrUsername(
+                            post.author.displayName,
+                            post.author.username,
+                        )}
                         className="block w-[45px] h-[45px] object-cover"
                         cloudinaryWidth={45}
                     />
@@ -192,7 +203,10 @@ export default function PostCard({
                                 href={`/${post.author.username}`}
                                 className="block text-[#003399] font-bold no-underline"
                             >
-                                {displayNameOrUsername(post.author.displayName, post.author.username)}
+                                {displayNameOrUsername(
+                                    post.author.displayName,
+                                    post.author.username,
+                                )}
                             </Link>
                             {isGroup ? (
                                 <span className="block text-gray-500 text-[11px]">
@@ -283,6 +297,7 @@ export default function PostCard({
                                     itemId={post._id}
                                     initialBody={postBody}
                                     initialVisibility={postVisibility}
+                                    friends={friends}
                                     onCancel={() => setEditingPost(false)}
                                     onSaved={(body, visibility) => {
                                         setPostBody(body);
@@ -293,12 +308,16 @@ export default function PostCard({
                                 />
                             )
                         ) : (
-                            post.body && displayBody.trim() && (
+                            post.body &&
+                            displayBody.trim() && (
                                 <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
                                     {isGroup ? (
                                         displayBody
                                     ) : (
-                                        <LinkedText text={displayBody} />
+                                        <LinkedText
+                                            text={displayBody}
+                                            mentions={post.mentions}
+                                        />
                                     )}
                                 </p>
                             )
@@ -361,13 +380,16 @@ export default function PostCard({
                             return (
                                 <div
                                     key={comment._id}
-                                    className="bg-[#DBE9F7] p-2 mt-1"
+                                    className="bg-[#DBE9F7] p-2 mt-1.5"
                                 >
                                     <Link
                                         href={`/${comment.author.username}`}
                                         className="text-[#003399] font-bold"
                                     >
-                                        {displayNameOrUsername(comment.author.displayName, comment.author.username)}
+                                        {displayNameOrUsername(
+                                            comment.author.displayName,
+                                            comment.author.username,
+                                        )}
                                     </Link>{" "}
                                     <span className="text-gray-500">
                                         ({timeAgo(comment.createdAt)})
@@ -401,10 +423,15 @@ export default function PostCard({
                                                 mode="comment"
                                                 itemId={comment._id}
                                                 initialBody={comment.body}
+                                                friends={friends}
                                                 onCancel={() =>
                                                     setEditingCommentId(null)
                                                 }
-                                                onSaved={(body) => {
+                                                onSaved={(
+                                                    body,
+                                                    _visibility,
+                                                    mentions,
+                                                ) => {
                                                     setComments((items) =>
                                                         items.map((item) =>
                                                             item._id ===
@@ -412,6 +439,11 @@ export default function PostCard({
                                                                 ? {
                                                                       ...item,
                                                                       body,
+                                                                      ...(mentions
+                                                                          ? {
+                                                                                mentions,
+                                                                            }
+                                                                          : {}),
                                                                   }
                                                                 : item,
                                                         ),
@@ -428,6 +460,9 @@ export default function PostCard({
                                                 ) : (
                                                     <LinkedText
                                                         text={comment.body}
+                                                        mentions={
+                                                            comment.mentions
+                                                        }
                                                     />
                                                 )}
                                             </div>
@@ -496,10 +531,29 @@ export default function PostCard({
                                                                     }
                                                                 />
                                                                 <ReactionPicker
-                                                                    myReaction={comment.myReaction}
-                                                                    reacting={reactingCommentId === comment._id}
-                                                                    countOf={(type) => commentCountOf(comment, type)}
-                                                                    onReact={(type) => reactToComment(comment._id, type)}
+                                                                    myReaction={
+                                                                        comment.myReaction
+                                                                    }
+                                                                    reacting={
+                                                                        reactingCommentId ===
+                                                                        comment._id
+                                                                    }
+                                                                    countOf={(
+                                                                        type,
+                                                                    ) =>
+                                                                        commentCountOf(
+                                                                            comment,
+                                                                            type,
+                                                                        )
+                                                                    }
+                                                                    onReact={(
+                                                                        type,
+                                                                    ) =>
+                                                                        reactToComment(
+                                                                            comment._id,
+                                                                            type,
+                                                                        )
+                                                                    }
                                                                 />
                                                             </>
                                                         )}
@@ -620,6 +674,7 @@ export default function PostCard({
                             currentUserId && (
                                 <BulletinCommentForm
                                     postId={post._id}
+                                    friends={friends}
                                     onPosted={(
                                         comment: SerializedBulletinComment,
                                     ) =>

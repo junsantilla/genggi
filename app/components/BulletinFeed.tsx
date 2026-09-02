@@ -2,21 +2,23 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMoreBulletinPostsAction } from "@/app/actions";
-import type { SerializedBulletinPost } from "@/lib/types";
-import Box from "./Box";
+import type { MentionFriend, SerializedBulletinPost } from "@/lib/types";
 import PostCard from "./PostCard";
 import BulletinPostForm from "./BulletinPostForm";
+import BulletinBox from "./BulletinBox";
 
 export default function BulletinFeed({
     initialPosts,
     hasMore,
     currentUserId,
     currentUsername,
+    friends,
 }: {
     initialPosts: SerializedBulletinPost[];
     hasMore: boolean;
     currentUserId: string;
     currentUsername: string;
+    friends?: MentionFriend[];
 }) {
     const [posts, setPosts] = useState<SerializedBulletinPost[]>(initialPosts);
     const [more, setMore] = useState(hasMore);
@@ -65,8 +67,8 @@ export default function BulletinFeed({
     }, []);
 
     return (
-        <Box title=" Bulletin Board" className="bulletin-board">
-            <BulletinPostForm onPosted={onPosted} />
+        <BulletinBox title=" Bulletin Board" className="bulletin-board border">
+            <BulletinPostForm onPosted={onPosted} friends={friends} />
             {posts.length === 0 ? (
                 <p className="text-gray-500 italic ">
                     No bulletins yet. Be the first to post!
@@ -79,6 +81,7 @@ export default function BulletinFeed({
                             post={post}
                             currentUserId={currentUserId}
                             currentUsername={currentUsername}
+                            friends={friends}
                             onPostDeleted={(postId) =>
                                 setPosts((prev) =>
                                     prev.filter((p) => p._id !== postId),
@@ -98,6 +101,6 @@ export default function BulletinFeed({
                     <span>You&apos;re all caught up 🎉</span>
                 )}
             </div>
-        </Box>
+        </BulletinBox>
     );
 }

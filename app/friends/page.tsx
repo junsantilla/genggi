@@ -2,7 +2,11 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
-import { respondFriendRequestAction, removeFriendAction } from "@/app/actions";
+import {
+    cancelFriendRequestAction,
+    respondFriendRequestAction,
+    removeFriendAction,
+} from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
 import FriendSearch from "@/app/components/FriendSearch";
@@ -188,7 +192,11 @@ export default async function FriendsPage() {
                     {outgoing.length === 0 ? (
                         <p className="text-gray-500 italic ">None pending.</p>
                     ) : (
-                        outgoingUsers.map((f) => (
+                        outgoingUsers.map((f) => {
+                            const request = outgoing.find(
+                                (x) => x.addresseeId.toString() === f._id.toString(),
+                            );
+                            return (
                             <div
                                 key={f._id.toString()}
                                 className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
@@ -211,11 +219,24 @@ export default async function FriendsPage() {
                                         {f.displayName}
                                     </Link>
                                 </div>
-                                <span className="text-gray-500 text-[11px] italic">
-                                    awaiting response…
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-gray-500 text-[11px] italic">
+                                        awaiting response…
+                                    </span>
+                                    <ActionButton
+                                        action={cancelFriendRequestAction.bind(
+                                            null,
+                                            request!._id.toString(),
+                                        )}
+                                        className="btn btn-danger"
+                                        confirmText={`Cancel your friend request to ${f.displayName}?`}
+                                    >
+                                        Cancel
+                                    </ActionButton>
+                                </div>
                             </div>
-                        ))
+                            );
+                        })
                     )}
                 </Box>
 
