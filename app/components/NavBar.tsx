@@ -53,7 +53,14 @@ export default function NavBar({
         router.refresh();
     };
 
-    if (!isLoggedIn && pathname === "/") return null;
+    if (
+        !isLoggedIn &&
+        (pathname === "/" ||
+            pathname === "/login" ||
+            pathname === "/signup" ||
+            pathname === "/forgot-password")
+    )
+        return null;
 
     return (
         <header className="sticky top-0 z-50">
