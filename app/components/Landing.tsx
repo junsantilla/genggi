@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AuthPageShell from "./AuthPageShell";
+import GoogleLoginButton from "./GoogleLoginButton";
 import Image from "next/image";
 
 export default function Landing() {
@@ -27,6 +28,7 @@ export default function Landing() {
                     <Link href="/login" className="btn w-full">
                         Login
                     </Link>
+                    <GoogleLoginButton />
                     <Link href="/signup" className="btn btn-ghost w-full">
                         Sign up
                     </Link>
