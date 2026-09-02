@@ -201,7 +201,7 @@ export default async function Profile({
                                     {/* Left: photo, name, username, buttons */}
                                     <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
                                         <UserAvatar
-                                            src={user.photo}
+                                            src={user.photo || "/images/avatar.png"}
                                             alt={`${displayNameOrUsername(user.displayName, user.username)}'s photo`}
                                             className="profile-photo w-full object-cover mx-auto mb-2 p-1"
                                             cloudinaryWidth={440}
@@ -578,7 +578,7 @@ export default async function Profile({
                                                         className="block"
                                                     >
                                                         <UserAvatar
-                                                            src={f.photo}
+                                                            src={f.photo || "/images/avatar.png"}
                                                             alt={displayNameOrUsername(f.displayName, f.username)}
                                                             className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
                                                             cloudinaryWidth={
