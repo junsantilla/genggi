@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb, ObjectId } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
+import { uploadImage } from "@/lib/r2";
 
 export const runtime = "nodejs";
 
@@ -40,7 +41,28 @@ export async function POST(request: Request) {
         }
 
         const email = googleUser.email.trim().toLowerCase();
-        const photo = googleUser.photoUrl?.trim() || "/images/avatar.png";
+        const photo = googleUser.photoUrl?.trim();
+        let storedPhoto = "/images/avatar.png";
+        let photoPublicId: string | null = null;
+        if (photo) {
+            const photoResponse = await fetch(
+                `${photo}${photo.includes("?") ? "&" : "?"}sz=256`,
+                { cache: "no-store" },
+            );
+            if (photoResponse.ok) {
+                const contentType = photoResponse.headers.get("content-type") || "image/jpeg";
+                const image = Buffer.from(await photoResponse.arrayBuffer());
+                if (image.length > 0 && image.length <= 5 * 1024 * 1024) {
+                    try {
+                        const uploaded = await uploadImage(image, "profiles/google", contentType);
+                        storedPhoto = uploaded.secure_url;
+                        photoPublicId = uploaded.public_id;
+                    } catch (error) {
+                        console.error("Failed to store Google profile photo:", error);
+                    }
+                }
+            }
+        }
         const db = getDb();
         let user = await db.collection("users").findOne({ email });
         if (user?.banned) return NextResponse.json({ error: "This account has been suspended." }, { status: 403 });
@@ -59,14 +81,17 @@ export async function POST(request: Request) {
                 displayName, firstName: displayName, lastName: "", gender: "", location: "", interests: [],
                 relationshipStatus: "Single", orientation: "", zodiac: "", bodyType: "", occupation: "",
                 aboutMe: "", hereFor: "", whoIdLikeToMeet: "", favoriteSong: "", mood: "", awayMessage: "",
-                photo, theme: { border: "#6699cc", customCss: "" }, profileViews: 0,
+                photo: storedPhoto, photoPublicId, theme: { border: "#6699cc", customCss: "" }, profileViews: 0,
                 lastActive: new Date(), isPrivate: false, hideFromSearch: false,
                 whoCanMessage: "everyone", whoCanFriendRequest: "everyone",
             };
             await db.collection("users").insertOne(newUser);
             user = newUser;
         } else {
-            await db.collection("users").updateOne({ _id: user._id }, { $set: { emailVerified: true, photo } });
+            await db.collection("users").updateOne(
+                { _id: user._id },
+                { $set: { emailVerified: true, photo: storedPhoto, photoPublicId } },
+            );
         }
 
         await createSession(user._id.toString());
