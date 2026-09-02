@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { loginAction } from "@/app/actions";
 import AuthForm from "@/app/components/AuthForm";
 import AuthPageShell from "@/app/components/AuthPageShell";
+import GoogleLoginButton from "@/app/components/GoogleLoginButton";
 
 export default async function LoginPage({
     searchParams,
@@ -58,6 +59,12 @@ export default async function LoginPage({
                 ]}
                 submitLabel="Login"
             />
+            <div className="my-3 flex items-center gap-2 text-xs text-gray-400">
+                <span className="h-px flex-1 bg-gray-200" />
+                <span>or</span>
+                <span className="h-px flex-1 bg-gray-200" />
+            </div>
+            <GoogleLoginButton />
             <p className="mt-3 text-center text-gray-500">
                 No account?{" "}
                 <Link href="/signup" className="font-bold text-[#003399]">
