@@ -2,29 +2,25 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ForgotPasswordForm from "@/app/components/ForgotPasswordForm";
+import AuthPageShell from "@/app/components/AuthPageShell";
 
 export default async function ForgotPasswordPage() {
     const user = await getCurrentUser();
     if (user) redirect("/");
 
     return (
-        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
-            <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
-                🔑 Forgot Password
-            </div>
-            <div className="p-4">
-                <p className=" text-gray-600 mb-3">
-                    Enter the email address you signed up with and we&apos;ll
-                    send you a link to reset your password.
-                </p>
-                <ForgotPasswordForm />
-                <p className="text-center  text-gray-500 mt-3">
-                    Remembered it?{" "}
-                    <Link href="/login" className="text-[#003399] font-bold">
-                        Login
-                    </Link>
-                </p>
-            </div>
-        </div>
+        <AuthPageShell title="Forgot Password">
+            <p className="mb-3 text-gray-600">
+                Enter the email address you signed up with and we&apos;ll send
+                you a link to reset your password.
+            </p>
+            <ForgotPasswordForm />
+            <p className="mt-3 text-center text-gray-500">
+                Remembered it?{" "}
+                <Link href="/login" className="font-bold text-[#003399]">
+                    Login
+                </Link>
+            </p>
+        </AuthPageShell>
     );
 }

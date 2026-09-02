@@ -44,48 +44,50 @@ export default async function ReportBugPage() {
         reports = rawReports.map((r) => ({
             ...r,
             username: r.userId
-                ? usernameById.get(r.userId.toString()) ?? null
+                ? (usernameById.get(r.userId.toString()) ?? null)
                 : null,
         }));
     }
 
     return (
-        <div className="max-w-[640px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
-            <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
-                🐛 Report a Bug
-            </div>
-            <div className="p-4">
-                <Box title="Found a bug?">
-                    <p className=" text-gray-600 mb-3">
-                        Describe the bug below and we&apos;ll look into it.
-                        Include what page you were on and what you expected to
-                        happen.
-                    </p>
-                    <BoundForm
-                        action={reportBugAction}
-                        submitLabel="Submit Bug Report"
-                        textarea
-                        name="body"
-                        placeholder="e.g. On the messages page, clicking send doesn't do anything..."
-                        rows={6}
-                        successMessage="Thanks! Your bug report has been sent."
-                    />
-                </Box>
-
-                {isAdmin && reports.length > 0 && (
-                    <Box title={`Bug Reports (${reports.length})`}>
-                        <BugReportList
-                            reports={reports.map((r) => ({
-                                _id: r._id.toString(),
-                                userId: r.userId?.toString() ?? null,
-                                username: r.username ?? null,
-                                body: r.body,
-                                createdAt: r.createdAt,
-                                done: !!r.done,
-                            }))}
+        <div className="p-4 min-h-[calc(100dvh-135px)]">
+            <div className="max-w-[640px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+                <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
+                    🐛 Report a Bug
+                </div>
+                <div className="p-4">
+                    <Box title="Found a bug?">
+                        <p className=" text-gray-600 mb-3">
+                            Describe the bug below and we&apos;ll look into it.
+                            Include what page you were on and what you expected
+                            to happen.
+                        </p>
+                        <BoundForm
+                            action={reportBugAction}
+                            submitLabel="Submit Bug Report"
+                            textarea
+                            name="body"
+                            placeholder="e.g. On the messages page, clicking send doesn't do anything..."
+                            rows={6}
+                            successMessage="Thanks! Your bug report has been sent."
                         />
                     </Box>
-                )}
+
+                    {isAdmin && reports.length > 0 && (
+                        <Box title={`Bug Reports (${reports.length})`}>
+                            <BugReportList
+                                reports={reports.map((r) => ({
+                                    _id: r._id.toString(),
+                                    userId: r.userId?.toString() ?? null,
+                                    username: r.username ?? null,
+                                    body: r.body,
+                                    createdAt: r.createdAt,
+                                    done: !!r.done,
+                                }))}
+                            />
+                        </Box>
+                    )}
+                </div>
             </div>
         </div>
     );
