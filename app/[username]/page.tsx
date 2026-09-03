@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { normalizeUsername } from "@/lib/usernames";
 import type { User } from "@/lib/types";
 import Profile from "@/app/components/Profile";
 import ProfileViewTracker from "@/app/components/ProfileViewTracker";
 
 async function getUser(username: string): Promise<User | null> {
+    const normalizedUsername = normalizeUsername(username);
     return (await getDb()
         .collection("users")
-        .findOne({ username })) as User | null;
+        .findOne({ username: normalizedUsername })) as User | null;
 }
 
 export async function generateMetadata({

@@ -12,6 +12,7 @@ import Box from "@/app/components/Box";
 export default async function EditPage() {
     const user = await requireUser();
     const editableUser: EditableUser = {
+        username: user.username,
         displayName: user.displayName,
         firstName: user.firstName,
         lastName: user.lastName,

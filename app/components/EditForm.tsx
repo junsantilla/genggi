@@ -12,6 +12,7 @@ import type { User } from "@/lib/types";
 
 export type EditableUser = Pick<
     User,
+    | "username"
     | "displayName"
     | "firstName"
     | "lastName"
@@ -45,6 +46,22 @@ export default function EditForm({
 
     return (
         <form action={formAction} className="grid grid-cols-2 gap-2.5">
+            <div className="col-span-2">
+                <label className="label" htmlFor="username">Username</label>
+                <input
+                    id="username"
+                    name="username"
+                    defaultValue={user.username}
+                    className="input"
+                    minLength={3}
+                    maxLength={20}
+                    pattern="[A-Za-z0-9_]{3,20}"
+                    required
+                />
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                    3-20 letters, numbers, or underscores. Usernames are lowercase.
+                </p>
+            </div>
             <div>
                 <label className="label">Display Name</label>
                 <input

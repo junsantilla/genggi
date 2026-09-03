@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getDb, ObjectId } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
 import { uploadImage } from "@/lib/r2";
+import {
+    isReservedUsername,
+    normalizeUsername,
+} from "@/lib/usernames";
 
 export const runtime = "nodejs";
 
@@ -68,11 +72,21 @@ export async function POST(request: Request) {
         if (user?.banned) return NextResponse.json({ error: "This account has been suspended." }, { status: 403 });
 
         if (!user) {
-            const baseUsername = email.split("@")[0].replace(/[^a-z0-9_]/g, "").slice(0, 16) || "user";
+            const rawBaseUsername = normalizeUsername(
+                email.split("@")[0].replace(/[^a-z0-9_]/g, "").slice(0, 16),
+            );
+            const baseUsername =
+                rawBaseUsername.length >= 3 && !isReservedUsername(rawBaseUsername)
+                    ? rawBaseUsername
+                    : "user";
             let username = baseUsername;
             let suffix = 1;
-            while (await db.collection("users").findOne({ username })) {
-                username = `${baseUsername.slice(0, 20 - String(suffix).length)}${suffix++}`;
+            while (
+                isReservedUsername(username) ||
+                (await db.collection("users").findOne({ username }))
+            ) {
+                const suffixText = String(suffix++);
+                username = `${baseUsername.slice(0, 20 - suffixText.length)}${suffixText}`;
             }
             const displayName = googleUser.displayName?.trim() || username;
             const newUser = {
