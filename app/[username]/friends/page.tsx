@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { normalizeUsername } from "@/lib/usernames";
 import { getDb } from "@/lib/db";
 import { areFriends } from "@/lib/queries";
 import type { User } from "@/lib/types";
@@ -9,9 +10,10 @@ import Box from "@/app/components/Box";
 import UserAvatar from "@/app/components/UserAvatar";
 
 async function getUser(username: string): Promise<User | null> {
+    const normalizedUsername = normalizeUsername(username);
     return (await getDb()
         .collection("users")
-        .findOne({ username })) as User | null;
+        .findOne({ username: normalizedUsername })) as User | null;
 }
 
 export async function generateMetadata({

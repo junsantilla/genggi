@@ -31,6 +31,10 @@ import {
 } from "@/lib/chatbox";
 import { getYouTubeVideoId } from "@/lib/utils";
 import {
+    normalizeUsername,
+    validateUsername,
+} from "@/lib/usernames";
+import {
     getGroupById,
     getGroupMembership,
     canAccessGroup,
@@ -65,9 +69,7 @@ export async function signupAction(
     _prev: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    const username = String(formData.get("username") || "")
-        .trim()
-        .toLowerCase();
+    const username = normalizeUsername(String(formData.get("username") || ""));
     const email = String(formData.get("email") || "")
         .trim()
         .toLowerCase();
@@ -103,10 +105,8 @@ export async function signupAction(
     if (password.length < 6)
         return { error: "Password must be at least 6 characters." };
     if (password !== confirm) return { error: "Passwords do not match." };
-    if (!/^[a-z0-9_]{3,20}$/.test(username))
-        return {
-            error: "Username must be 3-20 characters (letters, numbers, underscore).",
-        };
+    const usernameError = validateUsername(username);
+    if (usernameError) return { error: usernameError };
     if (!/^\S+@\S+\.\S+$/.test(email))
         return { error: "Please enter a valid email." };
 
@@ -401,6 +401,20 @@ export async function updateProfileAction(
 ): Promise<ActionResult> {
     const user = await requireUser();
     const patch: Record<string, unknown> = {};
+    if (formData.has("username")) {
+        const nextUsername = normalizeUsername(String(formData.get("username") || ""));
+        const currentUsername = normalizeUsername(user.username);
+        if (nextUsername !== currentUsername) {
+            const usernameError = validateUsername(nextUsername);
+            if (usernameError) return { error: usernameError };
+            const existing = await getDb().collection("users").findOne({
+                username: nextUsername,
+                _id: { $ne: user._id },
+            });
+            if (existing) return { error: "Username is taken." };
+        }
+        patch.username = nextUsername;
+    }
     for (const f of PROFILE_FIELDS) {
         patch[f] = String(formData.get(f) || "").trim();
     }
@@ -416,10 +430,13 @@ export async function updateProfileAction(
         formData.get("whoCanFriendRequest") || "everyone",
     );
 
+    const nextUsername =
+        typeof patch.username === "string" ? patch.username : user.username;
     await getDb()
         .collection("users")
         .updateOne({ _id: user._id }, { $set: patch });
     revalidatePath(`/${user.username}`);
+    if (nextUsername !== user.username) revalidatePath(`/${nextUsername}`);
     revalidatePath("/edit");
     return { ok: true };
 }
@@ -666,8 +683,9 @@ export async function updatePrivacyAction(formData: FormData): Promise<void> {
 export async function incrementProfileViewAction(
     username: string,
 ): Promise<ActionResult> {
+    const normalizedUsername = normalizeUsername(username);
     const db = getDb();
-    const user = await db.collection("users").findOne({ username });
+    const user = await db.collection("users").findOne({ username: normalizedUsername });
     if (!user) return { error: "User not found." };
     const current = await getCurrentUser();
     if (current && current._id.toString() === user._id.toString())
@@ -675,7 +693,7 @@ export async function incrementProfileViewAction(
     await db
         .collection("users")
         .updateOne({ _id: user._id }, { $inc: { profileViews: 1 } });
-    revalidatePath(`/${username}`);
+    revalidatePath(`/${normalizedUsername}`);
     return { ok: true };
 }
 

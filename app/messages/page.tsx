@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
+import { normalizeUsername } from "@/lib/usernames";
 import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
 import Box from "@/app/components/Box";
@@ -60,7 +61,9 @@ export default async function MessagesPage({
     // Compose target
     let composeTarget = null;
     if (to) {
-        composeTarget = await db.collection("users").findOne({ username: to });
+        composeTarget = await db
+            .collection("users")
+            .findOne({ username: normalizeUsername(to) });
     }
 
     return (
