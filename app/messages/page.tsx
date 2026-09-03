@@ -3,9 +3,11 @@ import { requireUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
 import { timeAgo } from "@/lib/utils";
 import { normalizeUsername } from "@/lib/usernames";
+import { getFriendSuggestions } from "@/lib/queries";
 import { sendMessageAction } from "@/app/actions";
 import BoundForm from "@/app/components/BoundForm";
 import Box from "@/app/components/Box";
+import MessageRecipientSearch from "@/app/components/MessageRecipientSearch";
 import UserAvatar from "@/app/components/UserAvatar";
 
 export default async function MessagesPage({
@@ -17,6 +19,7 @@ export default async function MessagesPage({
     const { to } = await searchParams;
     const db = getDb();
     const uid = user._id.toString();
+    const friends = await getFriendSuggestions(uid);
 
     const messages = await db
         .collection("messages")
@@ -71,7 +74,7 @@ export default async function MessagesPage({
             <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
                 Messages
             </div>
-            <div className="p-4 flex flex-col gap-4">
+            <div className="p-4 flex flex-col gap-1.5">
                 <Box
                     title={
                         composeTarget
@@ -94,24 +97,11 @@ export default async function MessagesPage({
                     ) : (
                         <p className="text-gray-500 italic ">
                             Visit someone&apos;s profile and hit “Send Message”,
-                            or type a username below:
+                            or search your friends below:
                         </p>
                     )}
                     {!composeTarget && (
-                        <form
-                            action="/messages"
-                            method="get"
-                            className="mt-2 flex gap-1.5"
-                        >
-                            <input
-                                name="to"
-                                placeholder="username"
-                                className="input"
-                            />
-                            <button type="submit" className="btn">
-                                Compose
-                            </button>
-                        </form>
+                        <MessageRecipientSearch friends={friends} />
                     )}
                 </Box>
 
