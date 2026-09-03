@@ -46,6 +46,7 @@ export default function PostCard({
     onPostDeleted,
     canInteract = true,
     hideComments = false,
+    showComments = false,
     friends,
 }: {
     post: Post;
@@ -55,6 +56,7 @@ export default function PostCard({
     onPostDeleted?: (postId: string) => void;
     canInteract?: boolean;
     hideComments?: boolean;
+    showComments?: boolean;
     // Friends of the current user, used to power @mentions in the post/comment
     // composers. Group posts don't pass this (group members aren't friends).
     friends?: MentionFriend[];
@@ -81,6 +83,7 @@ export default function PostCard({
     const [commentBody, setCommentBody] = useState("");
     const [commentPending, setCommentPending] = useState(false);
     const isGroup = Boolean(groupId);
+    const commentsVisible = isGroup ? !hideComments : showComments;
     const isOwn = currentUserId === post.author._id;
     const countOf = (type: string) =>
         reactions.find((reaction) => reaction.type === type)?.count ?? 0;
@@ -343,25 +346,27 @@ export default function PostCard({
                         </Link>
                     )}
                     {(!isGroup || canInteract) && (
-                        <div className="relative inline-block mt-1.5">
-                            <button
-                                type="button"
-                                className={`btn text-[11px] px-2 py-0.5 ${myReaction ? "" : "btn-ghost"}`}
-                                onClick={() => setOpen(!open)}
-                            >
-                                {myReaction
-                                    ? `${myReaction} ${countOf(myReaction)}`
-                                    : "React"}
-                            </button>
-                            {open && (
-                                <ReactionPicker
-                                    myReaction={myReaction}
-                                    countOf={countOf}
-                                    onReact={react}
-                                />
-                            )}{" "}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <div className="relative inline-block">
+                                <button
+                                    type="button"
+                                    className={`btn text-[11px] px-2 py-0.5 ${myReaction ? "" : "btn-ghost"}`}
+                                    onClick={() => setOpen(!open)}
+                                >
+                                    {myReaction
+                                        ? `${myReaction} ${countOf(myReaction)}`
+                                        : "React"}
+                                </button>
+                                {open && (
+                                    <ReactionPicker
+                                        myReaction={myReaction}
+                                        countOf={countOf}
+                                        onReact={react}
+                                    />
+                                )}
+                            </div>
                             {reactions.length > 0 && (
-                                <span className="ml-1.5 text-[11px] text-gray-500">
+                                <span className="text-[11px] text-gray-500 mx-1 font-bold">
                                     {reactions
                                         .slice(0, 3)
                                         .map(
@@ -371,321 +376,360 @@ export default function PostCard({
                                         .join(" · ")}
                                 </span>
                             )}
+                            {!isGroup && (
+                                <>
+                                    <Link
+                                        href={`/bulletin/${post._id}#comments`}
+                                        className="btn btn-ghost text-[11px] pt-2 py-2 no-underline leading-5"
+                                        aria-label={`View comments${comments.length > 0 ? ` (${comments.length})` : ""}`}
+                                        title="View comments"
+                                    >
+                                        Comment
+                                    </Link>
+                                    {comments.length > 0 && (
+                                        <span
+                                            className="text-[11px] text-gray-500 mx-1 font-bold"
+                                            aria-label={`${comments.length} comments`}
+                                        >
+                                            {comments.length}
+                                        </span>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
-                    {!hideComments &&
-                        comments.map((comment) => {
-                            const ownComment =
-                                currentUserId === comment.author._id;
-                            return (
-                                <div
-                                    key={comment._id}
-                                    className="bg-[#DBE9F7] p-2 mt-1.5"
-                                >
-                                    <Link
-                                        href={`/${comment.author.username}`}
-                                        className="text-[#003399] font-bold"
+                    {commentsVisible && (
+                        <div id={!isGroup ? "comments" : undefined}>
+                            {comments.map((comment) => {
+                                const ownComment =
+                                    currentUserId === comment.author._id;
+                                return (
+                                    <div
+                                        key={comment._id}
+                                        className="bg-[#DBE9F7] p-2 mt-1.5"
                                     >
-                                        {displayNameOrUsername(
-                                            comment.author.displayName,
-                                            comment.author.username,
-                                        )}
-                                    </Link>{" "}
-                                    <span className="text-gray-500">
-                                        ({timeAgo(comment.createdAt)})
-                                    </span>{" "}
-                                    {editingCommentId === comment._id ? (
-                                        isGroup ? (
-                                            <GroupEditForm
-                                                groupId={groupId!}
-                                                commentId={comment._id}
-                                                initialBody={comment.body}
-                                                onCancel={() =>
-                                                    setEditingCommentId(null)
-                                                }
-                                                onSaved={(body) => {
-                                                    setComments((items) =>
-                                                        items.map((item) =>
-                                                            item._id ===
-                                                            comment._id
-                                                                ? {
-                                                                      ...item,
-                                                                      body,
-                                                                  }
-                                                                : item,
-                                                        ),
-                                                    );
-                                                    setEditingCommentId(null);
-                                                }}
-                                            />
-                                        ) : (
-                                            <BulletinEditForm
-                                                mode="comment"
-                                                itemId={comment._id}
-                                                initialBody={comment.body}
-                                                friends={friends}
-                                                onCancel={() =>
-                                                    setEditingCommentId(null)
-                                                }
-                                                onSaved={(
-                                                    body,
-                                                    _visibility,
-                                                    mentions,
-                                                ) => {
-                                                    setComments((items) =>
-                                                        items.map((item) =>
-                                                            item._id ===
-                                                            comment._id
-                                                                ? {
-                                                                      ...item,
-                                                                      body,
-                                                                      ...(mentions
-                                                                          ? {
-                                                                                mentions,
-                                                                            }
-                                                                          : {}),
-                                                                  }
-                                                                : item,
-                                                        ),
-                                                    );
-                                                    setEditingCommentId(null);
-                                                }}
-                                            />
-                                        )
-                                    ) : (
-                                        <>
-                                            <div>
-                                                {isGroup ? (
-                                                    comment.body
-                                                ) : (
-                                                    <LinkedText
-                                                        text={comment.body}
-                                                        mentions={
-                                                            comment.mentions
-                                                        }
-                                                    />
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
-                                                {!isGroup && currentUserId && (
-                                                    <span className="relative inline-flex items-center">
-                                                        <button
-                                                            type="button"
-                                                            className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
-                                                            onClick={() =>
-                                                                setOpenCommentId(
-                                                                    (id) =>
-                                                                        id ===
-                                                                        comment._id
-                                                                            ? null
-                                                                            : comment._id,
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                reactingCommentId ===
+                                        <Link
+                                            href={`/${comment.author.username}`}
+                                            className="text-[#003399] font-bold"
+                                        >
+                                            {displayNameOrUsername(
+                                                comment.author.displayName,
+                                                comment.author.username,
+                                            )}
+                                        </Link>{" "}
+                                        <span className="text-gray-500">
+                                            ({timeAgo(comment.createdAt)})
+                                        </span>{" "}
+                                        {editingCommentId === comment._id ? (
+                                            isGroup ? (
+                                                <GroupEditForm
+                                                    groupId={groupId!}
+                                                    commentId={comment._id}
+                                                    initialBody={comment.body}
+                                                    onCancel={() =>
+                                                        setEditingCommentId(
+                                                            null,
+                                                        )
+                                                    }
+                                                    onSaved={(body) => {
+                                                        setComments((items) =>
+                                                            items.map((item) =>
+                                                                item._id ===
                                                                 comment._id
+                                                                    ? {
+                                                                          ...item,
+                                                                          body,
+                                                                      }
+                                                                    : item,
+                                                            ),
+                                                        );
+                                                        setEditingCommentId(
+                                                            null,
+                                                        );
+                                                    }}
+                                                />
+                                            ) : (
+                                                <BulletinEditForm
+                                                    mode="comment"
+                                                    itemId={comment._id}
+                                                    initialBody={comment.body}
+                                                    friends={friends}
+                                                    onCancel={() =>
+                                                        setEditingCommentId(
+                                                            null,
+                                                        )
+                                                    }
+                                                    onSaved={(
+                                                        body,
+                                                        _visibility,
+                                                        mentions,
+                                                    ) => {
+                                                        setComments((items) =>
+                                                            items.map((item) =>
+                                                                item._id ===
+                                                                comment._id
+                                                                    ? {
+                                                                          ...item,
+                                                                          body,
+                                                                          ...(mentions
+                                                                              ? {
+                                                                                    mentions,
+                                                                                }
+                                                                              : {}),
+                                                                      }
+                                                                    : item,
+                                                            ),
+                                                        );
+                                                        setEditingCommentId(
+                                                            null,
+                                                        );
+                                                    }}
+                                                />
+                                            )
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    {isGroup ? (
+                                                        comment.body
+                                                    ) : (
+                                                        <LinkedText
+                                                            text={comment.body}
+                                                            mentions={
+                                                                comment.mentions
                                                             }
-                                                            title={
-                                                                comment.myReaction
-                                                                    ? "Change or remove your reaction"
-                                                                    : "React to this comment"
-                                                            }
-                                                            aria-label="React to this comment"
-                                                        >
-                                                            React
-                                                        </button>
-                                                        {commentTotalReactions(
-                                                            comment,
-                                                        ) > 0 &&
-                                                            openCommentId !==
-                                                                comment._id && (
-                                                                <span className="text-[11px] text-gray-500 ml-1.5">
-                                                                    {(
-                                                                        comment.reactions ??
-                                                                        []
-                                                                    )
-                                                                        .slice(
-                                                                            0,
-                                                                            3,
-                                                                        )
-                                                                        .map(
-                                                                            (
-                                                                                r,
-                                                                            ) =>
-                                                                                `${r.type} ${r.count}`,
-                                                                        )
-                                                                        .join(
-                                                                            " · ",
-                                                                        )}
-                                                                </span>
-                                                            )}
-                                                        {openCommentId ===
-                                                            comment._id && (
-                                                            <>
-                                                                <div
-                                                                    className="fixed inset-0 z-10"
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
+                                                    {!isGroup &&
+                                                        currentUserId && (
+                                                            <span className="relative inline-flex items-center">
+                                                                <button
+                                                                    type="button"
+                                                                    className="text-[#003399] underline text-[11px] p-0 border-0 bg-transparent cursor-pointer"
                                                                     onClick={() =>
                                                                         setOpenCommentId(
-                                                                            null,
+                                                                            (
+                                                                                id,
+                                                                            ) =>
+                                                                                id ===
+                                                                                comment._id
+                                                                                    ? null
+                                                                                    : comment._id,
                                                                         )
                                                                     }
-                                                                />
-                                                                <ReactionPicker
-                                                                    myReaction={
-                                                                        comment.myReaction
-                                                                    }
-                                                                    reacting={
+                                                                    disabled={
                                                                         reactingCommentId ===
                                                                         comment._id
                                                                     }
-                                                                    countOf={(
-                                                                        type,
-                                                                    ) =>
-                                                                        commentCountOf(
-                                                                            comment,
-                                                                            type,
-                                                                        )
+                                                                    title={
+                                                                        comment.myReaction
+                                                                            ? "Change or remove your reaction"
+                                                                            : "React to this comment"
                                                                     }
-                                                                    onReact={(
-                                                                        type,
-                                                                    ) =>
-                                                                        reactToComment(
-                                                                            comment._id,
-                                                                            type,
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </>
+                                                                    aria-label="React to this comment"
+                                                                >
+                                                                    React
+                                                                </button>
+                                                                {commentTotalReactions(
+                                                                    comment,
+                                                                ) > 0 &&
+                                                                    openCommentId !==
+                                                                        comment._id && (
+                                                                        <span className="text-[11px] text-gray-500 ml-1.5">
+                                                                            {(
+                                                                                comment.reactions ??
+                                                                                []
+                                                                            )
+                                                                                .slice(
+                                                                                    0,
+                                                                                    3,
+                                                                                )
+                                                                                .map(
+                                                                                    (
+                                                                                        r,
+                                                                                    ) =>
+                                                                                        `${r.type} ${r.count}`,
+                                                                                )
+                                                                                .join(
+                                                                                    " · ",
+                                                                                )}
+                                                                        </span>
+                                                                    )}
+                                                                {openCommentId ===
+                                                                    comment._id && (
+                                                                    <>
+                                                                        <div
+                                                                            className="fixed inset-0 z-10"
+                                                                            onClick={() =>
+                                                                                setOpenCommentId(
+                                                                                    null,
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        <ReactionPicker
+                                                                            myReaction={
+                                                                                comment.myReaction
+                                                                            }
+                                                                            reacting={
+                                                                                reactingCommentId ===
+                                                                                comment._id
+                                                                            }
+                                                                            countOf={(
+                                                                                type,
+                                                                            ) =>
+                                                                                commentCountOf(
+                                                                                    comment,
+                                                                                    type,
+                                                                                )
+                                                                            }
+                                                                            onReact={(
+                                                                                type,
+                                                                            ) =>
+                                                                                reactToComment(
+                                                                                    comment._id,
+                                                                                    type,
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </>
+                                                                )}
+                                                            </span>
                                                         )}
-                                                    </span>
-                                                )}
-                                                {(ownComment || isOwn) && (
-                                                    <span className="inline-flex items-center gap-1.5">
-                                                        {ownComment && (
-                                                            <button
-                                                                type="button"
-                                                                className="text-[#003399] underline text-[11px] cursor-pointer"
-                                                                onClick={() =>
-                                                                    setEditingCommentId(
-                                                                        comment._id,
+                                                    {(ownComment || isOwn) && (
+                                                        <span className="inline-flex items-center gap-1.5">
+                                                            {ownComment && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="text-[#003399] underline text-[11px] cursor-pointer"
+                                                                    onClick={() =>
+                                                                        setEditingCommentId(
+                                                                            comment._id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                            )}
+                                                            <ActionButton
+                                                                action={
+                                                                    (isGroup
+                                                                        ? deleteGroupCommentAction.bind(
+                                                                              null,
+                                                                              groupId!,
+                                                                              comment._id,
+                                                                          )
+                                                                        : deleteBulletinCommentAction.bind(
+                                                                              null,
+                                                                              comment._id,
+                                                                          )) as any
+                                                                }
+                                                                className="text-[#cc0000] underline text-[11px] cursor-pointer"
+                                                                confirmText="Delete this comment?"
+                                                                hideError={
+                                                                    isGroup
+                                                                }
+                                                                onSuccess={() =>
+                                                                    setComments(
+                                                                        (
+                                                                            items,
+                                                                        ) =>
+                                                                            items.filter(
+                                                                                (
+                                                                                    item,
+                                                                                ) =>
+                                                                                    item._id !==
+                                                                                    comment._id,
+                                                                            ),
                                                                     )
                                                                 }
                                                             >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        <ActionButton
-                                                            action={
-                                                                (isGroup
-                                                                    ? deleteGroupCommentAction.bind(
-                                                                          null,
-                                                                          groupId!,
-                                                                          comment._id,
-                                                                      )
-                                                                    : deleteBulletinCommentAction.bind(
-                                                                          null,
-                                                                          comment._id,
-                                                                      )) as any
-                                                            }
-                                                            className="text-[#cc0000] underline text-[11px] cursor-pointer"
-                                                            confirmText="Delete this comment?"
-                                                            hideError={isGroup}
-                                                            onSuccess={() =>
-                                                                setComments(
-                                                                    (items) =>
-                                                                        items.filter(
-                                                                            (
-                                                                                item,
-                                                                            ) =>
-                                                                                item._id !==
-                                                                                comment._id,
-                                                                        ),
-                                                                )
-                                                            }
-                                                        >
-                                                            Delete
-                                                        </ActionButton>
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    {!hideComments &&
-                        (isGroup && canInteract ? (
-                            <form
-                                action={async (formData) => {
-                                    const body = String(
-                                        formData.get("body") || "",
-                                    ).trim();
-                                    if (!body) return;
-                                    setCommentPending(true);
-                                    const result =
-                                        await createGroupCommentAction(
-                                            groupId!,
-                                            post._id,
-                                            formData,
-                                        );
-                                    setCommentPending(false);
-                                    if (result.ok) {
-                                        setCommentBody("");
-                                        setComments((items) => [
-                                            ...items,
-                                            {
-                                                _id: crypto.randomUUID(),
-                                                postId: post._id,
-                                                authorId: currentUserId!,
-                                                body,
-                                                createdAt:
-                                                    new Date().toISOString(),
-                                                author: {
-                                                    _id: currentUserId!,
-                                                    username: "",
-                                                    displayName: "You",
-                                                    photo: null,
+                                                                Delete
+                                                            </ActionButton>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                            {isGroup && canInteract ? (
+                                <form
+                                    action={async (formData) => {
+                                        const body = String(
+                                            formData.get("body") || "",
+                                        ).trim();
+                                        if (!body) return;
+                                        setCommentPending(true);
+                                        const result =
+                                            await createGroupCommentAction(
+                                                groupId!,
+                                                post._id,
+                                                formData,
+                                            );
+                                        setCommentPending(false);
+                                        if (result.ok) {
+                                            setCommentBody("");
+                                            setComments((items) => [
+                                                ...items,
+                                                {
+                                                    _id: crypto.randomUUID(),
+                                                    postId: post._id,
+                                                    authorId: currentUserId!,
+                                                    body,
+                                                    createdAt:
+                                                        new Date().toISOString(),
+                                                    author: {
+                                                        _id: currentUserId!,
+                                                        username: "",
+                                                        displayName: "You",
+                                                        photo: null,
+                                                    },
                                                 },
-                                            },
-                                        ]);
-                                    }
-                                }}
-                                className="flex gap-1 mt-1.5"
-                            >
-                                <input
-                                    name="body"
-                                    value={commentBody}
-                                    onChange={(e) =>
-                                        setCommentBody(e.target.value)
-                                    }
-                                    className="input flex-1 text-[11px]"
-                                    placeholder="Write a comment..."
-                                    required
-                                    disabled={commentPending}
-                                />
-                                <button
-                                    className="btn text-[11px]"
-                                    disabled={commentPending}
+                                            ]);
+                                        }
+                                    }}
+                                    className="flex gap-1 mt-1.5"
                                 >
-                                    {commentPending ? "Posting…" : "Comment"}
-                                </button>
-                            </form>
-                        ) : (
-                            currentUserId && (
-                                <BulletinCommentForm
-                                    postId={post._id}
-                                    friends={friends}
-                                    onPosted={(
-                                        comment: SerializedBulletinComment,
-                                    ) =>
-                                        setComments((items) => [
-                                            ...items,
-                                            comment,
-                                        ])
-                                    }
-                                />
-                            )
-                        ))}
+                                    <input
+                                        name="body"
+                                        value={commentBody}
+                                        onChange={(e) =>
+                                            setCommentBody(e.target.value)
+                                        }
+                                        className="input flex-1 text-[11px]"
+                                        placeholder="Write a comment..."
+                                        required
+                                        disabled={commentPending}
+                                    />
+                                    <button
+                                        className="btn text-[11px]"
+                                        disabled={commentPending}
+                                    >
+                                        {commentPending
+                                            ? "Posting…"
+                                            : "Comment"}
+                                    </button>
+                                </form>
+                            ) : (
+                                currentUserId && (
+                                    <BulletinCommentForm
+                                        postId={post._id}
+                                        friends={friends}
+                                        onPosted={(
+                                            comment: SerializedBulletinComment,
+                                        ) =>
+                                            setComments((items) => [
+                                                ...items,
+                                                comment,
+                                            ])
+                                        }
+                                    />
+                                )
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </article>

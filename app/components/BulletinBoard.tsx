@@ -15,6 +15,7 @@ export default function BulletinBoard({
     title = "Bulletin Board",
     border,
     bg,
+    showComments = false,
     friends,
 }: {
     posts: BulletinPostWithMentions[];
@@ -24,6 +25,7 @@ export default function BulletinBoard({
     title?: string;
     border?: string;
     bg?: string;
+    showComments?: boolean;
     // Friends of the viewer, used for @mentions in the comment composer.
     friends?: MentionFriend[];
 }) {
@@ -44,6 +46,7 @@ export default function BulletinBoard({
                             post={toBulletinPostCard(post)}
                             currentUserId={currentUserId}
                             currentUsername={currentUsername}
+                            showComments={showComments}
                             friends={friends}
                         />
                     ))}

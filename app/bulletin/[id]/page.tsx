@@ -69,6 +69,7 @@ export default async function BulletinPostPage({
                     currentUserId={user._id.toString()}
                     currentUsername={user.username}
                     title=" Bulletin Post"
+                    showComments
                     friends={friends}
                 />
                 <div className="text-center">
