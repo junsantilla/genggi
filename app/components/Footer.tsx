@@ -38,10 +38,12 @@ export default function Footer() {
                         Terms
                     </Link>
                     <Link
-                        href="/report-bug"
+                        href="https://github.com/junsantilla/genggi/issues"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="underline hover:text-primary"
                     >
-                        Report a bug
+                        GitHub
                     </Link>
                 </nav>
             </div>
