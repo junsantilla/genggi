@@ -21,7 +21,14 @@ export default function AboutPage() {
                 <p>
                     We&apos;re always working to make Genggi better. If
                     something doesn&apos;t work as expected, please use the{" "}
-                    <a href="/report-bug">Report a bug</a> page to let us know.
+                    <a
+                        href="https://github.com/junsantilla/genggi/issues"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        GitHub
+                    </a>
+                    page to let us know.
                 </p>
             </InfoPage>
         </div>
