@@ -2,8 +2,31 @@ import Link from "next/link";
 import AuthPageShell from "./AuthPageShell";
 import GoogleLoginButton from "./GoogleLoginButton";
 import Image from "next/image";
+import { getDb } from "@/lib/db";
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarGroup,
+    AvatarImage,
+} from "@/components/ui/avatar";
 
-export default function Landing() {
+export default async function Landing() {
+    const memberFilter = {
+        banned: { $ne: true },
+        hideFromSearch: { $ne: true },
+        emailVerified: { $ne: false },
+    };
+    const db = getDb();
+    const [recentUsers, memberCount] = await Promise.all([
+        db
+            .collection("users")
+            .find(memberFilter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(10)
+            .toArray(),
+        db.collection("users").countDocuments(memberFilter),
+    ]);
+
     return (
         <AuthPageShell showTitle={false}>
             <div className="text-center">
@@ -32,6 +55,32 @@ export default function Landing() {
                     <Link href="/signup" className="btn btn-ghost w-full">
                         Sign up
                     </Link>
+                </div>
+                <div className="mt-5 border-t border-[#d5e2f2] pt-4">
+                    <AvatarGroup className="justify-center">
+                        {recentUsers.map((user) => {
+                            const initials =
+                                `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() ||
+                                user.username.slice(0, 2).toUpperCase();
+
+                            return (
+                                <Avatar
+                                    key={user._id.toString()}
+                                    size="lg"
+                                    title={`@${user.username}`}
+                                >
+                                    <AvatarImage
+                                        src={user.photo || "/images/avatar.png"}
+                                        alt={`@${user.username}`}
+                                    />
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
+                            );
+                        })}
+                    </AvatarGroup>
+                    <p className="mt-3 mb-0 text-xs text-gray-600">
+                        Join {memberCount.toLocaleString()} {memberCount === 1 ? "member" : "members"} on Genggi
+                    </p>
                 </div>
             </div>
         </AuthPageShell>
