@@ -70,8 +70,10 @@ export async function POST(request: Request) {
         const db = getDb();
         let user = await db.collection("users").findOne({ email });
         if (user?.banned) return NextResponse.json({ error: "This account has been suspended." }, { status: 403 });
+        let isNewUser = false;
 
         if (!user) {
+            isNewUser = true;
             const rawBaseUsername = normalizeUsername(
                 email.split("@")[0].replace(/[^a-z0-9_]/g, "").slice(0, 16),
             );
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
             const displayName = googleUser.displayName?.trim() || username;
             const newUser = {
                 _id: new ObjectId(), username, email, passwordHash: hashPassword(crypto.randomUUID()),
-                role: "user", banned: false, emailVerified: true, createdAt: new Date(),
+                role: "user", banned: false, emailVerified: true, authProvider: "google", onboardingCompleted: false, createdAt: new Date(),
                 displayName, firstName: displayName, lastName: "", gender: "", location: "", interests: [],
                 relationshipStatus: "Single", orientation: "", zodiac: "", bodyType: "", occupation: "",
                 aboutMe: "", hereFor: "", whoIdLikeToMeet: "", favoriteSong: "", mood: "", awayMessage: "",
@@ -104,12 +106,15 @@ export async function POST(request: Request) {
         } else {
             await db.collection("users").updateOne(
                 { _id: user._id },
-                { $set: { emailVerified: true, photo: storedPhoto, photoPublicId } },
+                { $set: { emailVerified: true } },
             );
         }
 
         await createSession(user._id.toString());
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({
+            ok: true,
+            onboarding: isNewUser || user.onboardingCompleted === false,
+        });
     } catch {
         return NextResponse.json({ error: "Google login failed." }, { status: 500 });
     }

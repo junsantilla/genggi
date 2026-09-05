@@ -61,7 +61,7 @@ import {
     type GroupPrivacy,
 } from "@/lib/types";
 
-type ActionResult = { ok?: boolean; error?: string };
+type ActionResult = { ok?: boolean; error?: string; photo?: string };
 
 // ---------------------------------------------------------------- Auth
 
@@ -130,6 +130,8 @@ export async function signupAction(
         role: "user",
         banned: false,
         emailVerified: false,
+        authProvider: "local",
+        onboardingCompleted: false,
         createdAt: new Date(),
         displayName: displayName || username,
         firstName: displayName || username,
@@ -277,7 +279,7 @@ export async function loginAction(
             error: "Please verify your email before logging in. Check your inbox for the confirmation link.",
         };
     await createSession(user._id.toString());
-    redirect("/");
+    redirect(user.onboardingCompleted === false ? "/onboarding" : "/");
 }
 
 export async function logoutAction(): Promise<void> {
@@ -443,6 +445,7 @@ export async function updateProfileAction(
 
 export async function uploadPhotoAction(
     formData: FormData,
+    options?: { revalidateOnSuccess?: boolean },
 ): Promise<ActionResult> {
     const user = await requireUser();
     const file = formData.get("photo");
@@ -482,6 +485,46 @@ export async function uploadPhotoAction(
                 },
             },
         );
+    revalidatePath(`/${user.username}`);
+    revalidatePath("/edit");
+    if (options?.revalidateOnSuccess !== false) revalidatePath("/onboarding");
+    return { ok: true, photo: uploaded.secure_url };
+}
+
+export async function completeOnboardingAction(
+    formData: FormData,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const layoutId = String(formData.get("layoutId") || "none");
+    const db = getDb();
+    let customCss = "";
+
+    if (layoutId !== "none") {
+        let objectId: ObjectId;
+        try {
+            objectId = new ObjectId(layoutId);
+        } catch {
+            return { error: "Please choose a valid layout." };
+        }
+        const layout = await db.collection("layouts").findOne({ _id: objectId });
+        if (!layout) return { error: "Please choose a valid layout." };
+        customCss = String(layout.css || "").trim().slice(0, 20000);
+    }
+
+    if (user.authProvider !== "google" && !user.photo) {
+        return { error: "Please upload a profile photo before continuing." };
+    }
+
+    await db.collection("users").updateOne(
+        { _id: user._id },
+        {
+            $set: {
+                onboardingCompleted: true,
+                "theme.customCss": customCss,
+            },
+        },
+    );
+    revalidatePath("/onboarding");
     revalidatePath(`/${user.username}`);
     revalidatePath("/edit");
     return { ok: true };

@@ -16,6 +16,8 @@ export interface User {
   role: Role;
   banned: boolean;
   emailVerified?: boolean;
+  authProvider?: "local" | "google";
+  onboardingCompleted?: boolean;
   createdAt: Date;
 
   displayName: string;

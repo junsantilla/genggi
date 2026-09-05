@@ -28,9 +28,11 @@ function truncateDescription(description: string): string {
 export default function LayoutsGallery({
     initialLayouts,
     currentUserId,
+    onboardingMode = false,
 }: {
     initialLayouts: Layout[];
     currentUserId?: string;
+    onboardingMode?: boolean;
 }) {
     const [layouts, setLayouts] = useState(initialLayouts);
     const [modalOpen, setModalOpen] = useState(false);
@@ -192,17 +194,26 @@ export default function LayoutsGallery({
                                         View
                                     </Link>
                                     {currentUserId && (
-                                        <button
-                                            type="button"
-                                            className="btn"
-                                            onClick={() => applyLayout(layout)}
-                                            disabled={applyingId === layout.id}
-                                            title="Warning: replaces your current profile CSS"
-                                        >
-                                            {applyingId === layout.id
-                                                ? "Applying..."
-                                                : "Use Layout"}
-                                        </button>
+                                        onboardingMode ? (
+                                            <Link
+                                                href={`/onboarding?layout=${layout.id}`}
+                                                className="btn no-underline"
+                                            >
+                                                Choose Layout
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                className="btn"
+                                                onClick={() => applyLayout(layout)}
+                                                disabled={applyingId === layout.id}
+                                                title="Warning: replaces your current profile CSS"
+                                            >
+                                                {applyingId === layout.id
+                                                    ? "Applying..."
+                                                    : "Use Layout"}
+                                            </button>
+                                        )
                                     )}
                                     {layout.authorId === currentUserId && (
                                         <button
