@@ -4,23 +4,23 @@ import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
 import type { User } from "@/lib/types";
 import {
-  getFriendshipStatus,
-  getFriendSuggestions,
-  isBlocked,
-  areFriends,
+    getFriendshipStatus,
+    getFriendSuggestions,
+    isBlocked,
+    areFriends,
 } from "@/lib/queries";
 import { timeAgo, padViews } from "@/lib/utils";
 import {
-  sendFriendRequestAction,
-  cancelFriendRequestAction,
-  respondFriendRequestAction,
-  pokeAction,
-  blockUserAction,
-  unblockUserAction,
-  approveTestimonialAction,
-  deleteTestimonialAction,
-  writeTestimonialAction,
-  reportUserAction,
+    sendFriendRequestAction,
+    cancelFriendRequestAction,
+    respondFriendRequestAction,
+    pokeAction,
+    blockUserAction,
+    unblockUserAction,
+    approveTestimonialAction,
+    deleteTestimonialAction,
+    writeTestimonialAction,
+    reportUserAction,
 } from "@/app/actions";
 import ActionButton from "./ActionButton";
 import BoundForm from "./BoundForm";
@@ -631,6 +631,7 @@ export default async function Profile({
                                             >
                                                 Friends page
                                             </Link> */}
+<<<<<<< HEAD
                     </div>
                   </>
                 )}
@@ -641,4 +642,16 @@ export default async function Profile({
       </div>
     </div>
   );
+=======
+                                        </div>
+                                    </>
+                                )}
+                            </Box>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+>>>>>>> 12d91e5571c5f0b24db1ca46b78a9fa7746a6fae
 }
