@@ -16,7 +16,13 @@ export const metadata: Metadata = {
     },
 };
 
-export default async function LayoutsPage() {
+export default async function LayoutsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ from?: string }>;
+}) {
+    const { from } = await searchParams;
+    const onboardingMode = from === "onboarding";
     const [layouts, currentUser] = await Promise.all([
         getDb()
         .collection("layouts")
@@ -35,6 +41,7 @@ export default async function LayoutsPage() {
             <div className="p-4">
                 <LayoutsGallery
             currentUserId={currentUser?._id.toString()}
+            onboardingMode={onboardingMode}
             initialLayouts={layouts.map((layout) => ({
                 id: layout._id.toString(),
                 name: String(layout.name),

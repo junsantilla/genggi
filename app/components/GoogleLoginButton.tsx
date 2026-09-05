@@ -21,10 +21,13 @@ export default function GoogleLoginButton({ onError }: Props) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ idToken }),
             });
-            const data = (await response.json()) as { error?: string };
+            const data = (await response.json()) as {
+                error?: string;
+                onboarding?: boolean;
+            };
             if (!response.ok)
                 throw new Error(data.error || "Google login failed.");
-            router.push("/");
+            router.push(data.onboarding ? "/onboarding" : "/");
             router.refresh();
         } catch (error) {
             onError?.(
