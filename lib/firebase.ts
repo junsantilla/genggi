@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,10 +10,21 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const firebaseAuth = getAuth(app);
+export const isFirebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+
+function getFirebaseAuth(): Auth | null {
+    if (!isFirebaseConfigured) return null;
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    return getAuth(app);
+}
+
+export const firebaseAuth = (isFirebaseConfigured ? getFirebaseAuth() : null) as unknown as Auth;
 
 export async function signInWithGoogle() {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+        throw new Error("Google Sign-In is not configured in this environment.");
+    }
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(firebaseAuth, provider);
+    return signInWithPopup(auth, provider);
 }
