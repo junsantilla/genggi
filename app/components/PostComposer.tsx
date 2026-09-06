@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Globe, Lock, Users } from "lucide-react";
+import { Globe, Lock, Users, X } from "lucide-react";
 import { compressImageForUpload, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
 import type { MentionFriend } from "@/lib/types";
 import { useMentionAutocomplete } from "./useMentionAutocomplete";
@@ -63,6 +63,14 @@ export default function PostComposer({
         insertMention,
         closeMention,
     } = useMentionAutocomplete({ friends, value: body, setValue: setBody });
+
+    const handleRemovePhoto = () => {
+        setFileName("");
+        compressedRef.current = null;
+        compressPromiseRef.current = null;
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setError("");
+    };
 
     return (
         <form
@@ -199,15 +207,30 @@ export default function PostComposer({
                         }}
                     />
 
-                    <Button
-                        type="button"
-                        // variant="outline"
-                        disabled={pending}
-                        className="cursor-pointer bg-secondary"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        {fileName ? fileName : "Choose photo"}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            type="button"
+                            // variant="outline"
+                            disabled={pending}
+                            className="cursor-pointer bg-secondary max-w-[200px] truncate"
+                            onClick={() => fileInputRef.current?.click()}
+                            title={fileName ? `Selected: ${fileName}` : "Choose photo"}
+                        >
+                            {fileName ? fileName : "Choose photo"}
+                        </Button>
+                        {fileName && (
+                            <button
+                                type="button"
+                                disabled={pending}
+                                onClick={handleRemovePhoto}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded border-0 bg-transparent text-gray-500 hover:bg-gray-100 hover:text-red-600 cursor-pointer"
+                                title="Remove photo"
+                                aria-label="Remove photo"
+                            >
+                                <X size={16} aria-hidden="true" />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     {showPrivacy && (

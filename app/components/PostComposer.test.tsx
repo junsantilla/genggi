@@ -131,7 +131,7 @@ describe("PostComposer @mention autocomplete", () => {
 
     await user.type(textarea, "@");
     expect(screen.getByRole("listbox")).toBeInTheDocument();
-    await user.click(screen.getByText("Add photo"));
+    await user.click(screen.getByText("Choose photo"));
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
@@ -141,5 +141,20 @@ describe("PostComposer @mention autocomplete", () => {
 
     await user.type(textarea, "@");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("allows removing a chosen photo", async () => {
+    const user = userEvent.setup();
+    renderComposer();
+    const file = new File(["test-image-content"], "avatar.png", { type: "image/png" });
+    const fileInput = document.querySelector("#post-photo") as HTMLInputElement;
+
+    await user.upload(fileInput, file);
+    expect(screen.getByRole("button", { name: "Remove photo" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "avatar.png" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove photo" }));
+    expect(screen.queryByRole("button", { name: "Remove photo" })).not.toBeInTheDocument();
+    expect(screen.getByText("Choose photo")).toBeInTheDocument();
   });
 });
