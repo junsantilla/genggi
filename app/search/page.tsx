@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { displayNameOrUsername } from "@/lib/utils";
+import { displayNameOrUsername, escapeRegex } from "@/lib/utils";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { GENDERS, STATUSES } from "@/lib/utils";
@@ -35,15 +35,16 @@ export default async function SearchPage({
         _id: { $ne: user._id },
     };
     if (q) {
+        const safeQ = escapeRegex(q);
         filter.$or = [
-            { username: { $regex: q, $options: "i" } },
-            { displayName: { $regex: q, $options: "i" } },
-            { firstName: { $regex: q, $options: "i" } },
-            { lastName: { $regex: q, $options: "i" } },
+            { username: { $regex: safeQ, $options: "i" } },
+            { displayName: { $regex: safeQ, $options: "i" } },
+            { firstName: { $regex: safeQ, $options: "i" } },
+            { lastName: { $regex: safeQ, $options: "i" } },
         ];
     }
     if (gender) filter.gender = gender;
-    if (location) filter.location = { $regex: location, $options: "i" };
+    if (location) filter.location = { $regex: escapeRegex(location), $options: "i" };
     if (status) filter.relationshipStatus = status;
     if (interests) filter.interests = { $in: [interests] };
 

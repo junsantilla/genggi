@@ -113,3 +113,7 @@ export const ZODIACS = [
 ];
 export const BODY_TYPES = ["", "Slim", "Average", "Athletic", "Curvy", "A few extra pounds"];
 export const ORIENTATIONS = ["", "Straight", "Gay", "Lesbian", "Bisexual", "Other"];
+
+export function escapeRegex(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
