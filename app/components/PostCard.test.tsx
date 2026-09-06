@@ -102,4 +102,55 @@ describe("PostCard bulletin comments", () => {
         });
         expect(screen.getByRole("button", { name: "Change or remove reaction, 😂 1" })).toHaveTextContent("😂");
     });
+
+    it("displays only count when all reactions match the user's reaction (avoiding duplicate emoji)", () => {
+        render(
+            <PostCard
+                post={{
+                    ...post,
+                    comments: [],
+                    myReaction: "❤️",
+                    reactions: [{ type: "❤️", count: 4 }],
+                }}
+            />,
+        );
+
+        // The count text next to the button should be just "4", not "❤️ 4"
+        expect(screen.getByText("4")).toBeInTheDocument();
+        expect(screen.queryByText("❤️ 4")).not.toBeInTheDocument();
+    });
+
+    it("displays emoji breakdown when there are multiple different reactions", () => {
+        render(
+            <PostCard
+                post={{
+                    ...post,
+                    comments: [],
+                    myReaction: "😂",
+                    reactions: [
+                        { type: "❤️", count: 1 },
+                        { type: "😂", count: 1 },
+                    ],
+                }}
+            />,
+        );
+
+        expect(screen.getByText("❤️ 1 · 😂 1")).toBeInTheDocument();
+    });
+
+    it("displays emoji with count when user has not reacted", () => {
+        render(
+            <PostCard
+                post={{
+                    ...post,
+                    comments: [],
+                    myReaction: null,
+                    reactions: [{ type: "❤️", count: 4 }],
+                }}
+            />,
+        );
+
+        expect(screen.getByText("❤️ 4")).toBeInTheDocument();
+    });
 });
+

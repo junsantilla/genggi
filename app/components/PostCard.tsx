@@ -388,13 +388,17 @@ export default function PostCard({
                             </div>
                             {reactions.length > 0 && (
                                 <span className="text-[11px] text-gray-500 font-bold">
-                                    {reactions
-                                        .slice(0, 3)
-                                        .map(
-                                            (reaction) =>
-                                                `${reaction.type} ${reaction.count}`,
-                                        )
-                                        .join(" · ")}
+                                    {myReaction &&
+                                    reactions.length === 1 &&
+                                    reactions[0].type === myReaction
+                                        ? reactions[0].count
+                                        : reactions
+                                              .slice(0, 3)
+                                              .map(
+                                                  (reaction) =>
+                                                      `${reaction.type} ${reaction.count}`,
+                                              )
+                                              .join(" · ")}
                                 </span>
                             )}
                             {!isGroup && (
@@ -637,17 +641,15 @@ export default function PostCard({
                                                                 </button>
                                                             )}
                                                             <ActionButton
-                                                                action={
-                                                                    (isGroup
-                                                                        ? deleteGroupCommentAction.bind(
-                                                                              null,
+                                                                action={() =>
+                                                                    isGroup
+                                                                        ? deleteGroupCommentAction(
                                                                               groupId!,
                                                                               comment._id,
                                                                           )
-                                                                        : deleteBulletinCommentAction.bind(
-                                                                              null,
+                                                                        : deleteBulletinCommentAction(
                                                                               comment._id,
-                                                                          )) as any
+                                                                          )
                                                                 }
                                                                 className="text-[#cc0000] underline text-[11px] cursor-pointer"
                                                                 confirmText="Delete this comment?"
