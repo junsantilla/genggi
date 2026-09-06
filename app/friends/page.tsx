@@ -5,7 +5,6 @@ import { timeAgo } from "@/lib/utils";
 import {
     cancelFriendRequestAction,
     respondFriendRequestAction,
-    removeFriendAction,
 } from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
@@ -275,73 +274,25 @@ export default async function FriendsPage() {
 
                 <Box title={`All Friends (${friends.length})`}>
                     <FriendSearch
-                        friends={friends.map((f) => ({
-                            username: f.username,
-                            displayName: f.displayName,
-                        }))}
+                        friends={friends.map((f) => {
+                            const fr = approved.find(
+                                (x) =>
+                                    (x.requesterId.toString() === uid &&
+                                        x.addresseeId.toString() ===
+                                            f._id.toString()) ||
+                                    (x.requesterId.toString() ===
+                                        f._id.toString() &&
+                                        x.addresseeId.toString() === uid),
+                            );
+                            return {
+                                _id: f._id.toString(),
+                                username: f.username,
+                                displayName: f.displayName,
+                                photo: f.photo,
+                                friendshipId: fr?._id.toString() || "",
+                            };
+                        })}
                     />
-                    <div className="mt-2">
-                        {friends.length === 0 ? (
-                            <p className="text-gray-500 italic ">
-                                No friends yet.
-                            </p>
-                        ) : (
-                            friends.map((f) => {
-                                const fr = approved.find(
-                                    (x) =>
-                                        (x.requesterId.toString() === uid &&
-                                            x.addresseeId.toString() ===
-                                                f._id.toString()) ||
-                                        (x.requesterId.toString() ===
-                                            f._id.toString() &&
-                                            x.addresseeId.toString() === uid),
-                                );
-                                return (
-                                    <div
-                                        key={f._id.toString()}
-                                        className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <Link
-                                                href={`/${f.username}`}
-                                                className="flex shrink-0"
-                                            >
-                                                <UserAvatar
-                                                    src={f.photo}
-                                                    alt={f.displayName}
-                                                    className="w-9 h-9 object-cover"
-                                                />
-                                            </Link>
-                                            <Link
-                                                href={`/${f.username}`}
-                                                className="text-[#003399] font-bold no-underline"
-                                            >
-                                                {f.displayName}
-                                            </Link>
-                                        </div>
-                                        <div className="flex gap-1.5">
-                                            <Link
-                                                href={`/messages?to=${f.username}`}
-                                                className="btn no-underline"
-                                            >
-                                                Message
-                                            </Link>
-                                            <ActionButton
-                                                action={removeFriendAction.bind(
-                                                    null,
-                                                    fr!._id.toString(),
-                                                )}
-                                                className="btn btn-danger"
-                                                confirmText={`Remove ${f.displayName} as a friend?`}
-                                            >
-                                                Remove
-                                            </ActionButton>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
                 </Box>
             </div>
         </div>
