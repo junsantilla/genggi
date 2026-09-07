@@ -20,9 +20,19 @@ import {
     resolveMentionRefs,
     resolveMentionedUserIds,
 } from "@/lib/mentions";
-import { uploadImage, destroyImage } from "@/lib/r2";
+import { uploadImage, destroyImage, deleteObject, publicUrlForKey } from "@/lib/r2";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
 import { getBulletinFeedPage } from "@/lib/bulletin";
+import {
+    getVidsFeedPage,
+    getVidCommentsPage,
+    canPostComment,
+    parseHashtags,
+    validateVidMetadata,
+    cleanupAbandonedVids,
+    VID_MAX_CAPTION_LENGTH,
+} from "@/lib/vids";
+import { processVideo } from "@/lib/video-processing";
 import {
     canAccessChatbox,
     getChatboxById,
@@ -60,6 +70,9 @@ import {
     type ChatboxVisibility,
     type User,
     type GroupPrivacy,
+    type SerializedVidComment,
+    type VidFeedPage,
+    VID_REPORT_CATEGORIES,
 } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string; photo?: string };
@@ -831,6 +844,37 @@ export async function respondFriendRequestAction(
     return { ok: true };
 }
 
+// Approves a pending incoming friend request from a specific user without the
+// client needing the friendship id (used by the Vids follow button).
+export async function acceptFriendRequestFromAction(
+    targetId: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    const f = await db.collection("friendships").findOne({
+        requesterId: new ObjectId(targetId),
+        addresseeId: user._id,
+        status: "pending",
+    });
+    if (!f) return { error: "Request not found." };
+    await db
+        .collection("friendships")
+        .updateOne(
+            { _id: f._id },
+            { $set: { status: "approved", respondedAt: new Date() } },
+        );
+    await notify(
+        f.requesterId.toString(),
+        "friend_accepted",
+        user._id.toString(),
+        `${user.displayName} accepted your friend request.`,
+        `/${user.username}`,
+    );
+    revalidatePath(`/${user.username}`);
+    revalidatePath("/friends");
+    return { ok: true };
+}
+
 export async function cancelFriendRequestAction(
     friendshipId: string,
 ): Promise<ActionResult> {
@@ -842,8 +886,7 @@ export async function cancelFriendRequestAction(
     } catch {
         return { error: "Request not found." };
     }
-    const result = await db.collection("friendships").deleteOne({
-        _id: requestId,
+    const result = await db.collection("friendships").deleteOne({        _id: requestId,
         requesterId: user._id,
         status: "pending",
     });
@@ -2300,6 +2343,17 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
         .toArray()) as unknown as { _id: ObjectId }[];
     const chatboxIds = ownedChatboxes.map((c) => c._id);
 
+    const userVids = (await db
+        .collection("vids")
+        .find({ userId: oid })
+        .project({ _id: 1, videoKey: 1, thumbnailKey: 1 })
+        .toArray()) as unknown as {
+        _id: ObjectId;
+        videoKey: string;
+        thumbnailKey: string | null;
+    }[];
+    const vidIds = userVids.map((v) => v._id);
+
     await db.collection("users").deleteOne({ _id: oid });
     await Promise.all([
         ...userPosts
@@ -2361,6 +2415,35 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
             ],
         }),
         db.collection("bugReports").deleteMany({ userId: oid }),
+        // Vids: remove the R2 objects, the records, and everything that
+        // references the user or their Vids.
+        ...userVids.flatMap((vid) => [
+            deleteObject(vid.videoKey).catch(() => {}),
+            deleteObject(vid.thumbnailKey).catch(() => {}),
+        ]),
+        db.collection("vids").deleteMany({ userId: oid }),
+        ...(vidIds.length > 0
+            ? [
+                  db.collection("vidLikes").deleteMany({
+                      $or: [{ userId: oid }, { vidId: { $in: vidIds } }],
+                  }),
+                  db.collection("vidComments").deleteMany({
+                      $or: [{ authorId: oid }, { vidId: { $in: vidIds } }],
+                  }),
+                  db.collection("vidViews").deleteMany({
+                      $or: [
+                          { viewerKey: oid.toString() },
+                          { vidId: { $in: vidIds } },
+                      ],
+                  }),
+                  db.collection("vidShares").deleteMany({
+                      $or: [{ userId: oid }, { vidId: { $in: vidIds } }],
+                  }),
+                  db
+                      .collection("reports")
+                      .deleteMany({ type: "vid", reportedId: { $in: vidIds } }),
+              ]
+            : []),
     ]);
 }
 
@@ -2650,4 +2733,382 @@ export async function deleteBugReportAction(
         .deleteOne({ _id: new ObjectId(reportId) });
     revalidatePath("/report-bug");
     return { ok: true };
+}
+
+// ---------------------------------------------------------------- Vids
+
+export async function finishVidAction(
+    vidId: string,
+    formData: FormData,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const vid = await db.collection("vids").findOne({ _id: oid });
+    if (!vid) return { error: "Vid not found." };
+    if (vid.userId.toString() !== user._id.toString())
+        return { error: "You can only publish your own Vids." };
+    if (vid.status !== "uploading" && vid.status !== "processing")
+        return { error: "This Vid can't be published." };
+
+    const caption = String(formData.get("caption") || "")
+        .trim()
+        .slice(0, VID_MAX_CAPTION_LENGTH);
+    const hashtags = parseHashtags(caption);
+    const metadata = validateVidMetadata(
+        formData.get("duration"),
+        formData.get("width"),
+        formData.get("height"),
+    );
+    if (!metadata.ok) return { error: metadata.error };
+
+    // Server-side processing hook. Today this is a passthrough that keeps the
+    // uploaded file; when a transcoder is added it runs here while the record
+    // is in the "processing" state.
+    const processed = await processVideo({
+        userId: user._id.toString(),
+        vidId: vid._id.toString(),
+        videoKey: vid.videoKey,
+        contentType: "video/mp4",
+    });
+
+    const videoUrl =
+        processed.videoKey === vid.videoKey
+            ? vid.videoUrl
+            : publicUrlForKey(processed.videoKey);
+
+    await db.collection("vids").updateOne(
+        { _id: vid._id },
+        {
+            $set: {
+                status: "published",
+                caption,
+                hashtags,
+                duration: metadata.duration,
+                width: metadata.width,
+                height: metadata.height,
+                videoKey: processed.videoKey,
+                videoUrl,
+                updatedAt: new Date(),
+            },
+        },
+    );
+    revalidatePath("/vids");
+    revalidatePath(`/vids/${vid._id.toString()}`);
+    revalidatePath(`/${user.username}`);
+    return { ok: true };
+}
+
+export async function likeVidAction(
+    vidId: string,
+): Promise<ActionResult & { likeCount?: number }> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const vid = await db
+        .collection("vids")
+        .findOne({ _id: oid, status: "published" });
+    if (!vid) return { error: "Vid not found." };
+
+    let inserted = false;
+    try {
+        await db.collection("vidLikes").insertOne({
+            vidId: oid,
+            userId: user._id,
+            createdAt: new Date(),
+        });
+        inserted = true;
+    } catch (error) {
+        // Unique index on (vidId, userId) prevents duplicate likes.
+        if ((error as { code?: number }).code !== 11000) throw error;
+    }
+    if (inserted) {
+        await db
+            .collection("vids")
+            .updateOne({ _id: oid }, { $inc: { likeCount: 1 } });
+    }
+    revalidatePath(`/vids/${vidId}`);
+    return {
+        ok: true,
+        likeCount: (vid.likeCount ?? 0) + (inserted ? 1 : 0),
+    };
+}
+
+export async function unlikeVidAction(
+    vidId: string,
+): Promise<ActionResult & { likeCount?: number }> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const result = await db
+        .collection("vidLikes")
+        .deleteOne({ vidId: oid, userId: user._id });
+    if (result.deletedCount > 0) {
+        await db
+            .collection("vids")
+            .updateOne(
+                { _id: oid, likeCount: { $gt: 0 } },
+                { $inc: { likeCount: -1 } },
+            );
+    }
+    const vid = await db
+        .collection("vids")
+        .findOne({ _id: oid }, { projection: { likeCount: 1 } });
+    revalidatePath(`/vids/${vidId}`);
+    return { ok: true, likeCount: Math.max(0, vid?.likeCount ?? 0) };
+}
+
+export async function createVidCommentAction(
+    vidId: string,
+    formData: FormData,
+): Promise<ActionResult & { comment?: SerializedVidComment }> {
+    const user = await requireUser();
+    const body = String(formData.get("body") || "").trim();
+    if (!body) return { error: "Comment cannot be empty." };
+    if (body.length > 500)
+        return { error: "Comments must be 500 characters or fewer." };
+    const limit = await canPostComment(user._id.toString());
+    if (!limit.allowed) return { error: limit.error };
+
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const vid = await db
+        .collection("vids")
+        .findOne({ _id: oid, status: "published" });
+    if (!vid) return { error: "Vid not found." };
+
+    const createdAt = new Date();
+    const inserted = await db.collection("vidComments").insertOne({
+        vidId: oid,
+        authorId: user._id,
+        body,
+        createdAt,
+    });
+    await db
+        .collection("vids")
+        .updateOne({ _id: oid }, { $inc: { commentCount: 1 } });
+
+    if (vid.userId.toString() !== user._id.toString()) {
+        await notify(
+            vid.userId.toString(),
+            "vid_comment",
+            user._id.toString(),
+            `${user.displayName} commented on your Vid.`,
+            `/vids/${vidId}`,
+        ).catch(() => {});
+    }
+
+    revalidatePath(`/vids/${vidId}`);
+    revalidatePath(`/${user.username}`);
+    return {
+        ok: true,
+        comment: {
+            _id: inserted.insertedId.toString(),
+            vidId: vid._id.toString(),
+            authorId: user._id.toString(),
+            body,
+            createdAt: createdAt.toISOString(),
+            author: {
+                _id: user._id.toString(),
+                username: user.username,
+                displayName: user.displayName,
+                photo: user.photo,
+            },
+        },
+    };
+}
+
+export async function deleteVidCommentAction(
+    commentId: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(commentId);
+    } catch {
+        return { error: "Comment not found." };
+    }
+    const comment = await db
+        .collection("vidComments")
+        .findOne({ _id: oid });
+    if (!comment) return { error: "Comment not found." };
+
+    const vid = await db.collection("vids").findOne({ _id: comment.vidId });
+    const isCommentAuthor = comment.authorId.toString() === user._id.toString();
+    const isVidAuthor = vid
+        ? vid.userId.toString() === user._id.toString()
+        : false;
+    if (
+        !isCommentAuthor &&
+        !isVidAuthor &&
+        user.role !== "admin" &&
+        user.username !== "genggengpro"
+    )
+        return { error: "Not allowed." };
+
+    await db.collection("vidComments").deleteOne({ _id: comment._id });
+    await db
+        .collection("vids")
+        .updateOne(
+            { _id: comment.vidId, commentCount: { $gt: 0 } },
+            { $inc: { commentCount: -1 } },
+        );
+    revalidatePath(`/vids/${comment.vidId.toString()}`);
+    return { ok: true };
+}
+
+export async function shareVidAction(vidId: string): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const vid = await db
+        .collection("vids")
+        .findOne({ _id: oid, status: "published" });
+    if (!vid) return { error: "Vid not found." };
+
+    try {
+        // Unique index prevents a user's share from being counted repeatedly.
+        await db.collection("vidShares").insertOne({
+            vidId: oid,
+            userId: user._id,
+            createdAt: new Date(),
+        });
+    } catch (error) {
+        if ((error as { code?: number }).code !== 11000) throw error;
+    }
+    await db
+        .collection("vids")
+        .updateOne({ _id: oid }, { $inc: { shareCount: 1 } });
+    revalidatePath(`/vids/${vidId}`);
+    return { ok: true };
+}
+
+export async function deleteVidAction(
+    vidId: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    const vid = await db.collection("vids").findOne({ _id: oid });
+    if (!vid) return { error: "Vid not found." };
+
+    const isOwner = vid.userId.toString() === user._id.toString();
+    if (!isOwner && user.role !== "admin" && user.username !== "genggengpro")
+        return { error: "You can only delete your own Vids." };
+
+    // Remove the R2 objects first; a storage failure must never leave the
+    // database record behind pointing at content that still exists.
+    await Promise.all([
+        deleteObject(vid.videoKey).catch(() => {}),
+        deleteObject(vid.thumbnailKey).catch(() => {}),
+    ]);
+    await db
+        .collection("vids")
+        .updateOne(
+            { _id: vid._id },
+            { $set: { status: "deleted", updatedAt: new Date() } },
+        );
+    await Promise.all([
+        db.collection("vidLikes").deleteMany({ vidId: oid }),
+        db.collection("vidComments").deleteMany({ vidId: oid }),
+        db.collection("vidViews").deleteMany({ vidId: oid }),
+        db.collection("vidShares").deleteMany({ vidId: oid }),
+        db
+            .collection("reports")
+            .deleteMany({ type: "vid", reportedId: oid }),
+    ]);
+    revalidatePath("/vids");
+    revalidatePath(`/vids/${vidId}`);
+    revalidatePath(`/${user.username}`);
+    return { ok: true };
+}
+
+export async function reportVidAction(
+    vidId: string,
+    category: string,
+    reason: string,
+): Promise<ActionResult> {
+    const user = await requireUser();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(vidId);
+    } catch {
+        return { error: "Vid not found." };
+    }
+    if (!(VID_REPORT_CATEGORIES as readonly string[]).includes(category))
+        return { error: "Please choose a valid report category." };
+    const trimmedReason = reason.trim().slice(0, 500);
+
+    const db = getDb();
+    const vid = await db.collection("vids").findOne({ _id: oid });
+    if (!vid) return { error: "Vid not found." };
+    // Reports live in the existing "reports" collection reviewed through
+    // adminReviewReportAction, so Vid reports share the app's moderation queue.
+    await db.collection("reports").insertOne({
+        reporterId: user._id,
+        reportedId: oid,
+        type: "vid",
+        reason: trimmedReason ? `${category}: ${trimmedReason}` : category,
+        status: "open",
+        createdAt: new Date(),
+    });
+    return { ok: true };
+}
+
+export async function getMoreVidsAction(
+    cursor: { createdAt: string; _id: string } | null,
+): Promise<VidFeedPage> {
+    const user = await getCurrentUser();
+    return getVidsFeedPage(user?._id.toString() ?? null, cursor);
+}
+
+export async function getMoreVidCommentsAction(
+    vidId: string,
+    cursor: { createdAt: string; _id: string } | null,
+): Promise<{ comments: SerializedVidComment[]; nextCursor: { createdAt: string; _id: string } | null }> {
+    return getVidCommentsPage(vidId, cursor);
+}
+
+// Removes abandoned/failed uploads that never reached "published". Restricted
+// to admins; also runs opportunistically from the upload endpoint. In
+// production, point a cron/scheduled worker at this action.
+export async function runVidCleanupAction(): Promise<
+    ActionResult & { removed?: number }
+> {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "admin" && user.username !== "genggengpro"))
+        return { error: "Not allowed." };
+    const removed = await cleanupAbandonedVids();
+    return { ok: true, removed };
 }

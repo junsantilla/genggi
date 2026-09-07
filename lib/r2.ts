@@ -57,3 +57,45 @@ export async function destroyImage(identifier: string): Promise<void> {
   const r2 = getR2();
   await r2.client.send(new DeleteObjectCommand({ Bucket: r2.bucket, Key: identifier }));
 }
+
+// ------------------------------------------------------------------- Vids
+
+// Uploads bytes or a Node stream to an exact, caller-controlled key. Used by
+// Vids, where the storage path is a predictable server-generated structure
+// (vids/{userId}/{vidId}/...) rather than the random key uploadImage makes.
+export async function putObject(
+  key: string,
+  body: Buffer | import("stream").Readable,
+  contentType: string,
+  contentLength?: number,
+): Promise<void> {
+  const r2 = getR2();
+  await r2.client.send(
+    new PutObjectCommand({
+      Bucket: r2.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      ...(contentLength !== undefined ? { ContentLength: contentLength } : {}),
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+}
+
+// Deletes a single object by its storage key. Returns false when the key looks
+// like a URL or a Cloudinary public id so callers know nothing was removed.
+export async function deleteObject(key: string | null | undefined): Promise<boolean> {
+  if (!key) return false;
+  if (key.startsWith("cloudinary:")) return false;
+  if (key.startsWith("http://") || key.startsWith("https://")) return false;
+  const r2 = getR2();
+  await r2.client.send(new DeleteObjectCommand({ Bucket: r2.bucket, Key: key }));
+  return true;
+}
+
+// Builds the public URL for an object key stored in the R2 bucket.
+export function publicUrlForKey(key: string): string {
+  const base = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
+  if (!base) throw new Error("R2_PUBLIC_URL is not set in .env.local");
+  return `${base}/${key}`;
+}

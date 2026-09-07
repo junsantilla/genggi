@@ -7,6 +7,7 @@ Genggi is a nostalgic social network for custom profiles, friends, messages, com
 - Create an account with email/password or Google sign-in.
 - Build a custom profile with layouts, profile details, photos, friends, and testimonials.
 - Share bulletin posts with public, friends-only, or private visibility.
+- Post and watch **Vids** — short vertical videos with likes, comments, sharing, and view counts.
 - Send messages, use chatboxes, join groups, and receive notifications.
 - Search members and report bugs from inside the app.
 
@@ -16,7 +17,7 @@ Genggi is a nostalgic social network for custom profiles, friends, messages, com
 - TypeScript
 - MongoDB for application data
 - Firebase Authentication for Google sign-in
-- Cloudflare R2 for image storage
+- Cloudflare R2 for image and video storage
 - Resend for verification and password-reset email
 - Tailwind CSS 4
 - Vitest and Testing Library
@@ -73,6 +74,40 @@ Genggi is a nostalgic social network for custom profiles, friends, messages, com
 4. Open [http://localhost:3000](http://localhost:3000).
 
 To use Google sign-in locally, enable Google as a Firebase Authentication provider and add your local and deployed domains to Firebase's authorized domains. To send email from a custom address, verify the domain in Resend and set `RESEND_FROM`.
+
+## Vids (short-form video)
+
+Vids is the app's short-form vertical video feed at `/vids` (watch), `/vids/upload` (post), and `/vids/{vidId}` (dedicated shareable page). It reuses the existing account system, friendship/follow system, R2 storage, and the `reports` moderation queue.
+
+### Upload flow
+
+1. The client validates the file (MP4/MOV/WebM/MKV, ≤ 100 MB, MIME + extension).
+2. The video streams directly to R2 through `POST /api/vids/upload` with upload progress and cancellation. The server re-validates size, MIME, authentication, and per-user rate limits (10 uploads/hour, 3 in progress), and stores it at a deterministic key — `vids/{userId}/{vidId}/video.mp4` — never derived from the user's filename.
+3. The browser captures a thumbnail frame (canvas) and posts it to `POST /api/vids/{vidId}/thumbnail` (stored as `vids/{userId}/{vidId}/thumbnail.jpg`).
+4. The user adds a caption/hashtags and publishes via `finishVidAction`, which runs the server-side processing hook (`lib/video-processing.ts`) and marks the record `published`.
+
+Video processing is a documented passthrough today (no transcoder is deployed). To add FFmpeg optimization (9:16, ≤ 1080×1920, H.264/AAC MP4, ~10–30 MB), implement `processVideo` in `lib/video-processing.ts`; the status lifecycle (`uploading → processing → published`) already supports it.
+
+### View counting
+
+Views are counted server-side at `POST /api/vids/{vidId}/view`. A view counts only when the client reports ≥ 2 seconds watched or ≥ 50% of the duration, and the server caps the reported time, validates the numbers, and deduplicates per viewer (unique index on `vidId + viewerKey`, where logged-in viewers are keyed by user id and guests by an HMAC of their IP). The client can never write counters directly.
+
+### Data model
+
+- `vids` — one document per Vid with `videoKey`/`videoUrl`, `thumbnailKey`/`thumbnailUrl`, caption, hashtags, playback metadata, counters (`viewCount`, `likeCount`, `commentCount`, `shareCount`), and a `status` (`uploading | processing | published | failed | deleted`). Indexed on `status + createdAt` and `userId + status + createdAt`.
+- `vidLikes` — unique `(vidId, userId)` so a user can like once.
+- `vidComments` — `(vidId, createdAt)` index; cursor-paginated (newest first).
+- `vidViews` — unique `(vidId, viewerKey)` used for view deduplication.
+- `vidShares` — unique `(vidId, userId)` so shares count once per user.
+- Vid reports are stored in the existing `reports` collection with `type: "vid"` and reviewed through `adminReviewReportAction`.
+
+Indexes are created idempotently on first use (`ensureVidIndexes`); there is no migration step.
+
+### R2 cleanup
+
+Abandoned/failed uploads never reached `published` are removed (R2 objects + records) after 24 hours by `cleanupAbandonedVids`. It runs opportunistically from the upload endpoint and via the admin-only `runVidCleanupAction`; in production, point a cron job at that action (e.g. a daily request to a server action). Deleting a Vid removes its R2 objects and all related records, and admin user deletion cleans up the user's Vids too.
+
+No additional environment variables are required — Vids uses the same `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_PUBLIC_URL` as image uploads. The bucket's public URL must serve videos with HTTP range-request support (R2 supports this natively), and the upload route must be reachable with a body limit above 100 MB.
 
 ## Available Scripts
 

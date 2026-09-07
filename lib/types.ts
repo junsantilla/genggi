@@ -400,3 +400,122 @@ export interface Report {
   status: "open" | "resolved" | "dismissed";
   createdAt: Date;
 }
+
+// ---------------------------------------------------------------- Vids
+
+export type VidStatus =
+  | "uploading"
+  | "processing"
+  | "published"
+  | "failed"
+  | "deleted";
+
+export interface Vid {
+  _id: ObjectId;
+  userId: ObjectId;
+  // R2 key (vids/{userId}/{vidId}/video.mp4) and its public URL. The key is
+  // deterministic and never derived from the user's filename.
+  videoKey: string;
+  videoUrl: string;
+  thumbnailKey: string | null;
+  thumbnailUrl: string | null;
+  caption: string;
+  hashtags: string[];
+  duration: number; // seconds
+  width: number;
+  height: number;
+  fileSize: number; // bytes
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  status: VidStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface VidComment {
+  _id: ObjectId;
+  vidId: ObjectId;
+  authorId: ObjectId;
+  body: string;
+  createdAt: Date;
+}
+
+export interface VidLike {
+  _id: ObjectId;
+  vidId: ObjectId;
+  userId: ObjectId;
+  createdAt: Date;
+}
+
+export interface VidView {
+  _id: ObjectId;
+  vidId: ObjectId;
+  // userId for logged-in viewers, or `ip:<hmac>` for anonymous viewers so raw
+  // IPs are never stored.
+  viewerKey: string;
+  createdAt: Date;
+}
+
+export interface VidShare {
+  _id: ObjectId;
+  vidId: ObjectId;
+  userId: ObjectId;
+  createdAt: Date;
+}
+
+export interface VidAuthorCard {
+  _id: string;
+  username: string;
+  displayName: string;
+  photo: string | null;
+}
+
+export interface SerializedVidComment {
+  _id: string;
+  vidId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  author: VidAuthorCard;
+}
+
+export interface SerializedVid {
+  _id: string;
+  userId: string;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  caption: string;
+  hashtags: string[];
+  duration: number;
+  width: number;
+  height: number;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  status: VidStatus;
+  createdAt: string;
+  author: VidAuthorCard;
+  // Viewer-specific fields populated when a viewer id is provided.
+  myLike: boolean;
+  friendshipStatus: "self" | "none" | "pending_out" | "pending_in" | "friends";
+}
+
+export interface VidFeedPage {
+  videos: SerializedVid[];
+  nextCursor: { createdAt: string; _id: string } | null;
+}
+
+export const VID_REPORT_CATEGORIES = [
+  "spam",
+  "harassment",
+  "hate",
+  "sexual",
+  "violence",
+  "copyright",
+  "other",
+] as const;
+
+export type VidReportCategory = (typeof VID_REPORT_CATEGORIES)[number];

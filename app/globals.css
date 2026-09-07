@@ -134,6 +134,11 @@ main:has(.landing-page) {
     padding-block: 0;
 }
 
+/* Hide the site footer on video-watching pages (immersive full-screen). */
+main:has(.vids-page) ~ footer {
+    display: none;
+}
+
 .pic-bg {
     background-image: repeating-linear-gradient(
         45deg,

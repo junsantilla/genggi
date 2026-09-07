@@ -55,6 +55,17 @@ export function padViews(n: number): string {
   return n.toString().padStart(6, "0");
 }
 
+export function formatCount(n: number): string {
+  const value = Math.max(0, Math.floor(n));
+  if (value < 1000) return String(value);
+  if (value < 1_000_000) {
+    const k = value / 1000;
+    return `${k >= 100 ? Math.round(k) : k.toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  const m = value / 1_000_000;
+  return `${m >= 100 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, "")}M`;
+}
+
 const YOUTUBE_VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/
 
 export function isYouTubeVideoId(value: unknown): value is string {

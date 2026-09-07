@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { getDb, ObjectId } from "@/lib/db";
 import { getProfileBulletinPosts } from "@/lib/bulletin";
+import { getProfileVids } from "@/lib/vids";
 import type { User } from "@/lib/types";
 import {
     getFriendshipStatus,
@@ -28,6 +29,7 @@ import Box from "./Box";
 import BulletinBoard from "./BulletinBoard";
 import YouTubeMusicPlayer from "./YouTubeMusicPlayer";
 import UserAvatar from "./UserAvatar";
+import ProfileVids from "./ProfileVids";
 import { displayNameOrUsername } from "@/lib/utils";
 
 export default async function Profile({
@@ -78,12 +80,18 @@ export default async function Profile({
         : undefined;
     const safeCustomCss = customCss?.replace(/<\/style/gi, "<\\/style");
     const canView = isOwner || !user.isPrivate || isFriend;
-    const [bulletinPosts, friendSuggestions] = canView
+    const [bulletinPosts, friendSuggestions, profileVids] = canView
         ? await Promise.all([
               getProfileBulletinPosts(uid, isOwner, isFriend, me ?? null),
               me ? getFriendSuggestions(me) : Promise.resolve([]),
+              getProfileVids(uid, {
+                  _id: uid,
+                  username: user.username,
+                  displayName: user.displayName,
+                  photo: user.photo,
+              }),
           ])
-        : [[], []];
+        : [[], [], []];
 
     // Six most recent friends
     const friendDocs = await db
@@ -427,6 +435,8 @@ export default async function Profile({
                                     </span>
                                 )}
                             </Box>
+
+                            <ProfileVids vids={profileVids} border={theme.border} />
 
                             <Box
                                 title="Who I'd Like to Meet"
