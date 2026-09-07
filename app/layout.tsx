@@ -55,9 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     isAdmin={isAdmin}
                     counts={counts}
                 />
-                <main className={user ? "py-2 min-h-[calc(100dvh-52px)]" : ""}>
-                    {children}
-                </main>
+                <main className={user ? "py-2" : ""}>{children}</main>
                 <Footer />
                 {process.env.NODE_ENV === "production" && !isAdmin && (
                     <Analytics />

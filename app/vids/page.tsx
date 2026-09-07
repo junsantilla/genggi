@@ -18,7 +18,9 @@ export default async function VidsPage() {
     return (
         // -my-2 compensates the root layout's main py-2 so the feed fills the
         // viewport below the navbar on every screen size.
-        <div className={`${user ? "-my-2" : ""} vids-page h-[calc(100dvh-80px)] w-full`}>
+        <div
+            className={`${user ? "-my-2" : ""} vids-page h-[calc(100dvh-81px)] w-full`}
+        >
             <VidsFeed
                 initialVideos={feed.videos}
                 hasMore={feed.nextCursor !== null}
