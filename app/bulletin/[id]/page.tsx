@@ -63,7 +63,7 @@ export default async function BulletinPostPage({
 
     return (
         <div className="max-w-[960px] w-full mx-auto">
-            <div className="bg-white border border-[#6699cc] sm:border-x p-2.5">
+            <div className=" p-2.5">
                 <BulletinBoard
                     posts={[post]}
                     currentUserId={user._id.toString()}

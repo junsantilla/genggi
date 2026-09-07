@@ -106,7 +106,7 @@ export default function PostComposer({
                     setPending(false);
                 }
             }}
-            className="border-b border-[#99bbdd] bg-[#DBE9F7] p-2.5 mb-3"
+            className="border border-[#99bbdd] bg-white p-2.5 mb-1 sm:mb-3"
         >
             <div className="relative" ref={rootRef}>
                 <textarea

@@ -75,7 +75,7 @@ export default async function GroupPage({
 
     return (
         <div className="max-w-[960px] w-full mx-auto">
-            <div className="bg-white border border-[#6699cc] sm:border-x">
+            <div className="">
                 <div className="flex flex-wrap w-full">
                     <main className="w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5 sm:pr-[5px]">
                         <Box

@@ -80,11 +80,11 @@ export default async function FriendsPage() {
         .slice(0, 10);
 
     return (
-        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+        <div className="max-w-[960px] w-full mx-auto ">
             <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
                 Friends
             </div>
-            <div className="p-4 flex flex-col gap-4">
+            <div className="pt-4">
                 <Box title={`Top 8 (${top8.length})`}>
                     {top8.length === 0 ? (
                         <p className="text-gray-500 italic ">
@@ -193,47 +193,49 @@ export default async function FriendsPage() {
                     ) : (
                         outgoingUsers.map((f) => {
                             const request = outgoing.find(
-                                (x) => x.addresseeId.toString() === f._id.toString(),
+                                (x) =>
+                                    x.addresseeId.toString() ===
+                                    f._id.toString(),
                             );
                             return (
-                            <div
-                                key={f._id.toString()}
-                                className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Link
-                                        href={`/${f.username}`}
-                                        className="flex shrink-0"
-                                    >
-                                        <UserAvatar
-                                            src={f.photo}
-                                            alt={f.displayName}
-                                            className="w-9 h-9 object-cover"
-                                        />
-                                    </Link>
-                                    <Link
-                                        href={`/${f.username}`}
-                                        className="text-[#003399] font-bold no-underline"
-                                    >
-                                        {f.displayName}
-                                    </Link>
+                                <div
+                                    key={f._id.toString()}
+                                    className="flex items-center justify-between gap-2 border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            href={`/${f.username}`}
+                                            className="flex shrink-0"
+                                        >
+                                            <UserAvatar
+                                                src={f.photo}
+                                                alt={f.displayName}
+                                                className="w-9 h-9 object-cover"
+                                            />
+                                        </Link>
+                                        <Link
+                                            href={`/${f.username}`}
+                                            className="text-[#003399] font-bold no-underline"
+                                        >
+                                            {f.displayName}
+                                        </Link>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-gray-500 text-[11px] italic">
+                                            awaiting response…
+                                        </span>
+                                        <ActionButton
+                                            action={cancelFriendRequestAction.bind(
+                                                null,
+                                                request!._id.toString(),
+                                            )}
+                                            className="btn btn-danger"
+                                            confirmText={`Cancel your friend request to ${f.displayName}?`}
+                                        >
+                                            Cancel
+                                        </ActionButton>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-gray-500 text-[11px] italic">
-                                        awaiting response…
-                                    </span>
-                                    <ActionButton
-                                        action={cancelFriendRequestAction.bind(
-                                            null,
-                                            request!._id.toString(),
-                                        )}
-                                        className="btn btn-danger"
-                                        confirmText={`Cancel your friend request to ${f.displayName}?`}
-                                    >
-                                        Cancel
-                                    </ActionButton>
-                                </div>
-                            </div>
                             );
                         })
                     )}

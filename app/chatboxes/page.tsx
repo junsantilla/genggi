@@ -31,11 +31,11 @@ export default async function ChatboxesPage() {
     const boxes = await getAvailableChatboxes(uid);
 
     return (
-        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+        <div className="max-w-[960px] w-full mx-auto ">
             <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
                 Chatbox
             </div>
-            <div className="p-4 flex flex-col gap-4">
+            <div className="pt-4">
                 <Box title="Create a Chatbox">
                     <p className=" text-gray-600 mb-3">
                         Make a chatbox and set it to public (anyone can join) or
@@ -61,7 +61,10 @@ export default async function ChatboxesPage() {
                                     >
                                         <ChatboxAvatar
                                             photo={b.author.photo}
-                                            name={displayNameOrUsername(b.author.displayName, b.author.username)}
+                                            name={displayNameOrUsername(
+                                                b.author.displayName,
+                                                b.author.username,
+                                            )}
                                         />
 
                                         <div className="min-w-0 flex-1">
@@ -88,7 +91,10 @@ export default async function ChatboxesPage() {
                                                 </span>
                                             </div>
                                             <div className="text-gray-500 text-[11px] truncate">
-                                                {displayNameOrUsername(b.author.displayName, b.author.username)}
+                                                {displayNameOrUsername(
+                                                    b.author.displayName,
+                                                    b.author.username,
+                                                )}
                                                 {b.messageCount > 0
                                                     ? ` · ${b.messageCount} ${
                                                           b.messageCount === 1

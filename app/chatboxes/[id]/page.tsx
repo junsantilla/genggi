@@ -30,7 +30,7 @@ export default async function ChatboxPage({
     const isOwner = chatbox.createdBy.toString() === uid;
 
     return (
-        <div className="max-w-[960px] w-full mx-auto bg-white border border-[#6699cc] sm:border-x">
+        <div className="max-w-[960px] w-full mx-auto ">
             <div className="bg-gradient-to-b from-[#4a76b8] to-[#2c4d80] text-white px-2.5 py-1.5 font-bold text-xl text-center tracking-tight">
                 {chatbox.name}
                 <span className="block text-[11px] font-normal opacity-80">

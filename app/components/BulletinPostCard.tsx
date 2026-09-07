@@ -97,7 +97,7 @@ export default function BulletinPostCard({
     };
 
     return (
-        <article className="bulletin-post border-b border-dotted border-[#99bbdd] py-2 last:border-0">
+        <article className="bulletin-post border-b border-dotted border-[#99bbdd] p-2 last:border-0 bg-white">
             <div className="flex gap-2">
                 <Link
                     href={`/${post.author.username}`}
@@ -105,7 +105,10 @@ export default function BulletinPostCard({
                 >
                     <UserAvatar
                         src={post.author.photo}
-                        alt={displayNameOrUsername(post.author.displayName, post.author.username)}
+                        alt={displayNameOrUsername(
+                            post.author.displayName,
+                            post.author.username,
+                        )}
                         className="block w-[45px] h-[45px] object-cover"
                         cloudinaryWidth={45}
                     />
@@ -117,7 +120,10 @@ export default function BulletinPostCard({
                                 href={`/${post.author.username}`}
                                 className="text-[#003399] font-bold no-underline"
                             >
-                                {displayNameOrUsername(post.author.displayName, post.author.username)}
+                                {displayNameOrUsername(
+                                    post.author.displayName,
+                                    post.author.username,
+                                )}
                             </Link>
                             <Link
                                 href={`/bulletin/${post._id}`}
@@ -207,7 +213,10 @@ export default function BulletinPostCard({
                             />
                         </Link>
                     )}
-                    <div ref={reactionMenuRef} className="relative inline-block mt-1.5">
+                    <div
+                        ref={reactionMenuRef}
+                        className="relative inline-block mt-1.5"
+                    >
                         <button
                             type="button"
                             className={`btn text-[11px] px-2 py-0.5 ${myReaction ? "" : "btn-ghost"}`}
@@ -284,7 +293,10 @@ export default function BulletinPostCard({
                                             href={`/${comment.author.username}`}
                                             className="text-[#003399] font-bold no-underline"
                                         >
-                                            {displayNameOrUsername(comment.author.displayName, comment.author.username)}
+                                            {displayNameOrUsername(
+                                                comment.author.displayName,
+                                                comment.author.username,
+                                            )}
                                         </Link>{" "}
                                         <span className="text-gray-500">
                                             ({timeAgo(comment.createdAt)})

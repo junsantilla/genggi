@@ -184,7 +184,7 @@ export default function PostCard({
         setOpen(false);
     };
     return (
-        <article className="border-b border-dotted border-[#99bbdd] py-2 last:border-0">
+        <article className="group-[.bulletin]:border group-[.bulletin]:border-[#99bbdd] mb-1 sm:mb-3 p-3 pb-2 group-[.bulletin]:bg-white">
             <div className="flex gap-2">
                 <Link
                     href={`/${post.author.username}`}
@@ -351,7 +351,7 @@ export default function PostCard({
                             <div className="relative inline-block">
                                 <button
                                     type="button"
-                                    className={`inline-flex min-h-9 min-w-9 items-center justify-center gap-1 border-0 bg-transparent p-1.5 text-[11px] cursor-pointer hover:bg-[#dbe9f7] ${myReaction ? "text-[#003399]" : "text-gray-500"}`}
+                                    className={`inline-flex min-h-9 min-w-9 items-center justify-center gap-1 mb-0.5 border-0 bg-transparent p-1.5 text-[11px] cursor-pointer hover:bg-[#dbe9f7] ${myReaction ? "text-[#003399]" : "text-gray-500"}`}
                                     onClick={() => setOpen(!open)}
                                     aria-label={
                                         myReaction

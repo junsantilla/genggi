@@ -74,7 +74,7 @@ export default function BulletinFeed({
                     No bulletins yet. Be the first to post!
                 </p>
             ) : (
-                <div>
+                <div className="bulletin group">
                     {posts.map((post) => (
                         <PostCard
                             key={post._id}

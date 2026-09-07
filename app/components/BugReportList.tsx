@@ -36,7 +36,7 @@ export default function BugReportList({
             {reports.map((r) => (
                 <div
                     key={r._id}
-                    className="border-b border-dotted border-[#99bbdd] py-2 last:border-0 flex gap-2 items-start"
+                    className="border-b border-dotted border-[#99bbdd] py-2 last:border-0 bg-white flex gap-2 items-start"
                 >
                     <input
                         type="checkbox"

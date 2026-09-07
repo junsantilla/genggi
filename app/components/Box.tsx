@@ -1,27 +1,30 @@
 export default function Box({
-  title,
-  children,
-  border = "#6699cc",
-  bg = "#f5f9ff",
-  className = "",
+    title,
+    children,
+    border = "#6699cc",
+    bg = "#f5f9ff",
+    className = "",
 }: {
-  title: string;
-  children: React.ReactNode;
-  border?: string;
-  bg?: string;
-  className?: string;
+    title: string;
+    children: React.ReactNode;
+    border?: string;
+    bg?: string;
+    className?: string;
 }) {
-  return (
-    <div className={`box border mb-3 ${className}`} style={{ borderColor: border }}>
-      <div
-        className="box-title text-white font-bold px-1.5 py-0.5 text-[13px]"
-        style={{ background: border }}
-      >
-        {title}
-      </div>
-      <div className="box-content p-1.5 px-2" style={{ background: bg }}>
-        {children}
-      </div>
-    </div>
-  );
+    return (
+        <div
+            className={`box border mb-3 ${className}`}
+            style={{ borderColor: border }}
+        >
+            <div
+                className="box-title text-white font-bold px-3 py-1 text-[13px]"
+                style={{ background: border }}
+            >
+                {title}
+            </div>
+            <div className="box-content p-3" style={{ background: bg }}>
+                {children}
+            </div>
+        </div>
+    );
 }

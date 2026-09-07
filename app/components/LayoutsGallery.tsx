@@ -149,7 +149,7 @@ export default function LayoutsGallery({
                         >
                             <Link
                                 href={`/layouts/${layout.id}`}
-                                className="flex h-36 items-center justify-center bg-[#f5f9ff] no-underline"
+                                className="flex h-46 items-center justify-center bg-[#f5f9ff] no-underline"
                                 aria-label={`View ${layout.name}`}
                             >
                                 {layout.screenshot ? (
@@ -157,7 +157,7 @@ export default function LayoutsGallery({
                                     <img
                                         src={optimizeCloudinaryUrl(
                                             layout.screenshot,
-                                            { width: 480, height: 220 },
+                                            { width: 480, height: 320 },
                                         )}
                                         alt={`${layout.name} screenshot`}
                                         className="h-full w-full object-cover"
@@ -168,7 +168,7 @@ export default function LayoutsGallery({
                                     </span>
                                 )}
                             </Link>
-                            <div className="p-2">
+                            <div className="p-3">
                                 <h2 className="font-bold">
                                     <Link
                                         href={`/layouts/${layout.id}`}
@@ -200,8 +200,8 @@ export default function LayoutsGallery({
                                     >
                                         View
                                     </Link>
-                                    {currentUserId && (
-                                        onboardingMode ? (
+                                    {currentUserId &&
+                                        (onboardingMode ? (
                                             <Link
                                                 href={`/onboarding?layout=${layout.id}`}
                                                 className="btn no-underline"
@@ -212,16 +212,19 @@ export default function LayoutsGallery({
                                             <button
                                                 type="button"
                                                 className="btn"
-                                                onClick={() => applyLayout(layout)}
-                                                disabled={applyingId === layout.id}
+                                                onClick={() =>
+                                                    applyLayout(layout)
+                                                }
+                                                disabled={
+                                                    applyingId === layout.id
+                                                }
                                                 title="Warning: replaces your current profile CSS"
                                             >
                                                 {applyingId === layout.id
                                                     ? "Applying..."
                                                     : "Use Layout"}
                                             </button>
-                                        )
-                                    )}
+                                        ))}
                                     {layout.authorId === currentUserId && (
                                         <button
                                             type="button"
