@@ -328,6 +328,7 @@ export default function VidCard({
             {commentsOpen && (
                 <VidComments
                     vidId={vid._id}
+                    totalCount={commentCount}
                     isLoggedIn={isLoggedIn}
                     currentUserId={currentUserId}
                     canModerate={canModerate}

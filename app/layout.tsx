@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     }}
                 />
             </head>
-            <body className="m-0 p-0 font-sans text-[13px] text-black">
+            <body className="m-0 p-0 font-sans text-[13px] text-black min-h-screen flex flex-col">
                 <SiteThemeProvider>
                     <NavBar
                         isLoggedIn={!!user}
@@ -66,7 +66,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                         isAdmin={isAdmin}
                         counts={counts}
                     />
-                    <main className={user ? "py-2" : ""}>{children}</main>
+                    <main className={`flex-1 ${user ? "py-2" : ""}`}>
+                        {children}
+                    </main>
                     <Footer />
                 </SiteThemeProvider>
                 {process.env.NODE_ENV === "production" && !isAdmin && (

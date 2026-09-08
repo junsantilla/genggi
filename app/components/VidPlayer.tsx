@@ -4,31 +4,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import type { SerializedVid } from "@/lib/types";
 
-// Browsers block unmuted autoplay until the user has interacted with the
-// page, so videos start muted. After the first click/tap/keypress anywhere,
-// autoplay with sound is allowed — the same behavior Facebook and TikTok
-// rely on.
-let userInteracted = false;
-const interactionListeners = new Set<() => void>();
+// Global mute preference across all video slides in the feed.
+// Videos default to unmuted (with sound) until the user explicitly toggles mute.
+let globalMuted = false;
+const muteListeners = new Set<(muted: boolean) => void>();
 
-function handleInteraction() {
-    if (userInteracted) return;
-    userInteracted = true;
-    for (const listener of interactionListeners) listener();
+export function resetGlobalMuted() {
+    globalMuted = false;
+    for (const listener of muteListeners) {
+        listener(false);
+    }
 }
 
-if (typeof window !== "undefined") {
-    const passive = { passive: true } as AddEventListenerOptions;
-    window.addEventListener("pointerdown", handleInteraction, passive);
-    window.addEventListener("keydown", handleInteraction, passive);
-    window.addEventListener("touchstart", handleInteraction, passive);
-    window.addEventListener("wheel", handleInteraction, passive);
+function setGlobalMuted(nextMuted: boolean) {
+    globalMuted = nextMuted;
+    for (const listener of muteListeners) {
+        listener(nextMuted);
+    }
 }
 
-// HTML5 video player for a single Vid. Autoplays (muted until the user has
-// interacted with the page) and loops when the slide becomes active; pauses
-// when it leaves the screen. Only the active video in the feed plays, so
-// multiple videos never sound/play at once.
+// HTML5 video player for a single Vid. Autoplays (muted by default) and loops
+// when the slide becomes active; pauses when it leaves the screen. Only the
+// active video in the feed plays, and mute preferences are preserved across slides.
 export default function VidPlayer({
     vid,
     active,
@@ -40,32 +37,28 @@ export default function VidPlayer({
 }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const [muted, setMuted] = useState(true);
+    const [muted, setMuted] = useState(globalMuted);
     const [progress, setProgress] = useState(0);
     const [ready, setReady] = useState(false);
     // Landscape videos are shown uncropped (object-contain, vertically
     // centered) inside the portrait frame; portrait videos keep object-cover.
     const [fit, setFit] = useState<"cover" | "contain">("cover");
 
-    // Once the user interacts with the page, unmute any video that is already
-    // playing (Facebook-style), so the very first video gains sound too.
+    // Synchronize mute state across all mounted VidPlayer instances.
     useEffect(() => {
-        const listener = () => {
-            const video = videoRef.current;
-            if (video && !video.paused && video.muted) {
-                video.muted = false;
-                setMuted(false);
+        const syncMute = (newMuted: boolean) => {
+            setMuted(newMuted);
+            if (videoRef.current) {
+                videoRef.current.muted = newMuted;
             }
         };
-        interactionListeners.add(listener);
+        muteListeners.add(syncMute);
         return () => {
-            interactionListeners.delete(listener);
+            muteListeners.delete(syncMute);
         };
     }, []);
 
-    // Drive playback from the active flag. Playing state is derived from the
-    // video element's own play/pause events below, never set synchronously in
-    // this effect.
+    // Drive playback from the active flag.
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -73,13 +66,13 @@ export default function VidPlayer({
             video.pause();
             return;
         }
-        // After the first interaction, start videos with sound like
-        // Facebook/TikTok; if the browser still blocks it, retry muted.
-        if (userInteracted && video.muted) {
-            video.muted = false;
-            setMuted(false);
-        }
+
+        // Apply the current global mute preference.
+        video.muted = globalMuted;
+        setMuted(globalMuted);
+
         video.play().catch(() => {
+            // If the browser blocks unmuted playback, fallback to muted for this playback.
             if (!video.muted) {
                 video.muted = true;
                 setMuted(true);
@@ -101,8 +94,10 @@ export default function VidPlayer({
     const toggleMute = useCallback(() => {
         const video = videoRef.current;
         if (!video) return;
-        video.muted = !video.muted;
-        setMuted(video.muted);
+        const next = !video.muted;
+        video.muted = next;
+        setMuted(next);
+        setGlobalMuted(next);
     }, []);
 
     return (
