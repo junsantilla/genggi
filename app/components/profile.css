@@ -1,0 +1,502 @@
+/* ------------------------------------------------------------------
+ * Profile pages — plain CSS (no Tailwind).
+ *
+ * Everything here is scoped under `.profile-page`, so user custom CSS
+ * from Edit Profile targets stable semantic class names instead of
+ * fighting Tailwind utilities.
+ *
+ * Load order: globals.css -> profile.css -> user <style> injected
+ * inside `.profile-page`. Equal specificity + later order means user
+ * rules win WITHOUT needing `!important`.
+ *
+ * Hooks: .profile-page, .profile-content, .profile-layout,
+ * .profile-main-column, .profile-sidebar, .profile-intro,
+ * .profile-photo-column, .profile-photo, .profile-actions,
+ * .profile-report, .profile-details, .profile-brief-table,
+ * .profile-views-count, .profile-interests, .profile-music,
+ * .profile-about, .profile-meet, .profile-testimonials,
+ * .profile-vids, .bulletin-board, .profile-friends, .profile-footer
+ * ------------------------------------------------------------------ */
+
+/* Root: was `profile-page w-full py-2` */
+.profile-page {
+    width: 100%;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* Centered content column: was `profile-content max-w-[960px] w-full mx-auto` */
+.profile-content {
+    width: 100%;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Two-column layout: was `flex flex-wrap w-full` */
+.profile-layout {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.profile-main-column {
+    width: 100%;
+    padding-bottom: 0;
+}
+
+.profile-sidebar {
+    width: 100%;
+    padding-top: 0;
+}
+
+@media (min-width: 640px) {
+    .profile-main-column {
+        width: 66.6667%;
+        padding-bottom: 10px;
+        padding-right: 5px;
+    }
+    .profile-sidebar {
+        width: 33.3333%;
+        padding-left: 5px;
+    }
+}
+
+/* ---- Blocked / private states ---- */
+
+.profile-blocked {
+    width: 100%;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 24px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.profile-blocked-title {
+    font-weight: 700;
+    color: #cc3399;
+    font-size: 18px;
+    margin: 0 0 4px;
+}
+
+.profile-blocked-text {
+    color: #6b7280;
+    margin: 0;
+}
+
+.profile-private {
+    padding: 24px;
+    text-align: center;
+}
+
+.profile-private-title {
+    font-weight: 700;
+    color: #2c4d80;
+    font-size: 18px;
+    margin: 0 0 4px;
+}
+
+.profile-private-text {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* ---- Intro box ---- */
+
+.profile-intro-body {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.profile-photo-column {
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .profile-photo-column {
+        width: 220px;
+        flex-shrink: 0;
+        padding-right: 10px;
+    }
+}
+
+.profile-photo {
+    width: 100%;
+    object-fit: cover;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 8px;
+    padding: 4px;
+}
+
+.profile-details {
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .profile-details {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* Brief table: was `w-full` + cell utilities */
+.profile-brief-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-brief-label,
+.profile-brief-value {
+    padding: 2px 4px;
+    vertical-align: top;
+    text-align: left;
+}
+
+.profile-brief-label {
+    font-weight: 700;
+    color: #2c4d80;
+    width: 120px;
+}
+
+/* Profile-views counter chip */
+.profile-views-count {
+    background: #000;
+    color: #0f0;
+    font-family: var(--font-geist-mono), monospace;
+    padding: 2px 6px;
+    display: inline-block;
+    border: 1px solid #333;
+}
+
+/* ---- Actions ---- */
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 260px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+}
+
+@media (min-width: 640px) {
+    .profile-actions {
+        max-width: none;
+        width: 200px;
+    }
+}
+
+.profile-actions .btn {
+    width: 100%;
+}
+
+/* Links styled as buttons */
+.profile-btn-link {
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+/* Report disclosure */
+.profile-report {
+    width: 100%;
+}
+
+.profile-report-summary {
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    list-style: none;
+}
+
+.profile-report-body {
+    margin-top: 4px;
+}
+
+/* ---- Generic profile text ---- */
+
+.profile-paragraph {
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+.profile-empty {
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Interests */
+.profile-interests-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.profile-interest-tag {
+    background: #dbe9f7;
+    border: 1px solid #6699cc;
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 4px;
+}
+
+/* ---- Testimonials ---- */
+
+.profile-pending-box {
+    margin-bottom: 8px;
+    border: 1px dashed #cc99cc;
+    padding: 6px;
+}
+
+.profile-pending-title {
+    font-weight: 700;
+    font-size: 11px;
+    color: #cc3399;
+    margin: 0 0 4px;
+}
+
+.profile-testimonial {
+    border-bottom: 1px dotted #99bbdd;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.profile-testimonial-spaced {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.profile-testimonial-flush:last-child {
+    border-bottom: 0;
+}
+
+.profile-testimonial-author {
+    color: #cc3399;
+    font-weight: 700;
+}
+
+.profile-testimonial-time {
+    color: #6b7280;
+    font-size: 11px;
+}
+
+.profile-testimonial-actions {
+    margin-top: 4px;
+    display: flex;
+    gap: 6px;
+}
+
+.profile-testimonial-form {
+    margin-top: 8px;
+    border-top: 1px solid #99bbdd;
+    padding-top: 8px;
+}
+
+.profile-testimonial-form-title {
+    font-weight: 700;
+    font-size: 11px;
+    color: #2c4d80;
+    margin: 0 0 4px;
+}
+
+/* ---- Friends ---- */
+
+.profile-friends-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+@media (min-width: 361px) {
+    .profile-friends-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 640px) {
+    .profile-friends-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile-friends-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.profile-friend-card {
+    min-width: 0;
+    text-align: center;
+    font-size: 11px;
+}
+
+.profile-friend-photo-link {
+    display: block;
+}
+
+.profile-friend-photo {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2px;
+}
+
+.profile-friend-name {
+    color: #003399;
+    text-decoration: none;
+    font-weight: 700;
+    overflow-wrap: break-word;
+}
+
+.profile-friend-name:hover {
+    text-decoration: underline;
+}
+
+.profile-friends-footer {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.profile-link {
+    color: #003399;
+}
+
+/* ---- Profile vids strip ---- */
+
+.profile-vids-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.profile-vid-card {
+    position: relative;
+    display: block;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    border: 1px solid #6699cc;
+    background: #000;
+}
+
+.profile-vid-thumb {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-vid-fallback {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-vid-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0);
+}
+
+.profile-vid-card:hover .profile-vid-overlay {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.profile-vid-play {
+    color: #fff;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+.profile-vid-views {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.profile-vids-footer {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.profile-vids-browse {
+    color: #003399;
+    text-decoration: none;
+}
+
+.profile-vids-browse:hover {
+    text-decoration: underline;
+}
+
+/* ---- Profile music player ---- */
+
+.profile-music-player {
+    position: relative;
+    border: 1px solid #99bbdd;
+    background: #fff;
+    padding: 6px;
+    margin-top: 8px;
+}
+
+.profile-music-iframe {
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.profile-music-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-music-title {
+    font-weight: 700;
+    color: #2c4d80;
+    font-size: 13px;
+    margin-right: auto;
+}
+
+.profile-music-player .btn {
+    font-size: 11px;
+    padding: 2px 8px;
+    min-height: 0;
+}
+
+/* ---- Bulletin posts inside a profile ----
+ * PostCard is shared with the bulletin / group feeds (still Tailwind
+ * there), so this only provides stable hooks for user CSS. */
+
+.bulletin-board-posts {
+    width: 100%;
+}

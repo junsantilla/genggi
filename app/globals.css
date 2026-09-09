@@ -232,6 +232,23 @@ main:has(.vids-page) ~ footer {
     margin-bottom: 2px;
 }
 
+/* Box: plain-CSS panel used across the site (no Tailwind). */
+.box {
+    border: 1px solid #6699cc;
+    margin-bottom: 12px;
+}
+.box-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 4px 12px;
+    overflow-wrap: break-word;
+}
+.box-content {
+    padding: 12px;
+    overflow-wrap: break-word;
+}
+
 /* Style the native file input's "Choose File" button to match .btn */
 .input {
     min-height: 32px;
@@ -272,6 +289,30 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 textarea,
 select {
     font-size: 16px;
+}
+
+/* Shared form helpers (no Tailwind) for ActionButton / BoundForm. */
+.action-button {
+    display: inline-block;
+}
+.action-button-error {
+    display: block;
+    color: #dc2626;
+    font-size: 11px;
+    margin-top: 2px;
+}
+.bound-form-error {
+    color: #dc2626;
+    font-size: 11px;
+    margin-top: 4px;
+}
+.bound-form-success {
+    color: #15803d;
+    font-weight: 700;
+    margin-top: 8px;
+}
+.bound-form-actions {
+    margin-top: 6px;
 }
 
 /* Profile theme: form controls inside a profile page follow the user's theme */

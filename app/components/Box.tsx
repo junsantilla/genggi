@@ -12,17 +12,11 @@ export default function Box({
     className?: string;
 }) {
     return (
-        <div
-            className={`box border mb-3 ${className}`}
-            style={{ borderColor: border }}
-        >
-            <div
-                className="box-title text-white font-bold px-3 py-1 text-[13px]"
-                style={{ background: border }}
-            >
+        <div className={`box ${className}`} style={{ borderColor: border }}>
+            <div className="box-title" style={{ background: border }}>
                 {title}
             </div>
-            <div className="box-content p-3" style={{ background: bg }}>
+            <div className="box-content" style={{ background: bg }}>
                 {children}
             </div>
         </div>

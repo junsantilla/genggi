@@ -11,11 +11,8 @@ export default function BulletinBox({
     className?: string;
 }) {
     return (
-        <div className={`box mb-3 ${className}`}>
-            <div
-                className="box-title text-white font-bold px-3 py-1 text-[13px]"
-                style={{ background: border }}
-            >
+        <div className={`${className}`}>
+            <div className="box-title" style={{ background: border }}>
                 {title}
             </div>
             <div className="">{children}</div>

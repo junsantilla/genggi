@@ -25,7 +25,7 @@ export default function ActionButton({
   const [error, setError] = useState("");
 
   return (
-    <span className="inline-block">
+    <span className="action-button">
       <button
         type="button"
         disabled={pending || disabled}
@@ -42,7 +42,7 @@ export default function ActionButton({
       >
         {pending ? "..." : children}
       </button>
-      {error && !hideError && <span className="block text-red-600 text-[11px] mt-0.5">{error}</span>}
+      {error && !hideError && <span className="action-button-error">{error}</span>}
     </span>
   );
 }

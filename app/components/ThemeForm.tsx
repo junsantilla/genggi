@@ -84,13 +84,17 @@ export default function ThemeForm({
                     placeholder={`/* Full-width background + centered content */\n.profile-page {\n  background: #fff0f8 url("https://example.com/background.jpg") center top / cover fixed;\n}\n\n.profile-content {\n  background: rgba(255, 255, 255, 0.95);\n}\n\n.profile-page .profile-friends .box-title {\n  background: #cc3399 !important;\n}`}
                 />
                 <p className="text-gray-500 text-[11px] mt-1">
-                    Hooks: .profile-page, .profile-content, .profile-intro,
+                    Hooks: .profile-page, .profile-content, .profile-layout,
+                    .profile-main-column, .profile-sidebar, .profile-intro,
                     .profile-photo, .profile-actions, .profile-details,
-                    .profile-views, .profile-interests, .profile-music,
-                    .profile-about, .profile-meet, .profile-testimonials,
-                    .bulletin-board, .profile-sidebar, .profile-friends,
-                    .profile-friends-grid, .profile-friend-card,
-                    .profile-friend-photo, .profile-footer
+                    .profile-brief-label, .profile-views-count,
+                    .profile-interests-list, .profile-interest-tag,
+                    .profile-music, .profile-music-player, .profile-about,
+                    .profile-meet, .profile-testimonials, .profile-vids,
+                    .bulletin-board, .bulletin-board-posts, .post-card,
+                    .profile-friends, .profile-friends-grid,
+                    .profile-friend-card, .profile-friend-photo, .box,
+                    .box-title, .box-content
                 </p>
             </div>
             <div className="col-span-2">

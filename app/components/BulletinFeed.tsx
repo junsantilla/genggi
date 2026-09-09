@@ -67,7 +67,10 @@ export default function BulletinFeed({
     }, []);
 
     return (
-        <BulletinBox title=" Bulletin Board" className="bulletin-board border">
+        <BulletinBox
+            title=" Bulletin Board"
+            className="bulletin-board border border-none"
+        >
             <BulletinPostForm onPosted={onPosted} friends={friends} />
             {posts.length === 0 ? (
                 <p className="text-gray-500 italic ">

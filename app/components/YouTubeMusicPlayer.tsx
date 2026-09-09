@@ -109,7 +109,7 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
 
     return (
         <div
-            className="profile-music-player relative border border-[#99bbdd] bg-white p-1.5 mt-2"
+            className="profile-music-player"
             aria-label="Profile music player"
         >
             <iframe
@@ -117,12 +117,12 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
                 src={embedUrl}
                 title="Profile music"
                 allow="autoplay; encrypted-media"
-                className="absolute h-px w-px opacity-0 pointer-events-none"
+                className="profile-music-iframe"
                 onLoad={handleIframeLoad}
             />
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="profile-music-row">
                 <span
-                    className="font-bold text-[#2c4d80] text-[13px] mr-auto"
+                    className="profile-music-title"
                     title={videoTitle ?? "Profile music"}
                 >
                     {" "}
@@ -131,7 +131,7 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
                 {playing ? (
                     <button
                         type="button"
-                        className="btn btn-ghost text-[11px] px-2 py-0.5"
+                        className="btn btn-ghost"
                         onClick={pause}
                     >
                         ❚❚
@@ -139,7 +139,7 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
                 ) : (
                     <button
                         type="button"
-                        className="btn btn-ghost text-[11px] px-2 py-0.5"
+                        className="btn btn-ghost"
                         onClick={play}
                     >
                         ▶
@@ -147,19 +147,12 @@ export default function YouTubeMusicPlayer({ videoId }: { videoId?: string }) {
                 )}
                 <button
                     type="button"
-                    className="btn btn-ghost text-[11px] px-2 py-0.5"
+                    className="btn btn-ghost"
                     onClick={toggleMuted}
                 >
                     {muted ? "🔊" : "🔇"}
                 </button>
             </div>
-            {/* {(muted || !playing) && (
-                <p className="text-gray-500 text-[10px] m-0 mt-1">
-                    {muted
-                        ? "Starts muted, then sound unlocks on your first profile interaction."
-                        : "Paused."}
-                </p>
-            )} */}
         </div>
     );
 }

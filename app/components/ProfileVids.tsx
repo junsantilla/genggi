@@ -22,12 +22,12 @@ export default function ProfileVids({
             bg="#f5f9ff"
             className="profile-vids"
         >
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="profile-vids-grid">
                 {vids.map((vid) => (
                     <Link
                         key={vid._id}
                         href={`/vids/${vid._id}`}
-                        className="group relative block aspect-[9/16] overflow-hidden border border-[#6699cc] bg-black"
+                        className="profile-vid-card"
                         aria-label={
                             vid.caption
                                 ? `Play Vid: ${vid.caption.slice(0, 80)}`
@@ -39,33 +39,33 @@ export default function ProfileVids({
                             <img
                                 src={vid.thumbnailUrl}
                                 alt={vid.caption || "Vid thumbnail"}
-                                className="h-full w-full object-cover"
+                                className="profile-vid-thumb"
                                 loading="lazy"
                                 decoding="async"
                             />
                         ) : (
                             <span
-                                className="flex h-full items-center justify-center text-2xl text-white/80"
+                                className="profile-vid-fallback"
                                 aria-hidden="true"
                             >
                                 📹
                             </span>
                         )}
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+                        <span className="profile-vid-overlay">
                             <Play
                                 size={22}
-                                className="text-white drop-shadow"
+                                className="profile-vid-play"
                                 aria-hidden="true"
                             />
                         </span>
-                        <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
+                        <span className="profile-vid-views">
                             {formatCount(vid.viewCount)} views
                         </span>
                     </Link>
                 ))}
             </div>
-            <div className="mt-1.5 text-[12px]">
-                <Link href="/vids" className="text-[#003399] no-underline hover:underline">
+            <div className="profile-vids-footer">
+                <Link href="/vids" className="profile-vids-browse">
                     Browse all Vids »
                 </Link>
             </div>

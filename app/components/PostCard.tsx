@@ -184,7 +184,7 @@ export default function PostCard({
         setOpen(false);
     };
     return (
-        <article className="group-[.bulletin]:border group-[.bulletin]:border-[#99bbdd] mb-1 sm:mb-3 p-3 pb-2 group-[.bulletin]:bg-white">
+        <article className="post-card group-[.bulletin]:border group-[.bulletin]:border-[#99bbdd] mb-1 sm:mb-3 p-3 pb-2 group-[.bulletin]:bg-white">
             <div className="flex gap-2">
                 <Link
                     href={`/${post.author.username}`}

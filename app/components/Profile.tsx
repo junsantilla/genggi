@@ -159,12 +159,12 @@ export default async function Profile({
 
     if (blockedByProfile) {
         return (
-            <div className="max-w-[960px] w-full mx-auto  p-6 text-center text-[13px]">
-                <p className="font-bold text-[#cc3399] text-lg mb-1">
+            <div className="profile-blocked">
+                <p className="profile-blocked-title">
                     {displayNameOrUsername(user.displayName, user.username)} has
                     blocked you.
                 </p>
-                <p className="text-gray-500">
+                <p className="profile-blocked-text">
                     You can&apos;t view this profile or interact with this user.
                 </p>
             </div>
@@ -173,7 +173,7 @@ export default async function Profile({
 
     return (
         <div
-            className="profile-page w-full py-2"
+            className="profile-page"
             style={
                 {
                     "--profile-border": theme.border || "#6699cc",
@@ -183,17 +183,13 @@ export default async function Profile({
             {safeCustomCss && (
                 <style dangerouslySetInnerHTML={{ __html: safeCustomCss }} />
             )}
-            <div
-                id="wrap"
-                className="profile-content max-w-[960px] w-full mx-auto"
-                style={{ borderColor: theme.border }}
-            >
+            <div id="wrap" className="profile-content" style={{ borderColor: theme.border }}>
                 {!canView ? (
-                    <div className="p-6 text-center">
-                        <p className="font-bold text-[#2c4d80] text-lg mb-1">
+                    <div className="profile-private">
+                        <p className="profile-private-title">
                             🔒 This profile is private
                         </p>
-                        <p className="text-gray-500 text-[13px]">
+                        <p className="profile-private-text">
                             {displayNameOrUsername(
                                 user.displayName,
                                 user.username,
@@ -203,31 +199,31 @@ export default async function Profile({
                         </p>
                     </div>
                 ) : (
-                    <div className="flex flex-wrap w-full">
+                    <div className="profile-layout">
                         {/* ---------------- Left column ---------------- */}
-                        <div className="profile-main-column w-full sm:w-2/3 pb-0 sm:pb-2.5 sm:pr-[5px]">
+                        <div className="profile-main-column">
                             <Box
                                 title={`${displayNameOrUsername(user.displayName, user.username)} (@${user.username})`}
                                 border={theme.border}
                                 bg="#f5f9ff"
                                 className="profile-intro"
                             >
-                                <div className="flex flex-wrap">
+                                <div className="profile-intro-body">
                                     {/* Left: photo, name, username, buttons */}
-                                    <div className="w-full sm:w-[220px] sm:shrink-0 sm:pr-2.5">
+                                    <div className="profile-photo-column">
                                         <UserAvatar
                                             src={
                                                 user.photo ||
                                                 "/images/avatar.png"
                                             }
                                             alt={`${displayNameOrUsername(user.displayName, user.username)}'s photo`}
-                                            className="profile-photo w-full object-cover mx-auto mb-2 p-1"
+                                            className="profile-photo"
                                             cloudinaryWidth={440}
                                         />
 
                                         {/* Actions */}
                                         {!isOwner && me && (
-                                            <div className="profile-actions flex flex-col gap-1 max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                                            <div className="profile-actions">
                                                 {friendshipStatus ===
                                                     "none" && (
                                                     <ActionButton
@@ -235,7 +231,7 @@ export default async function Profile({
                                                             null,
                                                             uid,
                                                         )}
-                                                        className="btn w-full"
+                                                        className="btn"
                                                     >
                                                         + Add as Friend
                                                     </ActionButton>
@@ -248,7 +244,7 @@ export default async function Profile({
                                                             outgoingRequest?._id.toString() ||
                                                                 "",
                                                         )}
-                                                        className="btn btn-danger w-full"
+                                                        className="btn btn-danger"
                                                         confirmText={`Cancel your friend request to ${user.displayName}?`}
                                                     >
                                                         Cancel Request
@@ -264,7 +260,7 @@ export default async function Profile({
                                                                     "",
                                                                 true,
                                                             )}
-                                                            className="btn w-full"
+                                                            className="btn"
                                                         >
                                                             Accept Request
                                                         </ActionButton>
@@ -272,7 +268,7 @@ export default async function Profile({
                                                 )}
                                                 <Link
                                                     href={`/messages?to=${user.username}`}
-                                                    className="btn w-full text-center no-underline"
+                                                    className="btn profile-btn-link"
                                                 >
                                                     Send Message
                                                 </Link>
@@ -281,7 +277,7 @@ export default async function Profile({
                                                         null,
                                                         uid,
                                                     )}
-                                                    className="btn w-full"
+                                                    className="btn"
                                                 >
                                                     Poke
                                                 </ActionButton>
@@ -291,7 +287,7 @@ export default async function Profile({
                                                             null,
                                                             uid,
                                                         )}
-                                                        className="btn w-full"
+                                                        className="btn"
                                                     >
                                                         Unblock
                                                     </ActionButton>
@@ -301,17 +297,17 @@ export default async function Profile({
                                                             null,
                                                             uid,
                                                         )}
-                                                        className="btn w-full"
+                                                        className="btn"
                                                         confirmText="Block this user? They won't be able to interact with you."
                                                     >
                                                         Block User
                                                     </ActionButton>
                                                 )}
-                                                <details className="w-full">
-                                                    <summary className="btn w-full text-center cursor-pointer list-none">
+                                                <details className="profile-report">
+                                                    <summary className="btn profile-report-summary">
                                                         Report
                                                     </summary>
-                                                    <div className="mt-1">
+                                                    <div className="profile-report-body">
                                                         <BoundForm
                                                             action={reportUserAction.bind(
                                                                 null,
@@ -329,10 +325,10 @@ export default async function Profile({
                                         )}
 
                                         {isOwner && (
-                                            <div className="profile-actions max-w-[260px] sm:max-w-none sm:w-[200px] mx-auto mb-2.5">
+                                            <div className="profile-actions">
                                                 <Link
                                                     href="/edit"
-                                                    className="btn w-full text-center no-underline block"
+                                                    className="btn profile-btn-link"
                                                 >
                                                     Edit Profile
                                                 </Link>
@@ -341,25 +337,25 @@ export default async function Profile({
                                     </div>
 
                                     {/* Right: brief table */}
-                                    <div className="profile-details w-full sm:flex-1 sm:min-w-0">
-                                        <table className="w-full">
+                                    <div className="profile-details">
+                                        <table className="profile-brief-table">
                                             <tbody>
                                                 {brief.map(([k, v]) => (
                                                     <tr key={k}>
-                                                        <td className="p-0.5 px-1 align-top font-bold text-[#2c4d80] w-[120px]">
+                                                        <td className="profile-brief-label">
                                                             {k}
                                                         </td>
-                                                        <td className="p-0.5 px-1 align-top">
+                                                        <td className="profile-brief-value">
                                                             {v}
                                                         </td>
                                                     </tr>
                                                 ))}
                                                 <tr>
-                                                    <td className="p-0.5 px-1 align-top font-bold text-[#2c4d80] w-[120px]">
+                                                    <td className="profile-brief-label">
                                                         Profile views:
                                                     </td>
-                                                    <td className="p-0.5 px-1 align-top">
-                                                        <span className="bg-black text-[#0f0] font-mono  px-1.5 py-0.5 inline-block border border-[#333]">
+                                                    <td className="profile-brief-value">
+                                                        <span className="profile-views-count">
                                                             {padViews(
                                                                 user.profileViews,
                                                             )}
@@ -383,18 +379,18 @@ export default async function Profile({
                                 className="profile-interests"
                             >
                                 {user.interests.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1">
+                                    <div className="profile-interests-list">
                                         {user.interests.map((i) => (
                                             <span
                                                 key={i}
-                                                className="bg-[#dbe9f7] border border-[#6699cc] px-1.5 py-0.5 text-[11px] rounded"
+                                                className="profile-interest-tag"
                                             >
                                                 {i}
                                             </span>
                                         ))}
                                     </div>
                                 ) : (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         No interests added yet.
                                     </span>
                                 )}
@@ -407,12 +403,12 @@ export default async function Profile({
                                 className="profile-music"
                             >
                                 {user.favoriteSong ? (
-                                    <p className="">
+                                    <p className="profile-paragraph">
                                         <b>Favorite song:</b> “
                                         {user.favoriteSong}”
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         No favorite song set.
                                     </span>
                                 )}
@@ -425,11 +421,11 @@ export default async function Profile({
                                 className="profile-about"
                             >
                                 {user.aboutMe ? (
-                                    <p className="whitespace-pre-wrap">
+                                    <p className="profile-paragraph">
                                         {user.aboutMe}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         Hey everyone!! welcome to my profile
                                         lol. (edit your About Me!)
                                     </span>
@@ -445,11 +441,11 @@ export default async function Profile({
                                 className="profile-meet"
                             >
                                 {user.whoIdLikeToMeet ? (
-                                    <p className="whitespace-pre-wrap">
+                                    <p className="profile-paragraph">
                                         {user.whoIdLikeToMeet}
                                     </p>
                                 ) : (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         People who don&apos;t take life too
                                         seriously.
                                     </span>
@@ -473,25 +469,25 @@ export default async function Profile({
                                 className="profile-testimonials"
                             >
                                 {pendingTestimonials.length > 0 && (
-                                    <div className="mb-2 border border-dashed border-[#cc99cc] p-1.5">
-                                        <p className="font-bold text-[11px] text-[#cc3399] mb-1">
+                                    <div className="profile-pending-box">
+                                        <p className="profile-pending-title">
                                             Pending approval (
                                             {pendingTestimonials.length})
                                         </p>
                                         {pendingTestimonials.map((t) => (
                                             <div
                                                 key={t._id.toString()}
-                                                className="border-b border-dotted border-[#99bbdd] py-1"
+                                                className="profile-testimonial"
                                             >
-                                                <span className="text-[#cc3399] font-bold">
+                                                <span className="profile-testimonial-author">
                                                     {authorName(t.authorId)}
                                                 </span>{" "}
-                                                <span className="text-gray-500 text-[11px]">
+                                                <span className="profile-testimonial-time">
                                                     {timeAgo(t.createdAt)}
                                                 </span>
                                                 <br />
                                                 {t.body}
-                                                <div className="mt-1 flex gap-1.5">
+                                                <div className="profile-testimonial-actions">
                                                     <ActionButton
                                                         action={approveTestimonialAction.bind(
                                                             null,
@@ -518,25 +514,25 @@ export default async function Profile({
 
                                 {testimonials.length === 0 &&
                                 pendingTestimonials.length === 0 ? (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         No testimonials yet.
                                     </span>
                                 ) : (
                                     testimonials.map((t) => (
                                         <div
                                             key={t._id.toString()}
-                                            className="border-b border-dotted border-[#99bbdd] py-1.5 last:border-0"
+                                            className="profile-testimonial profile-testimonial-spaced profile-testimonial-flush"
                                         >
-                                            <span className="text-[#cc3399] font-bold">
+                                            <span className="profile-testimonial-author">
                                                 {authorName(t.authorId)}
                                             </span>{" "}
-                                            <span className="text-gray-500 text-[11px]">
+                                            <span className="profile-testimonial-time">
                                                 wrote {timeAgo(t.createdAt)}
                                             </span>
                                             <br />
                                             {t.body}
                                             {isOwner && (
-                                                <div className="mt-1">
+                                                <div className="profile-testimonial-actions">
                                                     <ActionButton
                                                         action={deleteTestimonialAction.bind(
                                                             null,
@@ -553,8 +549,8 @@ export default async function Profile({
                                 )}
 
                                 {!isOwner && me && (
-                                    <div className="mt-2 border-t border-[#99bbdd] pt-2">
-                                        <p className="font-bold text-[11px] text-[#2c4d80] mb-1">
+                                    <div className="profile-testimonial-form">
+                                        <p className="profile-testimonial-form-title">
                                             Leave a testimonial:
                                         </p>
                                         <BoundForm
@@ -574,7 +570,7 @@ export default async function Profile({
                         </div>
 
                         {/* ---------------- Right column ---------------- */}
-                        <div className="profile-sidebar w-full sm:w-1/3 pt-0 sm:pl-[5px]">
+                        <div className="profile-sidebar">
                             {/* Six most recent friends */}
                             <Box
                                 title={`${displayNameOrUsername(user.displayName, user.username).split(" ")[0]}'s Friends (recent ${topFriends.length})`}
@@ -583,20 +579,20 @@ export default async function Profile({
                                 className="profile-friends"
                             >
                                 {topFriends.length === 0 ? (
-                                    <span className="text-gray-500 italic ">
+                                    <span className="profile-empty">
                                         No friends yet.
                                     </span>
                                 ) : (
                                     <>
-                                        <div className="profile-friends-grid grid grid-cols-2 min-[361px]:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                                        <div className="profile-friends-grid">
                                             {topFriends.map((f) => (
                                                 <div
                                                     key={f._id.toString()}
-                                                    className="profile-friend-card min-w-0 text-center text-[11px]"
+                                                    className="profile-friend-card"
                                                 >
                                                     <Link
                                                         href={`/${f.username}`}
-                                                        className="block"
+                                                        className="profile-friend-photo-link"
                                                     >
                                                         <UserAvatar
                                                             src={
@@ -607,7 +603,7 @@ export default async function Profile({
                                                                 f.displayName,
                                                                 f.username,
                                                             )}
-                                                            className="profile-friend-photo w-[60px] h-[60px] object-cover mx-auto mb-0.5"
+                                                            className="profile-friend-photo"
                                                             cloudinaryWidth={
                                                                 120
                                                             }
@@ -615,7 +611,7 @@ export default async function Profile({
                                                     </Link>
                                                     <Link
                                                         href={`/${f.username}`}
-                                                        className="text-[#003399] no-underline font-bold break-words"
+                                                        className="profile-friend-name"
                                                     >
                                                         {displayNameOrUsername(
                                                             f.displayName,
@@ -625,16 +621,16 @@ export default async function Profile({
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1 text-[13px]">
+                                        <div className="profile-friends-footer">
                                             <Link
                                                 href={`/${user.username}/friends`}
-                                                className="text-[#003399]"
+                                                className="profile-link"
                                             >
                                                 View All Friends »
                                             </Link>
                                             {/* <Link
                                                 href={`/${user.username}/friends`}
-                                                className="text-[#003399]"
+                                                className="profile-link"
                                             >
                                                 Friends page
                                             </Link> */}

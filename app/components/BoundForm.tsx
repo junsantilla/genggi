@@ -45,11 +45,11 @@ export default function BoundForm({
             ) : (
                 <input name={name} placeholder={placeholder} className="input" required />
             )}
-            {state.error && <div className="text-red-600 text-[11px] mt-1">{state.error}</div>}
+            {state.error && <div className="bound-form-error">{state.error}</div>}
             {state.ok && successMessage && (
-                <div className="text-green-700 font-bold mt-2">{successMessage}</div>
+                <div className="bound-form-success">{successMessage}</div>
             )}
-            <div className="mt-1.5">
+            <div className="bound-form-actions">
                 <button type="submit" disabled={pending} className={submitClassName}>
                     {pending ? "..." : submitLabel}
                 </button>
