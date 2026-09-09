@@ -567,6 +567,35 @@ export async function cleanupAbandonedVids(): Promise<number> {
   return stale.length;
 }
 
+// Lets an owner recover immediately from unfinished uploads instead of waiting
+// for the 24-hour abandoned-upload cleanup window. This is intentionally
+// limited to non-published records and is used by the upload page's recovery
+// button when the in-progress limit has been reached.
+export async function deleteUserUnpublishedVids(userId: string): Promise<number> {
+  const db = getDb();
+  const vids = (await db
+    .collection("vids")
+    .find(
+      {
+        userId: new ObjectId(userId),
+        status: { $in: ["uploading", "processing", "failed"] },
+      },
+      { projection: { _id: 1, videoKey: 1, thumbnailKey: 1 } },
+    )
+    .toArray()) as unknown as { _id: ObjectId; videoKey: string; thumbnailKey: string | null }[];
+
+  if (vids.length === 0) return 0;
+
+  await Promise.all(
+    vids.flatMap((vid) => [
+      deleteObject(vid.videoKey).catch(() => {}),
+      deleteObject(vid.thumbnailKey).catch(() => {}),
+    ]),
+  );
+  await db.collection("vids").deleteMany({ _id: { $in: vids.map((vid) => vid._id) } });
+  return vids.length;
+}
+
 // --------------------------------------------------------- Rate limiting
 
 // A user may start at most VID_MAX_UPLOADS_PER_HOUR uploads per hour and keep

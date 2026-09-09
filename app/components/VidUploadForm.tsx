@@ -3,11 +3,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pause, Play, X } from "lucide-react";
-import { finishVidAction, deleteVidAction } from "@/app/actions";
+import {
+    clearUnpublishedVidsAction,
+    finishVidAction,
+    deleteVidAction,
+} from "@/app/actions";
 
 const MAX_BYTES = 100 * 1024 * 1024; // 100 MB
 const ALLOWED_EXTENSIONS = /\.(mp4|mov|webm|mkv)$/i;
 const ALLOWED_MIME = /^video\/(mp4|quicktime|webm|x-matroska)$/i;
+
+function readableUploadError(status: number): string {
+    if (status === 413) {
+        return "This video is too large for the upload server. Maximum size is 100 MB.";
+    }
+    if (status === 401) return "Your session expired. Please sign in again.";
+    if (status === 415) return "Unsupported format. Please upload an MP4, MOV, or WebM video.";
+    if (status >= 500) {
+        return "The video storage service could not accept this upload. Please try again.";
+    }
+    return "Upload failed. Please try again.";
+}
 
 type Phase =
     | "idle" // no file selected
@@ -40,6 +56,7 @@ export default function VidUploadForm() {
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState("");
     const [vidId, setVidId] = useState<string | null>(null);
+    const [clearingUploads, setClearingUploads] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -147,6 +164,9 @@ export default function VidUploadForm() {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
         xhr.open("POST", "/api/vids/upload");
+        // Keep this above the server's 5-minute route budget so the user gets
+        // a useful timeout message instead of a generic network failure.
+        xhr.timeout = 5 * 60 * 1000;
         xhr.setRequestHeader("Content-Type", file.type);
 
         xhr.upload.onprogress = (event) => {
@@ -172,7 +192,7 @@ export default function VidUploadForm() {
                 }
                 return;
             }
-            let message = "Upload failed. Please try again.";
+            let message = readableUploadError(xhr.status);
             try {
                 const data = JSON.parse(xhr.responseText) as { error?: string };
                 if (data.error) message = data.error;
@@ -187,6 +207,12 @@ export default function VidUploadForm() {
             xhrRef.current = null;
             setPhase("ready");
             setError("Network error. Please check your connection and try again.");
+        };
+
+        xhr.ontimeout = () => {
+            xhrRef.current = null;
+            setPhase("ready");
+            setError("The upload took too long and timed out. Please try again on a faster connection.");
         };
 
         xhr.onabort = () => {
@@ -425,10 +451,34 @@ export default function VidUploadForm() {
                     Back to Vids
                 </button>
             </div>
-            <p className="mt-2 flex items-center gap-1 text-[11px] text-gray-500">
-                <X size={12} aria-hidden="true" /> Cancel at any time — unfinished
-                uploads are cleaned up automatically.
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+                <p className="flex items-center gap-1">
+                    <X size={12} aria-hidden="true" /> Cancel at any time — unfinished
+                    uploads are cleaned up automatically.
+                </p>
+                {(phase === "idle" || phase === "ready") && (
+                    <button
+                        type="button"
+                        className="btn btn-ghost text-[11px]"
+                        disabled={clearingUploads}
+                        onClick={async () => {
+                            setClearingUploads(true);
+                            setError("");
+                            try {
+                                const result = await clearUnpublishedVidsAction();
+                                if (result.error) setError(result.error);
+                                else setError("Unfinished uploads cleared. You can try again now.");
+                            } catch {
+                                setError("Could not clear unfinished uploads. Please try again.");
+                            } finally {
+                                setClearingUploads(false);
+                            }
+                        }}
+                    >
+                        {clearingUploads ? "Clearing..." : "Clear unfinished uploads"}
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

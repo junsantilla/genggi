@@ -30,6 +30,7 @@ import {
     parseHashtags,
     validateVidMetadata,
     cleanupAbandonedVids,
+    deleteUserUnpublishedVids,
     VID_MAX_CAPTION_LENGTH,
 } from "@/lib/vids";
 import { processVideo } from "@/lib/video-processing";
@@ -2736,6 +2737,13 @@ export async function deleteBugReportAction(
 }
 
 // ---------------------------------------------------------------- Vids
+
+export async function clearUnpublishedVidsAction(): Promise<ActionResult> {
+    const user = await requireUser();
+    await deleteUserUnpublishedVids(user._id.toString());
+    revalidatePath("/vids/upload");
+    return { ok: true };
+}
 
 export async function finishVidAction(
     vidId: string,

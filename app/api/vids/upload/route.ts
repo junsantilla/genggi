@@ -15,12 +15,21 @@ import { processVideo } from "@/lib/video-processing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// A 100 MB upload can take longer than the platform default, especially on a
+// mobile connection. Hosting providers must still allow request bodies this
+// size; this setting only communicates the route's execution budget.
+export const maxDuration = 300;
 
 // Opportunistic cleanup: every 25th upload sweeps abandoned uploads so R2
 // never accumulates orphaned objects between scheduled/admin runs.
 let uploadCounter = 0;
 
 export async function POST(request: NextRequest) {
+    // Keep these outside the main try block so any exception after the record
+    // is created can release the user's in-progress slot as well.
+    let createdVidId: ObjectId | null = null;
+    let createdVideoKey: string | null = null;
+
     try {
         const user = await getCurrentUser();
         if (!user) {
@@ -76,6 +85,8 @@ export async function POST(request: NextRequest) {
         // becomes part of the storage path.
         const key = vidVideoKey(userId, vidId.toString());
         const videoUrl = publicUrlForKey(key);
+        createdVidId = vidId;
+        createdVideoKey = key;
 
         await db.collection("vids").insertOne({
             _id: vidId,
@@ -148,6 +159,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, vidId: vidId.toString() });
     } catch (error) {
         console.error("Vid upload failed:", error);
+        // Errors after insertOne (for example, a database update failure) used
+        // to leave an "uploading" document behind forever. That document then
+        // consumed one of the user's three upload slots on every retry.
+        if (createdVidId) {
+            await deleteObject(createdVideoKey).catch(() => {});
+            await getDb()
+                .collection("vids")
+                .deleteOne({ _id: createdVidId })
+                .catch(() => {});
+        }
         return NextResponse.json(
             { error: "Upload failed. Please try again." },
             { status: 500 },
