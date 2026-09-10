@@ -151,7 +151,7 @@ main:has(.vids-page) ~ footer {
 
 .friend-bg {
     background: #dbe9f7;
-    border-bottom: 1px solid #6699cc;
+    border-bottom: 1px solid var(--line);
 }
 
 .friend-thumb-bg {
@@ -176,7 +176,7 @@ main:has(.vids-page) ~ footer {
 
 .input {
     width: 100%;
-    border: 1px solid #6699cc;
+    border: 1px solid var(--line-strong);
     /* background: #dbe9f7; */
     padding: 0.3rem 0.5rem;
     font-size: 16px;
@@ -184,7 +184,7 @@ main:has(.vids-page) ~ footer {
     border-radius: 0;
 }
 .input:focus {
-    outline: 2px solid #6699cc;
+    outline: 2px solid var(--line-strong);
     outline-offset: 0;
 }
 
@@ -195,7 +195,7 @@ main:has(.vids-page) ~ footer {
     font-weight: 700;
     font-size: 12px;
     padding: 0.3rem 0.75rem;
-    border: 1px solid #2c4d80;
+    border: 1px solid var(--line-bold);
     cursor: pointer;
     border-radius: 0;
     text-align: center;
@@ -210,7 +210,7 @@ main:has(.vids-page) ~ footer {
 }
 .btn-danger {
     background: #cc6666;
-    border-color: #802020;
+    border-color: var(--line);
 }
 .btn-danger:hover {
     background: #b84a4a;
@@ -218,7 +218,7 @@ main:has(.vids-page) ~ footer {
 .btn-ghost {
     background: #fff;
     color: #003399;
-    border-color: #6699cc;
+    border-color: var(--line-strong);
 }
 .btn-ghost:hover {
     background: #dbe9f7;
@@ -234,7 +234,7 @@ main:has(.vids-page) ~ footer {
 
 /* Box: plain-CSS panel used across the site (no Tailwind). */
 .box {
-    border: 1px solid #6699cc;
+    border: 1px solid var(--line-strong);
     margin-bottom: 12px;
 }
 .box-title {
@@ -263,7 +263,7 @@ input[type="file"].btn-file::file-selector-button {
     font-weight: 700;
     font-size: 12px;
     padding: 0.3rem 0.75rem;
-    border: 1px solid #2c4d80;
+    border: 1px solid var(--line);
     cursor: pointer;
     border-radius: 0;
     margin-right: 0.5rem;
@@ -347,7 +347,7 @@ select {
     width: 344px;
     overflow-y: auto;
     background: #ffffff;
-    border-left: 1px solid #6699cc;
+    border-left: 1px solid var(--line);
     box-shadow: -4px 0 12px rgba(44, 77, 128, 0.12);
     transform: translateX(0);
     transition: transform 150ms ease;
@@ -391,7 +391,7 @@ select {
     padding: 0 8px;
     color: #ffffff;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.65);
+    border: 1px solid var(--line);
     font-size: 11px;
     font-weight: 700;
 }
@@ -405,7 +405,7 @@ select {
     padding: 13px;
 }
 .profile-generator-section {
-    border-bottom: 1px solid #dbe9f7;
+    border-bottom: 1px solid var(--line);
     padding-bottom: 13px;
 }
 .profile-generator-section-heading {
@@ -492,7 +492,7 @@ select {
     width: 30px;
     height: 30px;
     padding: 2px;
-    border: 1px solid #6699cc;
+    border: 1px solid var(--line);
     background: #f5f9ff;
     cursor: pointer;
 }
@@ -529,17 +529,17 @@ select {
 .profile-generator-warning {
     color: #7c2d12;
     background: #fff7ed;
-    border: 1px solid #fdba74;
+    border: 1px solid var(--line);
 }
 .profile-generator-error {
     color: #991b1b;
     background: #fef2f2;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--line);
 }
 .profile-generator-success {
     color: #166534;
     background: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    border: 1px solid var(--line);
 }
 .profile-generator-apply {
     display: inline-flex;
@@ -557,7 +557,7 @@ select {
     padding: 0 10px;
     color: #ffffff;
     background: #2c4d80;
-    border: 1px solid #1c355b;
+    border: 1px solid var(--line);
     font-size: 11px;
     font-weight: 700;
 }
@@ -569,7 +569,7 @@ select {
     .profile-generator-sidebar {
         top: var(--profile-generator-top, 112px);
         width: min(344px, calc(100vw - 18px));
-        border-right: 1px solid #6699cc;
+        border-right: 1px solid var(--line);
     }
     .profile-generator.is-sidebar-open .profile-generator-preview {
         opacity: 0.35;
@@ -602,6 +602,16 @@ select {
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0;
+    /* One border color app wide. Every structural border resolves to
+     * --line (aliases kept so existing `var(--line-*)` references keep
+     * working). Exempt by design: user profile theme colors (inline
+     * styles), focus outlines, and white rings over photos/video. */
+    --line: #6699cc;
+    --line-strong: var(--line);
+    --line-soft: var(--line);
+    --line-bold: var(--line);
+    --line-accent: var(--line);
+    --line-pink: var(--line);
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
@@ -610,6 +620,37 @@ select {
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* One border color app wide. Every border utility below resolves to
+ * --line, which flips once for dark mode — so light and dark can never
+ * drift apart. Unlayered CSS beats Tailwind's layered utilities, so
+ * these win regardless of specificity. (Profile theme colors are inline
+ * styles and intentionally exempt; white rings over photos/video and
+ * focus outlines are functional, not line colors.) */
+.border-\[\#6699cc\],
+.border-\[\#99bbdd\],
+.border-\[\#b8cde5\],
+.border-\[\#c3d4e8\],
+.border-\[\#ccdded\],
+.border-\[\#d5e2f2\],
+.border-\[\#d6e0f0\],
+.border-\[\#dbe9f7\],
+.border-\[\#2c4d80\],
+.border-\[\#cc99cc\],
+.border-\[\#f0b6d9\],
+.border-\[\#fff\],
+.border-\[\#FFF\],
+.border-gray-200,
+.hover\:border-\[\#6699cc\]:hover,
+.group-\[\.bulletin\]\:border-\[\#99bbdd\],
+.divide-\[\#d5e2f2\] > *,
+.divide-\[\#99bbdd\] > * {
+    border-color: var(--line);
+}
+/* shadcn avatar ring (used on the landing page member stack). */
+[data-slot="avatar"]::after {
+    border-color: var(--line);
 }
 
 .dark {
@@ -689,6 +730,7 @@ select {
     --accent: #1a1a1a;
     --accent-foreground: #e8e8e8;
     --border: #262626;
+    --line: #222222;
     --input: #333333;
     --sidebar: #0a0a0a;
     --sidebar-foreground: #e8e8e8;
@@ -702,10 +744,7 @@ select {
     color: #e8e8e8;
 }
 
-/* Legacy plain-CSS panels */
-.dark .box {
-    border-color: #333;
-}
+/* Legacy plain-CSS panels (`.box` border now flows from --line-strong). */
 /* Box outer border is inline (`style={{ borderColor }}`) — needs
  * !important to beat it. */
 .dark div.box[style] {
@@ -729,7 +768,7 @@ select {
 }
 .dark .input {
     background: #0a0a0a;
-    border-color: #404040;
+    border-color: var(--line-strong);
     color: #e8e8e8;
 }
 .dark .input::placeholder {
@@ -766,7 +805,7 @@ select {
 .dark .btn-ghost {
     background: transparent;
     color: #e8e8e8;
-    border-color: #404040;
+    border-color: var(--line);
 }
 .dark .btn-ghost:hover {
     background: #1a1a1a;
@@ -785,7 +824,6 @@ select {
 }
 .dark .friend-bg {
     background: #0a0a0a;
-    border-bottom-color: #333;
 }
 .dark .friend-thumb-bg {
     background-image: repeating-linear-gradient(
@@ -798,15 +836,14 @@ select {
 }
 .dark .auth-card {
     background: #0a0a0a;
-    border-color: #333;
+    border-color: var(--line);
 }
 .dark .profile-generator-sidebar {
     background: #0a0a0a;
-    border-left-color: #333;
 }
 .dark .profile-generator-sidebar-header {
     background: #000;
-    border-bottom: 1px solid #262626;
+    border-bottom: 1px solid var(--line);
 }
 .dark .profile-generator-kicker {
     color: #737373;
@@ -817,7 +854,7 @@ select {
 }
 .dark .profile-generator-open-button {
     background: #1a1a1a;
-    border-color: #333;
+    border-color: var(--line);
 }
 .dark .profile-generator-section-heading h2,
 .dark .advance {
@@ -833,11 +870,11 @@ select {
     color: #e8e8e8;
 }
 .dark .profile-generator-color-row input[type="color"] {
-    border-color: #404040;
+    border-color: var(--line);
     background: #0a0a0a;
 }
 .dark .profile-generator-section {
-    border-bottom-color: #262626;
+    border-bottom-color: var(--line);
 }
 .dark .action-button-error,
 .dark .bound-form-error {
@@ -905,33 +942,37 @@ select {
 .dark .text-gray-400 {
     color: #8c8c8c;
 }
-.dark .border-\[\#6699cc\] {
-    border-color: #333;
+/* Border colors need no dark rules: the single rule above already resolves
+ * to --line, which flips to #333333 in dark mode by itself. */
+/* Chatbox own-message tint (`bg-[#cc99cc]/25`). */
+.dark .bg-\[\#cc99cc\]\/25 {
+    background-color: rgba(204, 153, 204, 0.12);
 }
-.dark .border-\[\#99bbdd\],
-.dark .border-\[\#b8cde5\],
-.dark .border-\[\#c3d4e8\],
-.dark .border-\[\#d5e2f2\],
-.dark .border-\[\#d6e0f0\],
-.dark .border-\[\#dbe9f7\] {
-    border-color: #262626;
+/* Pink tip box (`OnboardingForm`) + badges (`chatboxes` list). */
+.dark .bg-\[\#fff5fb\] {
+    background-color: #251016;
 }
-.dark .border-\[\#2c4d80\] {
-    border-color: #404040;
+.dark .text-\[\#a32670\] {
+    color: #f9a8d4;
 }
-.dark .border-\[\#fff\],
-.dark .border-\[\#FFF\] {
-    border-color: #262626;
+.dark .bg-\[\#ffeec2\] {
+    background-color: #241d08;
 }
-.dark .border-gray-200 {
-    border-color: #262626;
+.dark .text-\[\#8a6d00\] {
+    color: #fcd34d;
 }
-/* Row dividers (`divide-[#d5e2f2]` in New Members, `divide-[#99bbdd]`
- * in chatbox/group lists). Tailwind v4 applies these to every child
- * except the last, so match all children. */
-.dark .divide-\[\#d5e2f2\] > *,
-.dark .divide-\[\#99bbdd\] > * {
-    border-color: #262626;
+.dark .bg-\[\#f3e6f7\] {
+    background-color: #1e1033;
+}
+.dark .text-\[\#8a2b9a\] {
+    color: #d8b4fe;
+}
+/* Warm notice backgrounds (group pending box, chat highlight). */
+.dark .bg-\[\#fffaf0\] {
+    background-color: #161616;
+}
+.dark .bg-\[\#fff3cd\] {
+    background-color: #241d08;
 }
 .dark .hover\:bg-\[\#dbe9f7\]:hover {
     background-color: #1a1a1a;
@@ -968,7 +1009,7 @@ select {
 .dark .bulletin-post,
 .dark .post-card {
     background-color: #0a0a0a;
-    border-color: #262626;
+    border-color: var(--line);
     color: #e8e8e8;
 }
 /* Feed cards get their bg from `group-[.bulletin]:bg-white`. */
@@ -976,5 +1017,5 @@ select {
     background-color: #0a0a0a;
 }
 .dark .group-\[\.bulletin\]\:border-\[\#99bbdd\] {
-    border-color: #262626;
+    border-color: var(--line);
 }

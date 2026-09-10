@@ -172,7 +172,7 @@
     font-family: var(--font-geist-mono), monospace;
     padding: 2px 6px;
     display: inline-block;
-    border: 1px solid #333;
+    border: 1px solid var(--line);
 }
 
 /* ---- Actions ---- */
@@ -242,17 +242,20 @@
 
 .profile-interest-tag {
     background: #dbe9f7;
-    border: 1px solid #6699cc;
+    border: 1px solid var(--line-strong);
     padding: 2px 6px;
     font-size: 11px;
     border-radius: 4px;
+}
+.dark .profile-interest-tag {
+    background: #1a1a1a;
 }
 
 /* ---- Testimonials ---- */
 
 .profile-pending-box {
     margin-bottom: 8px;
-    border: 1px dashed #cc99cc;
+    border: 1px dashed var(--line-accent);
     padding: 6px;
 }
 
@@ -264,7 +267,7 @@
 }
 
 .profile-testimonial {
-    border-bottom: 1px dotted #99bbdd;
+    border-bottom: 1px dotted var(--line);
     padding-top: 4px;
     padding-bottom: 4px;
 }
@@ -296,7 +299,7 @@
 
 .profile-testimonial-form {
     margin-top: 8px;
-    border-top: 1px solid #99bbdd;
+    border-top: 1px solid var(--line);
     padding-top: 8px;
 }
 
@@ -391,7 +394,7 @@
     display: block;
     aspect-ratio: 9 / 16;
     overflow: hidden;
-    border: 1px solid #6699cc;
+    border: 1px solid var(--line-strong);
     background: #000;
 }
 
@@ -459,7 +462,7 @@
 
 .profile-music-player {
     position: relative;
-    border: 1px solid #99bbdd;
+    border: 1px solid var(--line);
     background: #fff;
     padding: 6px;
     margin-top: 8px;
@@ -518,5 +521,7 @@
 }
 .dark .profile-music-player {
     background: #0a0a0a;
-    border-color: #333;
+}
+.dark .profile-interest-tag {
+    border-color: var(--line-strong);
 }

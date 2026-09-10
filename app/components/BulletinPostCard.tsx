@@ -224,7 +224,7 @@ export default function BulletinPostCard({
                                 myReaction
                                     ? {
                                           background: "#ffde00",
-                                          borderColor: "#b8860b",
+                                          borderColor: "var(--line)",
                                           color: "#5c3d00",
                                       }
                                     : undefined
