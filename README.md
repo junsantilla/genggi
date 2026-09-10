@@ -82,9 +82,10 @@ Vids is the app's short-form vertical video feed at `/vids` (watch), `/vids/uplo
 ### Upload flow
 
 1. The client validates the file (MP4/MOV/WebM/MKV, ≤ 100 MB, MIME + extension).
-2. The video streams directly to R2 through `POST /api/vids/upload` with upload progress and cancellation. The server re-validates size, MIME, authentication, and per-user rate limits (10 uploads/hour, 3 in progress), and stores it at a deterministic key — `vids/{userId}/{vidId}/video.mp4` — never derived from the user's filename.
-3. The browser captures a thumbnail frame (canvas) and posts it to `POST /api/vids/{vidId}/thumbnail` (stored as `vids/{userId}/{vidId}/thumbnail.jpg`).
-4. The user adds a caption/hashtags and publishes via `finishVidAction`, which runs the server-side processing hook (`lib/video-processing.ts`) and marks the record `published`.
+2. The client requests a direct-to-R2 URL via `POST /api/vids/upload` with JSON `{ contentType, fileSize }` (tiny JSON — Vercel-safe). The server re-validates size, MIME, authentication, and per-user rate limits (10 uploads/hour, 3 in progress), creates the record at deterministic key `vids/{userId}/{vidId}/video.mp4` (never derived from the user's filename), and returns a short-lived presigned PUT URL. The browser then PUTs the video bytes **directly to R2** with upload progress and cancellation — the 100 MB never passes through Vercel (function bodies are capped at ~4.5 MB).
+3. The browser calls `POST /api/vids/{vidId}/complete`, where the server HEADs the R2 object to verify real size/MIME/ownership before moving the record `uploading → processing`.
+4. The browser captures a thumbnail frame (canvas) and posts it to `POST /api/vids/{vidId}/thumbnail` (stored as `vids/{userId}/{vidId}/thumbnail.jpg`).
+5. The user adds a caption/hashtags and publishes via `finishVidAction`, which runs the server-side processing hook (`lib/video-processing.ts`) and marks the record `published`.
 
 Video processing is a documented passthrough today (no transcoder is deployed). To add FFmpeg optimization (9:16, ≤ 1080×1920, H.264/AAC MP4, ~10–30 MB), implement `processVideo` in `lib/video-processing.ts`; the status lifecycle (`uploading → processing → published`) already supports it.
 
@@ -107,7 +108,7 @@ Indexes are created idempotently on first use (`ensureVidIndexes`); there is no 
 
 Abandoned/failed uploads never reached `published` are removed (R2 objects + records) after 24 hours by `cleanupAbandonedVids`. It runs opportunistically from the upload endpoint and via the admin-only `runVidCleanupAction`; in production, point a cron job at that action (e.g. a daily request to a server action). Deleting a Vid removes its R2 objects and all related records, and admin user deletion cleans up the user's Vids too.
 
-No additional environment variables are required — Vids uses the same `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_PUBLIC_URL` as image uploads. The bucket's public URL must serve videos with HTTP range-request support (R2 supports this natively), and the upload route must be reachable with a body limit above 100 MB.
+No additional environment variables are required — Vids uses the same `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_PUBLIC_URL` as image uploads. The bucket's public URL must serve videos with HTTP range-request support (R2 supports this natively). Because uploads go directly from the browser to R2 via presigned PUT URLs, the R2 bucket needs a CORS rule allowing `PUT` (and `HEAD`) from your site origin with `Content-Type` headers — e.g. AllowedOrigins `["https://your-domain.com"]`, AllowedMethods `["PUT", "HEAD", "GET"]`, AllowedHeaders `["Content-Type"]`. No 100 MB body limit is needed on the hosting platform (Vercel's ~4.5 MB function cap no longer matters).
 
 ## Available Scripts
 

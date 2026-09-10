@@ -15,10 +15,12 @@ const ALLOWED_MIME = /^video\/(mp4|quicktime|webm|x-matroska)$/i;
 
 function readableUploadError(status: number): string {
     if (status === 413) {
-        return "This video is too large for the upload server. Maximum size is 100 MB.";
+        return "This video is too large. Maximum size is 100 MB.";
     }
     if (status === 401) return "Your session expired. Please sign in again.";
+    if (status === 403) return "The upload link expired. Please try again.";
     if (status === 415) return "Unsupported format. Please upload an MP4, MOV, or WebM video.";
+    if (status === 429) return "You've reached the upload limit. Please try again later.";
     if (status >= 500) {
         return "The video storage service could not accept this upload. Please try again.";
     }
@@ -33,9 +35,11 @@ type Phase =
     | "finalizing" // thumbnail + publish
     | "done";
 
-// Full upload flow: pick -> validate -> preview -> stream to R2 with progress
-// -> capture thumbnail frame -> publish metadata. Every client check is
-// repeated server-side; the client never writes counters or storage keys.
+// Full upload flow: pick -> validate -> preview -> request presigned URL ->
+// PUT directly to R2 with progress -> verify -> capture thumbnail frame ->
+// publish metadata. Every client check is repeated server-side; the client
+// never writes counters or storage keys. Video bytes never pass through
+// Vercel (function body limit ~4.5 MB); only tiny JSON does.
 export default function VidUploadForm() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +156,11 @@ export default function VidUploadForm() {
         });
     }, []);
 
-    const startUpload = () => {
+    // Vercel-safe flow: the 100 MB of video bytes go directly from the
+    // browser to R2 via a presigned PUT URL, never through a Vercel Function
+    // (Vercel caps function bodies at ~4.5 MB). Steps: request URL -> PUT to
+    // R2 with progress -> tell the server to verify (HEAD) the object.
+    const startUpload = async () => {
         if (!file || !metadata) {
             setError("Please wait for the preview to load.");
             return;
@@ -161,68 +169,127 @@ export default function VidUploadForm() {
         setProgress(0);
         setPhase("uploading");
 
-        const xhr = new XMLHttpRequest();
-        xhrRef.current = xhr;
-        xhr.open("POST", "/api/vids/upload");
-        // Keep this above the server's 5-minute route budget so the user gets
-        // a useful timeout message instead of a generic network failure.
-        xhr.timeout = 5 * 60 * 1000;
-        xhr.setRequestHeader("Content-Type", file.type);
-
-        xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-                setProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
-            }
-        };
-
-        xhr.onload = () => {
-            xhrRef.current = null;
-            if (xhr.status >= 200 && xhr.status < 300) {
+        // 1. Mint a direct-to-R2 upload URL (tiny JSON, Vercel-safe).
+        let vidIdFromServer: string;
+        let uploadUrl: string;
+        try {
+            const res = await fetch("/api/vids/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contentType: file.type, fileSize: file.size }),
+            });
+            if (!res.ok) {
+                let message = readableUploadError(res.status);
                 try {
-                    const data = JSON.parse(xhr.responseText) as { vidId?: string };
-                    if (!data.vidId) throw new Error("No vid id returned.");
-                    setVidId(data.vidId);
-                    // Uploaded and stored — wait for the user to review and
-                    // press Publish before the Vid goes live.
-                    setPhase("uploaded");
-                    setProgress(100);
+                    const data = (await res.json()) as { error?: string };
+                    if (data.error) message = data.error;
                 } catch {
-                    setPhase("idle");
-                    setError("Upload failed. Please try again.");
+                    // Keep the default message.
                 }
+                setPhase("ready");
+                setError(message);
                 return;
             }
-            let message = readableUploadError(xhr.status);
-            try {
-                const data = JSON.parse(xhr.responseText) as { error?: string };
-                if (data.error) message = data.error;
-            } catch {
-                // Keep the default message.
+            const data = (await res.json()) as { vidId?: string; uploadUrl?: string };
+            if (!data.vidId || !data.uploadUrl) throw new Error("No upload URL returned.");
+            vidIdFromServer = data.vidId;
+            uploadUrl = data.uploadUrl;
+            setVidId(data.vidId);
+        } catch {
+            setPhase("ready");
+            setError("Could not start the upload. Please try again.");
+            return;
+        }
+
+        // 2. PUT the bytes straight to R2 with progress + cancellation.
+        const putSucceeded = await new Promise<boolean>((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhrRef.current = xhr;
+            xhr.open("PUT", uploadUrl);
+            // Give large uploads on slow connections room to finish.
+            xhr.timeout = 10 * 60 * 1000;
+            xhr.setRequestHeader("Content-Type", file.type);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    // Reserve the last 5% for server-side verification.
+                    setProgress(Math.min(95, Math.round((event.loaded / event.total) * 95)));
+                }
+            };
+
+            xhr.onload = () => {
+                xhrRef.current = null;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(true);
+                    return;
+                }
+                const message = readableUploadError(xhr.status);
+                setPhase("ready");
+                setError(message);
+                // The reserved vid record never received bytes — release the
+                // user's in-progress slot.
+                deleteVidAction(vidIdFromServer).catch(() => {});
+                setVidId(null);
+                resolve(false);
+            };
+
+            xhr.onerror = () => {
+                xhrRef.current = null;
+                setPhase("ready");
+                setError("Network error. Please check your connection and try again.");
+                deleteVidAction(vidIdFromServer).catch(() => {});
+                setVidId(null);
+                resolve(false);
+            };
+
+            xhr.ontimeout = () => {
+                xhrRef.current = null;
+                setPhase("ready");
+                setError("The upload took too long and timed out. Please try again on a faster connection.");
+                resolve(false);
+            };
+
+            xhr.onabort = () => {
+                xhrRef.current = null;
+                setPhase("ready");
+                setError("");
+                setProgress(0);
+                deleteVidAction(vidIdFromServer).catch(() => {});
+                setVidId(null);
+                resolve(false);
+            };
+
+            xhr.send(file);
+        });
+
+        if (!putSucceeded) return;
+
+        // 3. Tell the server to verify the R2 object (HEAD) and move the
+        // record to "processing". Only then can the Vid be published.
+        try {
+            const res = await fetch(`/api/vids/${vidIdFromServer}/complete`, {
+                method: "POST",
+            });
+            if (!res.ok) {
+                let message = readableUploadError(res.status);
+                try {
+                    const data = (await res.json()) as { error?: string };
+                    if (data.error) message = data.error;
+                } catch {
+                    // Keep the default message.
+                }
+                setPhase("ready");
+                setError(message);
+                return;
             }
+            // Uploaded and verified — wait for the user to review and press
+            // Publish before the Vid goes live.
+            setPhase("uploaded");
+            setProgress(100);
+        } catch {
             setPhase("ready");
-            setError(message);
-        };
-
-        xhr.onerror = () => {
-            xhrRef.current = null;
-            setPhase("ready");
-            setError("Network error. Please check your connection and try again.");
-        };
-
-        xhr.ontimeout = () => {
-            xhrRef.current = null;
-            setPhase("ready");
-            setError("The upload took too long and timed out. Please try again on a faster connection.");
-        };
-
-        xhr.onabort = () => {
-            xhrRef.current = null;
-            setPhase("ready");
-            setError("");
-            setProgress(0);
-        };
-
-        xhr.send(file);
+            setError("Upload verification failed. Please try again.");
+        }
     };
 
     const finalize = async (id: string) => {

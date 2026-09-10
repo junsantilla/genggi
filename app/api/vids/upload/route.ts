@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Readable } from "node:stream";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb, ObjectId } from "@/lib/db";
-import { putObject, publicUrlForKey, deleteObject } from "@/lib/r2";
+import { createPresignedPutUrl, publicUrlForKey } from "@/lib/r2";
 import {
     VID_ALLOWED_MIME,
     VID_MAX_UPLOAD_BYTES,
@@ -11,25 +10,24 @@ import {
     vidVideoKey,
     cleanupAbandonedVids,
 } from "@/lib/vids";
-import { processVideo } from "@/lib/video-processing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// A 100 MB upload can take longer than the platform default, especially on a
-// mobile connection. Hosting providers must still allow request bodies this
-// size; this setting only communicates the route's execution budget.
-export const maxDuration = 300;
+// This route only mints a short-lived presigned URL (tiny JSON in/out), so it
+// stays far under Vercel's ~4.5 MB function body limit. The 100 MB of video
+// bytes go directly from the browser to R2 and never touch Vercel.
+export const maxDuration = 60;
 
-// Opportunistic cleanup: every 25th upload sweeps abandoned uploads so R2
+// Opportunistic cleanup: every 25th request sweeps abandoned uploads so R2
 // never accumulates orphaned objects between scheduled/admin runs.
 let uploadCounter = 0;
 
+// Step 1 of the Vercel-safe upload flow:
+//   1. POST here with JSON { contentType, fileSize } -> { vidId, uploadUrl }
+//   2. Browser PUTs the file bytes directly to uploadUrl (R2, not Vercel)
+//   3. Browser POSTs /api/vids/[vidId]/complete to verify + mark processing
+//   4. Browser uploads thumbnail + publishes via finishVidAction (unchanged)
 export async function POST(request: NextRequest) {
-    // Keep these outside the main try block so any exception after the record
-    // is created can release the user's in-progress slot as well.
-    let createdVidId: ObjectId | null = null;
-    let createdVideoKey: string | null = null;
-
     try {
         const user = await getCurrentUser();
         if (!user) {
@@ -45,23 +43,34 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate the upload before touching storage. The browser's MIME and
-        // size checks are never trusted on their own.
-        const contentType = (request.headers.get("content-type") || "").toLowerCase();
+        let body: { contentType?: unknown; fileSize?: unknown };
+        try {
+            body = (await request.json()) as typeof body;
+        } catch {
+            return NextResponse.json(
+                { error: "Expected JSON { contentType, fileSize }." },
+                { status: 400 },
+            );
+        }
+
+        // Validate before touching storage or minting a URL. The browser's
+        // MIME and size checks are never trusted on their own, and the object
+        // is re-verified with an R2 HEAD in the complete step.
+        const contentType = String(body.contentType ?? "").toLowerCase();
         if (!VID_ALLOWED_MIME.has(contentType)) {
             return NextResponse.json(
                 { error: "Unsupported file type. Please upload an MP4, MOV, or WebM video." },
                 { status: 415 },
             );
         }
-        const contentLength = Number(request.headers.get("content-length") || "0");
-        if (!Number.isFinite(contentLength) || contentLength <= 0) {
+        const fileSize = Number(body.fileSize);
+        if (!Number.isFinite(fileSize) || fileSize <= 0) {
             return NextResponse.json(
                 { error: "Missing file size." },
                 { status: 400 },
             );
         }
-        if (contentLength > VID_MAX_UPLOAD_BYTES) {
+        if (fileSize > VID_MAX_UPLOAD_BYTES) {
             return NextResponse.json(
                 { error: "File too large. Maximum size is 100 MB." },
                 { status: 413 },
@@ -85,8 +94,6 @@ export async function POST(request: NextRequest) {
         // becomes part of the storage path.
         const key = vidVideoKey(userId, vidId.toString());
         const videoUrl = publicUrlForKey(key);
-        createdVidId = vidId;
-        createdVideoKey = key;
 
         await db.collection("vids").insertOne({
             _id: vidId,
@@ -100,7 +107,7 @@ export async function POST(request: NextRequest) {
             duration: 0,
             width: 0,
             height: 0,
-            fileSize: contentLength,
+            fileSize,
             viewCount: 0,
             likeCount: 0,
             commentCount: 0,
@@ -110,65 +117,21 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
         });
 
+        let uploadUrl: string;
         try {
-            if (!request.body) throw new Error("No request body.");
-            const stream = Readable.fromWeb(
-                request.body as unknown as import("stream/web").ReadableStream,
-            );
-            await putObject(key, stream, contentType, contentLength);
+            uploadUrl = await createPresignedPutUrl(key, contentType);
         } catch (error) {
-            // Aborted or failed upload: remove the (possibly partial) object
-            // and mark the record failed so cleanup can reclaim it.
-            console.error("Vid upload stream failed:", error);
-            await deleteObject(key).catch(() => {});
-            await db
-                .collection("vids")
-                .updateOne(
-                    { _id: vidId },
-                    { $set: { status: "failed", updatedAt: new Date() } },
-                );
+            console.error("Vid presigned URL failed:", error);
+            await db.collection("vids").deleteOne({ _id: vidId }).catch(() => {});
             return NextResponse.json(
                 { error: "Upload failed. Please try again." },
                 { status: 500 },
             );
         }
 
-        // Server-side processing hook. Today this is a passthrough that keeps
-        // the uploaded file at its final key; a future transcoder can write a
-        // new key here while the record stays in "processing".
-        const processed = await processVideo({
-            userId,
-            vidId: vidId.toString(),
-            videoKey: key,
-            contentType,
-        });
-        const finalKey = processed.videoKey;
-        await db.collection("vids").updateOne(
-            { _id: vidId },
-            {
-                $set: {
-                    status: "processing",
-                    videoKey: finalKey,
-                    videoUrl:
-                        finalKey === key ? videoUrl : publicUrlForKey(finalKey),
-                    updatedAt: new Date(),
-                },
-            },
-        );
-
-        return NextResponse.json({ ok: true, vidId: vidId.toString() });
+        return NextResponse.json({ ok: true, vidId: vidId.toString(), uploadUrl });
     } catch (error) {
-        console.error("Vid upload failed:", error);
-        // Errors after insertOne (for example, a database update failure) used
-        // to leave an "uploading" document behind forever. That document then
-        // consumed one of the user's three upload slots on every retry.
-        if (createdVidId) {
-            await deleteObject(createdVideoKey).catch(() => {});
-            await getDb()
-                .collection("vids")
-                .deleteOne({ _id: createdVidId })
-                .catch(() => {});
-        }
+        console.error("Vid upload request failed:", error);
         return NextResponse.json(
             { error: "Upload failed. Please try again." },
             { status: 500 },

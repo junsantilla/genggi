@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+    DeleteObjectCommand,
+    HeadObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const bucket = process.env.R2_BUCKET;
 const endpoint = process.env.R2_ENDPOINT;
@@ -98,4 +104,44 @@ export function publicUrlForKey(key: string): string {
   const base = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
   if (!base) throw new Error("R2_PUBLIC_URL is not set in .env.local");
   return `${base}/${key}`;
+}
+
+// Creates a short-lived presigned PUT URL so the browser can upload directly
+// to R2 without the bytes passing through a Vercel Function (Vercel caps
+// function request bodies at ~4.5 MB, so a 100 MB proxied upload can never
+// work there). The server still creates the vid record first and verifies
+// the object with headObject() in the complete step.
+export async function createPresignedPutUrl(
+    key: string,
+    contentType: string,
+    expiresInSeconds = 600,
+): Promise<string> {
+    const r2 = getR2();
+    // NOTE: only ContentType is signed here. The browser must send exactly
+    // this Content-Type and nothing extra (e.g. no Cache-Control), otherwise
+    // R2 rejects the PUT with a signature mismatch.
+    return getSignedUrl(
+        r2.client,
+        new PutObjectCommand({
+            Bucket: r2.bucket,
+            Key: key,
+            ContentType: contentType,
+        }),
+        { expiresIn: expiresInSeconds },
+    );
+}
+
+// HEADs an object to verify a direct-to-R2 upload actually landed and to
+// learn its real size/MIME. The complete route never trusts client claims.
+export async function headObject(
+    key: string,
+): Promise<{ size: number; contentType: string | undefined }> {
+    const r2 = getR2();
+    const out = await r2.client.send(
+        new HeadObjectCommand({ Bucket: r2.bucket, Key: key }),
+    );
+    return {
+        size: Number(out.ContentLength ?? 0),
+        contentType: out.ContentType,
+    };
 }
