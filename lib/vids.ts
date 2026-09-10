@@ -68,6 +68,11 @@ export async function ensureVidIndexes(): Promise<void> {
     db
       .collection("vidLikes")
       .createIndex({ vidId: 1, userId: 1 }, { unique: true }),
+    // One reaction per user per Vid (toggle/change, like bulletin posts).
+    db
+      .collection("vidReactions")
+      .createIndex({ vidId: 1, userId: 1 }, { unique: true }),
+    db.collection("vidReactions").createIndex({ vidId: 1 }),
     db
       .collection("vidViews")
       .createIndex({ vidId: 1, viewerKey: 1 }, { unique: true }),
@@ -191,7 +196,8 @@ function toVidAuthorCard(author: {
 export function toSerializedVid(
   vid: Vid,
   author: VidAuthorCard,
-  myLike: boolean,
+  reactions: SerializedVid["reactions"],
+  myReaction: SerializedVid["myReaction"],
   friendshipStatus: SerializedVid["friendshipStatus"],
 ): SerializedVid {
   return {
@@ -211,9 +217,53 @@ export function toSerializedVid(
     status: vid.status,
     createdAt: vid.createdAt.toISOString(),
     author,
-    myLike,
+    reactions,
+    myReaction,
     friendshipStatus,
   };
+}
+
+// Batched reaction summaries for a set of vids (one query, no N+1), plus the
+// viewer's own reaction per vid when a viewer id is provided.
+export async function reactionSummariesByVid(
+  vidIds: ObjectId[],
+  viewerId: string | null,
+): Promise<
+  Map<string, { reactions: SerializedVid["reactions"]; myReaction: string | null }>
+> {
+  const map = new Map<
+    string,
+    { reactions: SerializedVid["reactions"]; myReaction: string | null }
+  >();
+  for (const id of vidIds) map.set(id.toString(), { reactions: [], myReaction: null });
+  if (vidIds.length === 0) return map;
+
+  const rows = (await getDb()
+    .collection("vidReactions")
+    .find({ vidId: { $in: vidIds } })
+    .project({ vidId: 1, userId: 1, type: 1 })
+    .toArray()) as unknown as {
+    vidId: ObjectId;
+    userId: ObjectId;
+    type: string;
+  }[];
+
+  const countsByVid = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const key = row.vidId.toString();
+    const counts = countsByVid.get(key) ?? new Map<string, number>();
+    counts.set(row.type, (counts.get(row.type) ?? 0) + 1);
+    countsByVid.set(key, counts);
+    if (viewerId && row.userId.toString() === viewerId) {
+      map.get(key)!.myReaction = row.type;
+    }
+  }
+  for (const [key, counts] of countsByVid) {
+    map.get(key)!.reactions = [...counts.entries()]
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+  return map;
 }
 
 // Resolves the viewer's relationship with a set of vid authors in a single
@@ -305,17 +355,10 @@ export async function getVidsFeedPage(
   const authorById = new Map(authors.map((a) => [a._id.toString(), a]));
 
   const vidIds = vids.map((v) => v._id);
-  const [likeRows, statuses] = await Promise.all([
-    viewerId
-      ? db
-          .collection("vidLikes")
-          .find({ vidId: { $in: vidIds }, userId: new ObjectId(viewerId) })
-          .project({ vidId: 1 })
-          .toArray()
-      : Promise.resolve([]),
+  const [reactionMap, statuses] = await Promise.all([
+    reactionSummariesByVid(vidIds, viewerId),
     friendshipStatusByAuthor(viewerId, authorIds),
   ]);
-  const likedVidIds = new Set(likeRows.map((r) => r.vidId.toString()));
 
   const last = vids[vids.length - 1];
   const nextCursor: VidFeedPage["nextCursor"] = hasMore
@@ -326,11 +369,16 @@ export async function getVidsFeedPage(
     videos: vids.flatMap((vid) => {
       const author = authorById.get(vid.userId.toString());
       if (!author) return [];
+      const entry = reactionMap.get(vid._id.toString()) ?? {
+        reactions: [],
+        myReaction: null,
+      };
       return [
         toSerializedVid(
           vid,
           toVidAuthorCard(author),
-          likedVidIds.has(vid._id.toString()),
+          entry.reactions,
+          entry.myReaction,
           statuses.get(vid.userId.toString()) ?? "none",
         ),
       ];
@@ -371,16 +419,22 @@ export async function getVidById(
   } | null;
   if (!author) return null;
 
-  const myLike = viewerId
-    ? !!(await db
-        .collection("vidLikes")
-        .findOne({ vidId: oid, userId: new ObjectId(viewerId) }))
-    : false;
+  const reactionMap = await reactionSummariesByVid([oid], viewerId);
+  const entry = reactionMap.get(oid.toString()) ?? {
+    reactions: [],
+    myReaction: null,
+  };
 
   const statuses = await friendshipStatusByAuthor(viewerId, [vid.userId]);
   const friendshipStatus = statuses.get(vid.userId.toString()) ?? "none";
 
-  return toSerializedVid(vid, toVidAuthorCard(author), myLike, friendshipStatus);
+  return toSerializedVid(
+    vid,
+    toVidAuthorCard(author),
+    entry.reactions,
+    entry.myReaction,
+    friendshipStatus,
+  );
 }
 
 // Most recent published vids of a profile, used for the profile Vids section.
@@ -399,8 +453,10 @@ export async function getProfileVids(
     .toArray()) as unknown as Vid[];
   if (vids.length === 0) return [];
 
+  // Profile grids don't need per-vid reaction detail; the counts on the
+  // vid documents are the totals.
   return vids.map((vid) =>
-    toSerializedVid(vid, author, false, "self"),
+    toSerializedVid(vid, author, [], null, "self"),
   );
 }
 

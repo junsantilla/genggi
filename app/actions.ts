@@ -1851,6 +1851,8 @@ export async function reactToBulletinPostAction(
     if (!post) return { error: "Post not found." };
     if (!(REACTION_TYPES as readonly string[]).includes(type))
         return { error: "Invalid reaction." };
+    // Vid mirror posts share the full reaction set with the Vid.
+    const isVidMirror = !!post.vidId;
 
     const existing = await db
         .collection("bulletinReactions")
@@ -1897,6 +1899,43 @@ export async function reactToBulletinPostAction(
     for (const r of reactions) {
         counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
         if (r.userId.toString() === user._id.toString()) myReaction = r.type;
+    }
+
+    // Mirror the reaction to the Vid so the Vid page and the bulletin post
+    // share the same reactions. Best-effort: a mirror failure never blocks the
+    // bulletin reaction itself.
+    if (isVidMirror) {
+        try {
+            const vidOid = new ObjectId(post.vidId);
+            if (myReaction) {
+                await db.collection("vidReactions").updateOne(
+                    { vidId: vidOid, userId: user._id },
+                    {
+                        $set: { type: myReaction },
+                        $setOnInsert: {
+                            vidId: vidOid,
+                            userId: user._id,
+                            createdAt: new Date(),
+                        },
+                    },
+                    { upsert: true },
+                );
+            } else {
+                await db
+                    .collection("vidReactions")
+                    .deleteOne({ vidId: vidOid, userId: user._id });
+            }
+            const likeCount = await db
+                .collection("vidReactions")
+                .countDocuments({ vidId: vidOid });
+            await db
+                .collection("vids")
+                .updateOne({ _id: vidOid }, { $set: { likeCount } });
+            revalidatePath("/vids");
+            revalidatePath(`/vids/${vidOid.toString()}`);
+        } catch (error) {
+            console.error("Vid reaction mirror failed:", error);
+        }
     }
 
     revalidatePath("/");
@@ -2079,6 +2118,38 @@ export async function createBulletinCommentAction(
         mentionedUserIds,
     });
 
+    // Mirror the comment to the Vid so the Vid page and the bulletin post
+    // share the same comments. Best-effort and silent (no second
+    // notification): the bulletin comment notification above already covers it.
+    if (post.vidId) {
+        try {
+            const vidOid = new ObjectId(post.vidId);
+            const vid = await db
+                .collection("vids")
+                .findOne({ _id: vidOid, status: "published" });
+            if (vid) {
+                const mirrored = await db.collection("vidComments").insertOne({
+                    vidId: vidOid,
+                    authorId: user._id,
+                    body,
+                    createdAt,
+                    bulletinCommentId: inserted.insertedId,
+                });
+                await db.collection("bulletinComments").updateOne(
+                    { _id: inserted.insertedId },
+                    { $set: { vidCommentId: mirrored.insertedId } },
+                );
+                await db
+                    .collection("vids")
+                    .updateOne({ _id: vidOid }, { $inc: { commentCount: 1 } });
+                revalidatePath("/vids");
+                revalidatePath(`/vids/${vidOid.toString()}`);
+            }
+        } catch (error) {
+            console.error("Vid comment mirror failed:", error);
+        }
+    }
+
     const author = await db.collection("users").findOne({ _id: post.authorId });
     if (author && author._id.toString() !== user._id.toString()) {
         await notify(
@@ -2160,6 +2231,29 @@ export async function deleteBulletinCommentAction(
     await db
         .collection("bulletinCommentReactions")
         .deleteMany({ commentId: comment._id });
+    // Delete the mirrored Vid comment as well so both surfaces stay in sync.
+    if (comment.vidCommentId) {
+        try {
+            const vidComment = await db
+                .collection("vidComments")
+                .findOne({ _id: new ObjectId(comment.vidCommentId) });
+            if (vidComment) {
+                await db
+                    .collection("vidComments")
+                    .deleteOne({ _id: vidComment._id });
+                await db
+                    .collection("vids")
+                    .updateOne(
+                        { _id: vidComment.vidId, commentCount: { $gt: 0 } },
+                        { $inc: { commentCount: -1 } },
+                    );
+                revalidatePath("/vids");
+                revalidatePath(`/vids/${vidComment.vidId.toString()}`);
+            }
+        } catch (error) {
+            console.error("Vid comment mirror delete failed:", error);
+        }
+    }
     revalidatePath("/");
     if (post) {
         const author = await db
@@ -2806,15 +2900,58 @@ export async function finishVidAction(
             },
         },
     );
+
+    // Mirror every published Vid into the bulletin feed as a normal post so it
+    // shows on the homepage. The post links back to /vids/[id] and renders the
+    // video inline via PostCard. Idempotent: one bulletin post per vid.
+    try {
+        const freshVid = await db
+            .collection("vids")
+            .findOne({ _id: vid._id });
+        const existing = await db
+            .collection("bulletinPosts")
+            .findOne({ vidId: vid._id });
+        if (!existing) {
+            const mentionedUserIds = await resolveMentionedUserIds(
+                user._id.toString(),
+                caption,
+            );
+            await db.collection("bulletinPosts").insertOne({
+                authorId: user._id,
+                body: caption,
+                visibility: "public",
+                photo: null,
+                photoPublicId: null,
+                vidId: vid._id,
+                vidVideoUrl: freshVid?.videoUrl ?? videoUrl,
+                vidThumbnailUrl: freshVid?.thumbnailUrl ?? vid.thumbnailUrl ?? null,
+                createdAt: new Date(),
+                mentionedUserIds,
+            });
+        }
+    } catch (error) {
+        console.error("Vid bulletin mirror failed:", error);
+    }
+    revalidatePath("/");
     revalidatePath("/vids");
     revalidatePath(`/vids/${vid._id.toString()}`);
     revalidatePath(`/${user.username}`);
     return { ok: true };
 }
 
-export async function likeVidAction(
+// Emoji reactions on a Vid (toggle/change, same semantics as bulletin post
+// reactions). The reaction is mirrored to the Vid's bulletin post so both
+// surfaces share the same reactions.
+export async function reactToVidAction(
     vidId: string,
-): Promise<ActionResult & { likeCount?: number }> {
+    type: string,
+): Promise<
+    ActionResult & {
+        reactions?: BulletinReactionSummary[];
+        myReaction?: string | null;
+        likeCount?: number;
+    }
+> {
     const user = await requireUser();
     const db = getDb();
     let oid: ObjectId;
@@ -2823,62 +2960,100 @@ export async function likeVidAction(
     } catch {
         return { error: "Vid not found." };
     }
+    if (!(REACTION_TYPES as readonly string[]).includes(type))
+        return { error: "Invalid reaction." };
     const vid = await db
         .collection("vids")
         .findOne({ _id: oid, status: "published" });
     if (!vid) return { error: "Vid not found." };
 
-    let inserted = false;
-    try {
-        await db.collection("vidLikes").insertOne({
+    const existing = await db
+        .collection("vidReactions")
+        .findOne({ vidId: oid, userId: user._id });
+    const created = !existing;
+    if (existing && existing.type === type) {
+        await db.collection("vidReactions").deleteOne({ _id: existing._id });
+    } else if (existing) {
+        await db
+            .collection("vidReactions")
+            .updateOne({ _id: existing._id }, { $set: { type } });
+    } else {
+        await db.collection("vidReactions").insertOne({
             vidId: oid,
             userId: user._id,
+            type,
             createdAt: new Date(),
         });
-        inserted = true;
+    }
+
+    if (created) {
+        const author = await db.collection("users").findOne({ _id: vid.userId });
+        if (author && author._id.toString() !== user._id.toString()) {
+            await notify(
+                author._id.toString(),
+                "vid_reaction",
+                user._id.toString(),
+                `${user.displayName} reacted ${type} to your Vid.`,
+                `/vids?v=${vidId}`,
+            ).catch(() => {});
+        }
+    }
+
+    const rows = (await db
+        .collection("vidReactions")
+        .find({ vidId: oid })
+        .toArray()) as unknown as { userId: ObjectId; type: string }[];
+    const counts = new Map<string, number>();
+    let myReaction: string | null = null;
+    for (const r of rows) {
+        counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+        if (r.userId.toString() === user._id.toString()) myReaction = r.type;
+    }
+    const likeCount = rows.length;
+    await db.collection("vids").updateOne({ _id: oid }, { $set: { likeCount } });
+
+    // Mirror to the Vid's bulletin post. Silent and best-effort: no extra
+    // notification here, the Vid reaction above already covers it.
+    try {
+        const mirror = await db
+            .collection("bulletinPosts")
+            .findOne({ vidId: oid }, { projection: { _id: 1 } });
+        if (mirror) {
+            if (myReaction) {
+                await db.collection("bulletinReactions").updateOne(
+                    { postId: mirror._id, userId: user._id },
+                    {
+                        $set: { type: myReaction },
+                        $setOnInsert: {
+                            postId: mirror._id,
+                            userId: user._id,
+                            createdAt: new Date(),
+                        },
+                    },
+                    { upsert: true },
+                );
+            } else {
+                await db
+                    .collection("bulletinReactions")
+                    .deleteOne({ postId: mirror._id, userId: user._id });
+            }
+            revalidatePath("/");
+            revalidatePath(`/bulletin/${mirror._id.toString()}`);
+        }
     } catch (error) {
-        // Unique index on (vidId, userId) prevents duplicate likes.
-        if ((error as { code?: number }).code !== 11000) throw error;
+        console.error("Bulletin reaction mirror failed:", error);
     }
-    if (inserted) {
-        await db
-            .collection("vids")
-            .updateOne({ _id: oid }, { $inc: { likeCount: 1 } });
-    }
+
+    revalidatePath("/vids");
     revalidatePath(`/vids/${vidId}`);
     return {
         ok: true,
-        likeCount: (vid.likeCount ?? 0) + (inserted ? 1 : 0),
+        reactions: [...counts.entries()]
+            .map(([t, c]) => ({ type: t, count: c }))
+            .sort((a, b) => b.count - a.count),
+        myReaction,
+        likeCount,
     };
-}
-
-export async function unlikeVidAction(
-    vidId: string,
-): Promise<ActionResult & { likeCount?: number }> {
-    const user = await requireUser();
-    const db = getDb();
-    let oid: ObjectId;
-    try {
-        oid = new ObjectId(vidId);
-    } catch {
-        return { error: "Vid not found." };
-    }
-    const result = await db
-        .collection("vidLikes")
-        .deleteOne({ vidId: oid, userId: user._id });
-    if (result.deletedCount > 0) {
-        await db
-            .collection("vids")
-            .updateOne(
-                { _id: oid, likeCount: { $gt: 0 } },
-                { $inc: { likeCount: -1 } },
-            );
-    }
-    const vid = await db
-        .collection("vids")
-        .findOne({ _id: oid }, { projection: { likeCount: 1 } });
-    revalidatePath(`/vids/${vidId}`);
-    return { ok: true, likeCount: Math.max(0, vid?.likeCount ?? 0) };
 }
 
 export async function createVidCommentAction(
@@ -2915,6 +3090,39 @@ export async function createVidCommentAction(
     await db
         .collection("vids")
         .updateOne({ _id: oid }, { $inc: { commentCount: 1 } });
+
+    // Mirror the comment to the Vid's bulletin post so both surfaces share the
+    // same comments. Silent and best-effort (no second notification): the Vid
+    // comment notification below already covers it.
+    try {
+        const mirror = await db
+            .collection("bulletinPosts")
+            .findOne({ vidId: oid }, { projection: { _id: 1 } });
+        if (mirror) {
+            const mirrorMentionRefs = await resolveMentionRefs(
+                user._id.toString(),
+                body,
+            );
+            const mirrored = await db.collection("bulletinComments").insertOne({
+                postId: mirror._id,
+                authorId: user._id,
+                body,
+                createdAt,
+                mentionedUserIds: mirrorMentionRefs.map(
+                    (ref) => new ObjectId(ref.userId),
+                ),
+                vidCommentId: inserted.insertedId,
+            });
+            await db.collection("vidComments").updateOne(
+                { _id: inserted.insertedId },
+                { $set: { bulletinCommentId: mirrored.insertedId } },
+            );
+            revalidatePath("/");
+            revalidatePath(`/bulletin/${mirror._id.toString()}`);
+        }
+    } catch (error) {
+        console.error("Bulletin comment mirror failed:", error);
+    }
 
     if (vid.userId.toString() !== user._id.toString()) {
         await notify(
@@ -2982,6 +3190,30 @@ export async function deleteVidCommentAction(
             { _id: comment.vidId, commentCount: { $gt: 0 } },
             { $inc: { commentCount: -1 } },
         );
+    // Delete the mirrored bulletin comment as well so both surfaces stay in
+    // sync, including its reactions.
+    if (comment.bulletinCommentId) {
+        try {
+            const bulletinCommentId = new ObjectId(comment.bulletinCommentId);
+            const bulletinComment = await db
+                .collection("bulletinComments")
+                .findOne({ _id: bulletinCommentId });
+            if (bulletinComment) {
+                await db
+                    .collection("bulletinComments")
+                    .deleteOne({ _id: bulletinComment._id });
+                await db
+                    .collection("bulletinCommentReactions")
+                    .deleteMany({ commentId: bulletinComment._id });
+                revalidatePath("/");
+                revalidatePath(
+                    `/bulletin/${bulletinComment.postId.toString()}`,
+                );
+            }
+        } catch (error) {
+            console.error("Bulletin comment mirror delete failed:", error);
+        }
+    }
     revalidatePath(`/vids/${comment.vidId.toString()}`);
     return { ok: true };
 }
@@ -3049,6 +3281,7 @@ export async function deleteVidAction(
         );
     await Promise.all([
         db.collection("vidLikes").deleteMany({ vidId: oid }),
+        db.collection("vidReactions").deleteMany({ vidId: oid }),
         db.collection("vidComments").deleteMany({ vidId: oid }),
         db.collection("vidViews").deleteMany({ vidId: oid }),
         db.collection("vidShares").deleteMany({ vidId: oid }),
@@ -3056,6 +3289,25 @@ export async function deleteVidAction(
             .collection("reports")
             .deleteMany({ type: "vid", reportedId: oid }),
     ]);
+    // Remove the auto-created bulletin mirror post(s) for this vid, along with
+    // their comments and reactions, so deleted vids disappear from home feed.
+    try {
+        const mirrored = await db
+            .collection("bulletinPosts")
+            .find({ vidId: oid }, { projection: { _id: 1 } })
+            .toArray();
+        if (mirrored.length > 0) {
+            const postIds = mirrored.map((p) => p._id);
+            await Promise.all([
+                db.collection("bulletinPosts").deleteMany({ _id: { $in: postIds } }),
+                db.collection("bulletinComments").deleteMany({ postId: { $in: postIds } }),
+                db.collection("bulletinReactions").deleteMany({ postId: { $in: postIds } }),
+            ]);
+        }
+    } catch (error) {
+        console.error("Vid bulletin mirror cleanup failed:", error);
+    }
+    revalidatePath("/");
     revalidatePath("/vids");
     revalidatePath(`/vids/${vidId}`);
     revalidatePath(`/${user.username}`);

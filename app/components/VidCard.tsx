@@ -4,16 +4,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle, MoreHorizontal } from "lucide-react";
 import {
-    likeVidAction,
-    unlikeVidAction,
+    reactToVidAction,
     sendFriendRequestAction,
     acceptFriendRequestFromAction,
     deleteVidAction,
     reportVidAction,
 } from "@/app/actions";
-import { VID_REPORT_CATEGORIES, type SerializedVid } from "@/lib/types";
+import {
+    VID_REPORT_CATEGORIES,
+    type BulletinReactionSummary,
+    type SerializedVid,
+} from "@/lib/types";
 import { displayNameOrUsername, formatCount, timeAgo } from "@/lib/utils";
 import ActionButton from "./ActionButton";
+import ReactionPicker from "./ReactionPicker";
 import UserAvatar from "./UserAvatar";
 import VidComments from "./VidComments";
 import VidShareButton from "./VidShareButton";
@@ -51,38 +55,51 @@ export default function VidCard({
     currentUserId?: string;
     onDeleted?: (vidId: string) => void;
 }) {
-    const [myLike, setMyLike] = useState(vid.myLike);
+    const [reactions, setReactions] = useState<BulletinReactionSummary[]>(
+        vid.reactions ?? [],
+    );
+    const [myReaction, setMyReaction] = useState<string | null>(
+        vid.myReaction ?? null,
+    );
     const [likeCount, setLikeCount] = useState(vid.likeCount);
     const [commentCount, setCommentCount] = useState(vid.commentCount);
     const [friendshipStatus, setFriendshipStatus] = useState(
         vid.friendshipStatus,
     );
     const [menuOpen, setMenuOpen] = useState(false);
+    const [reactOpen, setReactOpen] = useState(false);
+    const [reacting, setReacting] = useState(false);
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
     const [followBusy, setFollowBusy] = useState(false);
 
     const isOwner = currentUserId === vid.userId;
     const canModerate = isOwner || currentUserId === "genggengpro";
+    const countOf = (type: string) =>
+        reactions.find((reaction) => reaction.type === type)?.count ?? 0;
 
-    const toggleLike = async () => {
-        if (!isLoggedIn) return;
-        const next = !myLike;
-        setMyLike(next);
-        setLikeCount((count) => Math.max(0, count + (next ? 1 : -1)));
+    const react = async (type: string) => {
+        if (!isLoggedIn || reacting) return;
+        setReactOpen(false);
+        setReacting(true);
+        const previous = { reactions, myReaction, likeCount };
         try {
-            const res = next
-                ? await likeVidAction(vid._id)
-                : await unlikeVidAction(vid._id);
-            if (res.error) {
-                setMyLike(!next);
-                setLikeCount((count) => Math.max(0, count + (next ? -1 : 1)));
+            const res = await reactToVidAction(vid._id, type);
+            if (res.error || !res.ok) {
+                setReactions(previous.reactions);
+                setMyReaction(previous.myReaction);
+                setLikeCount(previous.likeCount);
                 return;
             }
+            if (res.reactions) setReactions(res.reactions);
+            setMyReaction(res.myReaction ?? null);
             if (typeof res.likeCount === "number") setLikeCount(res.likeCount);
         } catch {
-            setMyLike(!next);
-            setLikeCount((count) => Math.max(0, count + (next ? -1 : 1)));
+            setReactions(previous.reactions);
+            setMyReaction(previous.myReaction);
+            setLikeCount(previous.likeCount);
+        } finally {
+            setReacting(false);
         }
     };
 
@@ -125,30 +142,61 @@ export default function VidCard({
             <div className="pointer-events-none absolute inset-0 z-10">
                 {/* Action rail */}
                 <div className="pointer-events-auto absolute bottom-24 right-2 z-20 flex flex-col items-center gap-4 sm:right-3 sm:bottom-28">
-                    <div className="flex flex-col items-center gap-0.5">
+                    <div className="relative flex flex-col items-center gap-0.5">
                         <button
                             type="button"
-                            onClick={toggleLike}
+                            onClick={() => setReactOpen((open) => !open)}
                             className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 text-white transition-transform hover:scale-105 ${
-                                myLike
+                                myReaction
                                     ? "bg-[#cc3399]"
                                     : "bg-black/40 hover:bg-black/60"
                             }`}
                             aria-label={
-                                myLike ? "Unlike this Vid" : "Like this Vid"
+                                myReaction
+                                    ? `Change or remove reaction, ${myReaction}`
+                                    : "React to this Vid"
                             }
-                            title={myLike ? "Unlike" : "Like"}
-                            disabled={!isLoggedIn}
+                            aria-haspopup="true"
+                            aria-expanded={reactOpen}
+                            title={
+                                reactions.length > 0
+                                    ? reactions
+                                          .map((r) => `${r.type} ${r.count}`)
+                                          .join(" · ")
+                                    : "React"
+                            }
+                            disabled={!isLoggedIn || reacting}
                         >
-                            <Heart
-                                size={22}
-                                aria-hidden="true"
-                                className={myLike ? "fill-white" : ""}
-                            />
+                            {myReaction ? (
+                                <span
+                                    className="text-[22px] leading-none"
+                                    aria-hidden="true"
+                                >
+                                    {myReaction}
+                                </span>
+                            ) : (
+                                <Heart size={22} aria-hidden="true" />
+                            )}
                         </button>
                         <span className="text-[12px] font-bold text-white drop-shadow">
                             {formatCount(likeCount)}
                         </span>
+                        {reactOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setReactOpen(false)}
+                                    aria-hidden="true"
+                                />
+                                <ReactionPicker
+                                    myReaction={myReaction}
+                                    reacting={reacting}
+                                    countOf={countOf}
+                                    onReact={react}
+                                    align="right"
+                                />
+                            </>
+                        )}
                     </div>
 
                     <div className="flex flex-col items-center gap-0.5">

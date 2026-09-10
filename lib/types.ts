@@ -117,6 +117,11 @@ export interface BulletinPost {
   // User ids of friends mentioned via @username in the body, validated on the
   // server at create/update time so the client can't tag non-friends.
   mentionedUserIds?: ObjectId[];
+  // Optional link to a Vid. When set, this bulletin post is an auto-created
+  // wrapper so the Vid shows in the homepage bulletin feed like a normal post.
+  vidId?: ObjectId | null;
+  vidVideoUrl?: string | null;
+  vidThumbnailUrl?: string | null;
 }
 
 // Friend-shaped subset used by the @mention autocomplete in the post composer.
@@ -153,6 +158,9 @@ export interface BulletinComment {
   // Friends mentioned via @username in the comment body, validated on the
   // server at create/update time.
   mentionedUserIds?: ObjectId[];
+  // Cross-link to the mirrored Vid comment when this comment lives on a
+  // Vid bulletin mirror post, so both surfaces share the same comments.
+  vidCommentId?: ObjectId | null;
 }
 
 export interface BulletinCommentWithAuthor extends BulletinComment {
@@ -228,6 +236,9 @@ export interface BulletinPostCard {
   mentionedUserIds?: string[];
   // Validated @mentions resolved to usernames for rendering profile links.
   mentions?: BulletinMentionRef[];
+  vidId?: string | null;
+  vidVideoUrl?: string | null;
+  vidThumbnailUrl?: string | null;
 }
 
 export interface SerializedBulletinComment {
@@ -255,6 +266,9 @@ export interface SerializedBulletinPost {
   comments: SerializedBulletinComment[];
   mentionedUserIds?: string[];
   mentions?: BulletinMentionRef[];
+  vidId?: string | null;
+  vidVideoUrl?: string | null;
+  vidThumbnailUrl?: string | null;
 }
 
 export interface Session {
@@ -440,12 +454,25 @@ export interface VidComment {
   authorId: ObjectId;
   body: string;
   createdAt: Date;
+  // Cross-link to the mirrored bulletin comment on the Vid's bulletin mirror
+  // post, so both surfaces share the same comments.
+  bulletinCommentId?: ObjectId | null;
 }
 
 export interface VidLike {
   _id: ObjectId;
   vidId: ObjectId;
   userId: ObjectId;
+  createdAt: Date;
+}
+
+// One reaction per user per Vid (toggle/change semantics, same as bulletin
+// post reactions). Replaces the old heart-only vidLikes.
+export interface VidReaction {
+  _id: ObjectId;
+  vidId: ObjectId;
+  userId: ObjectId;
+  type: string;
   createdAt: Date;
 }
 
@@ -498,8 +525,10 @@ export interface SerializedVid {
   status: VidStatus;
   createdAt: string;
   author: VidAuthorCard;
+  // likeCount is the total number of reactions (all emoji types).
   // Viewer-specific fields populated when a viewer id is provided.
-  myLike: boolean;
+  reactions: BulletinReactionSummary[];
+  myReaction: string | null;
   friendshipStatus: "self" | "none" | "pending_out" | "pending_in" | "friends";
 }
 

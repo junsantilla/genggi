@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getVidsFeedPage } from "@/lib/vids";
+import { getVidById, getVidsFeedPage } from "@/lib/vids";
 import VidsFeed from "@/app/components/VidsFeed";
 
 export const metadata: Metadata = {
@@ -11,9 +11,30 @@ export const metadata: Metadata = {
         "Short vertical videos on Genggi — watch, like, comment, and share Vids from across the community.",
 };
 
-export default async function VidsPage() {
+// Supports deep-linking into the scrollable feed: /vids?v=<vidId> lands on
+// that Vid's slide so the viewer can keep swiping through the rest.
+export default async function VidsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ v?: string }>;
+}) {
+    const { v } = await searchParams;
     const user = await getCurrentUser();
-    const feed = await getVidsFeedPage(user?._id.toString() ?? null, null);
+    const viewerId = user?._id.toString() ?? null;
+    const feed = await getVidsFeedPage(viewerId, null);
+
+    let initialVideos = feed.videos;
+    let startAtVidId: string | null = null;
+    if (v) {
+        const target = await getVidById(v, viewerId);
+        if (target) {
+            startAtVidId = target._id;
+            initialVideos = [
+                target,
+                ...feed.videos.filter((vid) => vid._id !== target._id),
+            ];
+        }
+    }
 
     return (
         // -my-2 compensates the root layout's main py-2 so the feed fills the
@@ -22,7 +43,8 @@ export default async function VidsPage() {
             className={`${user ? "-my-2" : ""} vids-page h-[calc(100dvh-81px)] w-full`}
         >
             <VidsFeed
-                initialVideos={feed.videos}
+                initialVideos={initialVideos}
+                startAtVidId={startAtVidId}
                 hasMore={feed.nextCursor !== null}
                 isLoggedIn={!!user}
                 currentUserId={user?._id.toString()}

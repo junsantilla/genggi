@@ -36,6 +36,7 @@ import YouTubeLinkEmbed, {
     findYouTubeVideoId,
     stripYouTubeLinks,
 } from "./YouTubeLinkEmbed";
+import BulletinVidEmbed from "./BulletinVidEmbed";
 
 type Post = BulletinPostCard & { groupId?: string };
 
@@ -345,6 +346,13 @@ export default function PostCard({
                                 decoding="async"
                             />
                         </Link>
+                    )}
+                    {post.vidId && post.vidVideoUrl && (
+                        <BulletinVidEmbed
+                            vidId={post.vidId}
+                            videoUrl={post.vidVideoUrl}
+                            thumbnailUrl={post.vidThumbnailUrl}
+                        />
                     )}
                     {(!isGroup || canInteract) && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

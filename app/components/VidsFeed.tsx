@@ -15,11 +15,14 @@ import VidCard from "./VidCard";
 // slides only load metadata.
 export default function VidsFeed({
     initialVideos,
+    startAtVidId,
     hasMore,
     isLoggedIn,
     currentUserId,
 }: {
     initialVideos: SerializedVid[];
+    // Deep-link target (from /vids?v=<id>): the feed opens on this slide.
+    startAtVidId?: string | null;
     hasMore: boolean;
     isLoggedIn: boolean;
     currentUserId?: string;
@@ -29,7 +32,7 @@ export default function VidsFeed({
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState("");
     const [activeId, setActiveId] = useState<string | null>(
-        initialVideos[0]?._id ?? null,
+        startAtVidId ?? initialVideos[0]?._id ?? null,
     );
     const containerRef = useRef<HTMLDivElement>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -40,6 +43,17 @@ export default function VidsFeed({
     useEffect(() => {
         videosRef.current = videos;
     }, [videos]);
+
+    // Deep-link entry: jump straight to the requested slide on mount so the
+    // viewer lands on that Vid and can keep scrolling from there.
+    useEffect(() => {
+        if (!startAtVidId) return;
+        const container = containerRef.current;
+        const slide = container?.querySelector<HTMLElement>(
+            `[data-vid-slide][data-vid-id="${startAtVidId}"]`,
+        );
+        if (container && slide) container.scrollTop = slide.offsetTop;
+    }, [startAtVidId]);
 
     const reportView = useCallback((vidId: string) => {
         const watch = watchRef.current;

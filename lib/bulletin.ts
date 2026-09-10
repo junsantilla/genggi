@@ -266,6 +266,9 @@ export function toBulletinPostCard(post: BulletinPostWithMentions): BulletinPost
     body: post.body,
     visibility: post.visibility,
     photo: post.photo,
+    vidId: post.vidId?.toString() ?? null,
+    vidVideoUrl: post.vidVideoUrl ?? null,
+    vidThumbnailUrl: post.vidThumbnailUrl ?? null,
     createdAt: post.createdAt,
     author: {
       _id: post.author._id.toString(),
@@ -302,6 +305,9 @@ export function serializeBulletinPost(post: BulletinPostWithMentions): Serialize
     body: post.body,
     visibility: post.visibility,
     photo: post.photo,
+    vidId: post.vidId?.toString() ?? null,
+    vidVideoUrl: post.vidVideoUrl ?? null,
+    vidThumbnailUrl: post.vidThumbnailUrl ?? null,
     createdAt: post.createdAt.toISOString(),
     author: {
       _id: post.author._id.toString(),

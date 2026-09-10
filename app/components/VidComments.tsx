@@ -188,7 +188,7 @@ export default function VidComments({
                                                     </ActionButton>
                                                 )}
                                             </div>
-                                            <p className="whitespace-pre-wrap break-words text-[13px] text-black">
+                                            <p className="whitespace-pre-wrap break-words text-[13px] text-black dark:text-white">
                                                 {comment.body}
                                             </p>
                                         </div>
