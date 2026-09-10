@@ -77,7 +77,13 @@ export default function PwaInstallButton() {
                 Download App
             </button>
             {showInstructions && (
-                <div className="absolute right-0 top-full z-50 mt-1 w-72 border border-[#6699cc] bg-white p-2 text-[12px] font-normal leading-snug text-[#003399] shadow-md">
+                <>
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowInstructions(false)}
+                        aria-hidden="true"
+                    />
+                    <div className="absolute right-0 top-full z-50 mt-1 w-72 border border-[#6699cc] bg-white p-2 text-[12px] font-normal leading-snug text-[#003399] shadow-md">
                     {"standalone" in window.navigator ? (
                         <>
                             On iPhone, tap <Share size={13} className="inline-block align-text-bottom" aria-hidden="true" /> <strong>Share</strong>, then choose
@@ -90,7 +96,8 @@ export default function PwaInstallButton() {
                             <strong> Add to Home screen</strong>.
                         </>
                     )}
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );

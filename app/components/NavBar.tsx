@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 import PwaInstallButton from "./PwaInstallButton";
+import ThemeToggle from "./ThemeToggle";
 
 function NavLink({
     href,
@@ -79,6 +80,10 @@ export default function NavBar({
                         {isLoggedIn && (
                             <div className="flex items-center gap-1 sm:hidden">
                                 <PwaInstallButton />
+                                <ThemeToggle
+                                    variant="icon"
+                                    className="text-white"
+                                />
                                 <button
                                     type="button"
                                     className="p-1.5"
@@ -124,7 +129,7 @@ export default function NavBar({
                                 >
                                     Messages
                                 </NavLink>
-                                <NavLink href="/chatboxes">Chatbox</NavLink>
+                                {/* Hidden for now: <NavLink href="/chatboxes">Chatbox</NavLink> */}
                                 <NavLink href="/groups">Groups</NavLink>
                                 <NavLink href="/vids">Vids</NavLink>
                                 <NavLink href="/search">Search</NavLink>
@@ -143,6 +148,10 @@ export default function NavBar({
                                     <NavLink href="/admin">Admin</NavLink>
                                 )} */}
                                 <LogoutButton />
+                                <ThemeToggle
+                                    variant="icon"
+                                    className="text-[#003399] dark:text-[#e8e8e8]"
+                                />
                             </div>
                         </>
                     ) : (
@@ -156,19 +165,30 @@ export default function NavBar({
                             </button>
                             <NavLink href="/login">Login</NavLink>
                             <NavLink href="/signup">Create Account</NavLink>
+                            <ThemeToggle
+                                variant="icon"
+                                className="text-[#003399] dark:text-[#e8e8e8]"
+                            />
                         </div>
                     )}
                 </div>
             </nav>
             {isLoggedIn && menuOpen && (
-                <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md sm:hidden">
-                    <div className="flex flex-col items-stretch gap-1">
-                        <NavLink href="/edit">Edit Profile</NavLink>
-                        <NavLink href="/layouts">Layouts</NavLink>
-                        {/* {isAdmin && <NavLink href="/admin">Admin</NavLink>} */}
-                        <LogoutButton />
+                <>
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setMenuOpen(false)}
+                        aria-hidden="true"
+                    />
+                    <div className="absolute right-2.5 top-full z-50 min-w-[190px] border border-[#6699cc] bg-[#dbe9f7] p-2 shadow-md sm:hidden">
+                        <div className="flex flex-col items-stretch gap-1">
+                            <NavLink href="/edit">Edit Profile</NavLink>
+                            <NavLink href="/layouts">Layouts</NavLink>
+                            {/* {isAdmin && <NavLink href="/admin">Admin</NavLink>} */}
+                            <LogoutButton />
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </header>
     );

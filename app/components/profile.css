@@ -500,3 +500,23 @@
 .bulletin-board-posts {
     width: 100%;
 }
+
+/* ------------------------------------------------------------------
+ * Site dark mode (`.dark` on <html> via the theme toggle).
+ * Blue labels/links go white; user custom CSS injected later inside
+ * `.profile-page` still wins ties by source order.
+ * ------------------------------------------------------------------ */
+
+.dark .profile-brief-label,
+.dark .profile-music-title,
+.dark .profile-testimonial-form-title,
+.dark .profile-private-title,
+.dark .profile-friend-name,
+.dark .profile-link,
+.dark .profile-vids-browse {
+    color: #fff;
+}
+.dark .profile-music-player {
+    background: #0a0a0a;
+    border-color: #333;
+}

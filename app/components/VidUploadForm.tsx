@@ -455,7 +455,7 @@ export default function VidUploadForm() {
                     ref={fileInputRef}
                     type="file"
                     accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv"
-                    className="btn-file input mb-2"
+                    className="hidden"
                     onChange={(event) => pickFile(event.target.files?.[0])}
                     aria-label="Choose a video file"
                 />

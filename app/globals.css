@@ -657,3 +657,324 @@ select {
         @apply font-sans;
     }
 }
+
+/* ------------------------------------------------------------------
+ * Site dark mode. Toggled by adding `.dark` to <html> via
+ * SiteThemeProvider (persisted as `genggi-theme` in localStorage,
+ * defaults to prefers-color-scheme). Tailwind v4's
+ * `@custom-variant dark` handles `dark:` utilities; the rules below
+ * cover the legacy hardcoded palette (plain-CSS `.box`/`.input`/`.btn`
+ * + Tailwind arbitrary hex classes like `bg-[#dbe9f7]`) so the whole
+ * site follows the toggle without touching 100+ files.
+ *
+ * Specificity is kept at two classes max (e.g. `.dark .box-content`)
+ * so user profile CSS injected later inside `.profile-page` still wins
+ * ties by source order.
+ * ------------------------------------------------------------------ */
+
+.dark {
+    color-scheme: dark;
+    --background: #000000;
+    --foreground: #e8e8e8;
+    --card: #0a0a0a;
+    --card-foreground: #e8e8e8;
+    --popover: #0a0a0a;
+    --popover-foreground: #e8e8e8;
+    --primary: #e8e8e8;
+    --primary-foreground: #0a0a0a;
+    --secondary: #1a1a1a;
+    --secondary-foreground: #e8e8e8;
+    --muted: #161616;
+    --muted-foreground: #a3a3a3;
+    --accent: #1a1a1a;
+    --accent-foreground: #e8e8e8;
+    --border: #262626;
+    --input: #333333;
+    --sidebar: #0a0a0a;
+    --sidebar-foreground: #e8e8e8;
+    --sidebar-accent: #161616;
+    --sidebar-accent-foreground: #e8e8e8;
+    --sidebar-border: #262626;
+}
+
+.dark body {
+    background-color: #000;
+    color: #e8e8e8;
+}
+
+/* Legacy plain-CSS panels */
+.dark .box {
+    border-color: #333;
+}
+/* Box outer border is inline (`style={{ borderColor }}`) — needs
+ * !important to beat it. */
+.dark div.box[style] {
+    border-color: #333 !important;
+}
+.dark .box-title {
+    color: #fff;
+}
+/* Box titles use inline `style={{ background: border }}` — flatten the
+ * default blue to near-black in dark mode. */
+.dark div.box-title[style] {
+    background-color: #161616 !important;
+}
+.dark .box-content {
+    background-color: #0a0a0a;
+    color: #e8e8e8;
+}
+/* Box uses inline `style={{ background: bg }}` — needs !important. */
+.dark div.box-content[style] {
+    background-color: #0a0a0a !important;
+}
+.dark .input {
+    background: #0a0a0a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+.dark .input::placeholder {
+    color: #737373;
+}
+/* Primary buttons are blue (`#6699cc`) in light mode — monochrome in
+ * dark mode. Danger/ghost variants are untouched. */
+.dark .btn:not(.btn-danger):not(.btn-ghost) {
+    background: #ededed;
+    border-color: #ededed;
+    color: #0a0a0a;
+}
+.dark .btn:not(.btn-danger):not(.btn-ghost):hover {
+    background: #fff;
+}
+.dark input[type="file"].btn-file::file-selector-button {
+    background: #ededed;
+    border-color: #ededed;
+    color: #0a0a0a;
+}
+.dark input[type="file"].btn-file::file-selector-button:hover {
+    background: #fff;
+}
+/* PostComposer buttons layer `bg-secondary` over the default Button
+ * variant. In dark mode that resolves to near-black bg with near-black
+ * (`text-primary-foreground`) text — keep them light like the other
+ * buttons instead. */
+.dark .bg-secondary {
+    background-color: #ededed;
+}
+.dark .hover\:bg-primary\/80:hover {
+    background-color: #fff;
+}
+.dark .btn-ghost {
+    background: transparent;
+    color: #e8e8e8;
+    border-color: #404040;
+}
+.dark .btn-ghost:hover {
+    background: #1a1a1a;
+}
+.dark .label {
+    color: #a3a3a3;
+}
+.dark .pic-bg {
+    background-image: repeating-linear-gradient(
+        45deg,
+        #111,
+        #111 10px,
+        #1a1a1a 10px,
+        #1a1a1a 20px
+    );
+}
+.dark .friend-bg {
+    background: #0a0a0a;
+    border-bottom-color: #333;
+}
+.dark .friend-thumb-bg {
+    background-image: repeating-linear-gradient(
+        45deg,
+        #1c1c1c,
+        #1c1c1c 6px,
+        #242424 6px,
+        #242424 12px
+    );
+}
+.dark .auth-card {
+    background: #0a0a0a;
+    border-color: #333;
+}
+.dark .profile-generator-sidebar {
+    background: #0a0a0a;
+    border-left-color: #333;
+}
+.dark .profile-generator-sidebar-header {
+    background: #000;
+    border-bottom: 1px solid #262626;
+}
+.dark .profile-generator-kicker {
+    color: #737373;
+}
+.dark .profile-generator-icon-button:hover,
+.dark .profile-generator-open-button:hover {
+    background: #262626;
+}
+.dark .profile-generator-open-button {
+    background: #1a1a1a;
+    border-color: #333;
+}
+.dark .profile-generator-section-heading h2,
+.dark .advance {
+    color: #fff;
+}
+.dark .profile-generator-subsection h3,
+.dark .profile-generator-field,
+.dark .profile-generator-color-control,
+.dark .profile-generator-check {
+    color: #c9c9c9;
+}
+.dark .profile-generator-color-row code {
+    color: #e8e8e8;
+}
+.dark .profile-generator-color-row input[type="color"] {
+    border-color: #404040;
+    background: #0a0a0a;
+}
+.dark .profile-generator-section {
+    border-bottom-color: #262626;
+}
+.dark .action-button-error,
+.dark .bound-form-error {
+    color: #ff8080;
+}
+.dark .bound-form-success {
+    color: #4ade80;
+}
+
+/* Hardcoded Tailwind palette -> dark equivalents (unlayered, so these
+ * beat utilities only when `.dark` is present). */
+.dark .bg-\[\#dbe9f7\],
+.dark .bg-\[\#DBE9F7\] {
+    background-color: #111;
+}
+.dark .bg-\[\#f5f9ff\],
+.dark .bg-\[\#f0f6ff\],
+.dark .bg-\[\#eef3fa\] {
+    background-color: #0a0a0a;
+}
+.dark .bg-\[\#c9ddf0\],
+.dark .bg-\[\#cddcee\],
+.dark .bg-\[\#c3d4e8\],
+.dark .bg-\[\#c5daf0\] {
+    background-color: #1a1a1a;
+}
+/* Unread-notification highlight (`bg-[#fff7d6]`) — dark but visibly
+ * distinct from the read background. */
+.dark .bg-\[\#fff7d6\] {
+    background-color: #1a1a1a;
+}
+.dark .bg-white {
+    background-color: #0a0a0a;
+}
+.dark .bg-\[\#2c4d80\] {
+    background-color: #000;
+}
+/* Blue gradient bars (`from-[#4a76b8] to-[#2c4d80]`) become black. */
+.dark .from-\[\#4a76b8\] {
+    --tw-gradient-from: #1a1a1a;
+}
+.dark .to-\[\#2c4d80\] {
+    --tw-gradient-to: #000;
+}
+.dark .text-\[\#003399\] {
+    color: #f0f0f0;
+}
+.dark .text-\[\#2c4d80\] {
+    color: #c9c9c9;
+}
+.dark .text-\[\#1a1a1a\] {
+    color: #e8e8e8;
+}
+.dark .text-\[\#cc0000\] {
+    color: #ff8080;
+}
+.dark .text-red-600 {
+    color: #ff8080;
+}
+.dark .text-gray-700,
+.dark .text-gray-600 {
+    color: #a3a3a3;
+}
+.dark .text-gray-500,
+.dark .text-gray-400 {
+    color: #8c8c8c;
+}
+.dark .border-\[\#6699cc\] {
+    border-color: #333;
+}
+.dark .border-\[\#99bbdd\],
+.dark .border-\[\#b8cde5\],
+.dark .border-\[\#c3d4e8\],
+.dark .border-\[\#d5e2f2\],
+.dark .border-\[\#d6e0f0\],
+.dark .border-\[\#dbe9f7\] {
+    border-color: #262626;
+}
+.dark .border-\[\#2c4d80\] {
+    border-color: #404040;
+}
+.dark .border-\[\#fff\],
+.dark .border-\[\#FFF\] {
+    border-color: #262626;
+}
+.dark .border-gray-200 {
+    border-color: #262626;
+}
+/* Row dividers (`divide-[#d5e2f2]` in New Members, `divide-[#99bbdd]`
+ * in chatbox/group lists). Tailwind v4 applies these to every child
+ * except the last, so match all children. */
+.dark .divide-\[\#d5e2f2\] > *,
+.dark .divide-\[\#99bbdd\] > * {
+    border-color: #262626;
+}
+.dark .hover\:bg-\[\#dbe9f7\]:hover {
+    background-color: #1a1a1a;
+}
+.dark .hover\:bg-\[\#f5f9ff\]:hover,
+.dark .hover\:bg-\[\#f0f6ff\]:hover,
+.dark .hover\:bg-\[\#eef3fa\]:hover {
+    background-color: #161616;
+}
+.dark .hover\:bg-\[\#c5daf0\]:hover,
+.dark .hover\:bg-\[\#c9ddf0\]:hover,
+.dark .hover\:bg-\[\#cddcee\]:hover {
+    background-color: #1a1a1a;
+}
+.dark .hover\:text-\[\#003399\]:hover {
+    color: #fff;
+}
+.dark .focus\:ring-\[\#6699cc\]:focus {
+    --tw-ring-color: #525252;
+}
+/* InfoPage arbitrary variants (`[&_h2]:text-[#2c4d80]` etc.). */
+.dark .\[\&_h2\]\:text-\[\#2c4d80\] h2 {
+    color: #d4d4d4;
+}
+.dark .\[\&_p\]\:text-gray-700 p,
+.dark .\[\&_li\]\:text-gray-700 li {
+    color: #a3a3a3;
+}
+.dark .\[\&_a\]\:text-\[\#003399\] a {
+    color: #f0f0f0;
+}
+
+/* Bulletin posts (feed `PostCard` + profile `BulletinPostCard`). */
+.dark .bulletin-post,
+.dark .post-card {
+    background-color: #0a0a0a;
+    border-color: #262626;
+    color: #e8e8e8;
+}
+/* Feed cards get their bg from `group-[.bulletin]:bg-white`. */
+.dark .group-\[\.bulletin\]\:bg-white {
+    background-color: #0a0a0a;
+}
+.dark .group-\[\.bulletin\]\:border-\[\#99bbdd\] {
+    border-color: #262626;
+}

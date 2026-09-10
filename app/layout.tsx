@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "@/app/components/NavBar";
 import Footer from "@/app/components/Footer";
+import { SiteThemeProvider } from "@/app/components/SiteThemeProvider";
 import "./globals.css";
 import "@/app/components/profile.css";
 
@@ -47,17 +48,27 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html
             lang="en"
+            suppressHydrationWarning
             className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
         >
-            <body className="m-0 p-0 font-sans text-[13px] text-black">
-                <NavBar
-                    isLoggedIn={!!user}
-                    username={user?.username ?? ""}
-                    isAdmin={isAdmin}
-                    counts={counts}
+            <head>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `(function(){try{var t=localStorage.getItem('genggi-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})();`,
+                    }}
                 />
-                <main className={user ? "py-2" : ""}>{children}</main>
-                <Footer />
+            </head>
+            <body className="m-0 p-0 font-sans text-[13px] text-black">
+                <SiteThemeProvider>
+                    <NavBar
+                        isLoggedIn={!!user}
+                        username={user?.username ?? ""}
+                        isAdmin={isAdmin}
+                        counts={counts}
+                    />
+                    <main className={user ? "py-2" : ""}>{children}</main>
+                    <Footer />
+                </SiteThemeProvider>
                 {process.env.NODE_ENV === "production" && !isAdmin && (
                     <Analytics />
                 )}

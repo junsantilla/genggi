@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Footer() {
     const pathname = usePathname();
@@ -17,7 +18,7 @@ export default function Footer() {
                 </Link>
                 <nav
                     aria-label="Footer navigation"
-                    className="flex flex-wrap gap-x-3 gap-y-1"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1"
                 >
                     <Link
                         href="/about"
@@ -45,6 +46,7 @@ export default function Footer() {
                     >
                         GitHub
                     </Link>
+                    <ThemeToggle variant="ghost" />
                 </nav>
             </div>
         </footer>
