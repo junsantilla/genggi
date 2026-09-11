@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Globe, Lock, Users, X } from "lucide-react";
 import { compressImageForUpload, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
 import type { MentionFriend } from "@/lib/types";
@@ -9,6 +9,9 @@ import MentionSuggestions from "./MentionSuggestions";
 import { Button } from "@/components/ui/button";
 
 type PostResult = { ok?: boolean; error?: string };
+
+// How long the "Posted successfully." notice stays visible before clearing.
+export const POST_SUCCESS_NOTICE_MS = 3000;
 
 export default function PostComposer({
     action,
@@ -63,6 +66,14 @@ export default function PostComposer({
         insertMention,
         closeMention,
     } = useMentionAutocomplete({ friends, value: body, setValue: setBody });
+
+    // The success notice is transient: clear it after a moment so it doesn't
+    // linger over the composer once the post is submitted.
+    useEffect(() => {
+        if (!posted) return;
+        const timer = setTimeout(() => setPosted(false), POST_SUCCESS_NOTICE_MS);
+        return () => clearTimeout(timer);
+    }, [posted]);
 
     const handleRemovePhoto = () => {
         setFileName("");

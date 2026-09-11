@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import PostComposer from "./PostComposer";
+import PostComposer, { POST_SUCCESS_NOTICE_MS } from "./PostComposer";
 import type { MentionFriend } from "@/lib/types";
 
 const friends: MentionFriend[] = [
@@ -142,6 +142,31 @@ describe("PostComposer @mention autocomplete", () => {
     await user.type(textarea, "@");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
+
+  it(
+    "clears the success notice after a moment",
+    async () => {
+      const action = vi.fn().mockResolvedValue({ ok: true });
+      render(<PostComposer action={action} />);
+
+      await userEvent.type(
+        screen.getByPlaceholderText("What's on your mind?"),
+        "hello",
+      );
+      await userEvent.click(screen.getByRole("button", { name: "Post" }));
+
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Posted successfully.",
+      );
+
+      await waitFor(
+        () =>
+          expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+        { timeout: POST_SUCCESS_NOTICE_MS + 1000 },
+      );
+    },
+    10000,
+  );
 
   it("allows removing a chosen photo", async () => {
     const user = userEvent.setup();

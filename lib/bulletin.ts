@@ -1,4 +1,5 @@
 import { getDb, ObjectId } from "@/lib/db";
+import { getGroupFeedPosts, type GroupFeedPost } from "@/lib/group";
 import { getFriendIds } from "@/lib/queries";
 import type {
   BulletinComment,
@@ -295,6 +296,7 @@ export function toBulletinPostCard(post: BulletinPostWithMentions): BulletinPost
     })),
     mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
     mentions: post.mentionRefs,
+    groupId: post.groupId?.toString() ?? null,
   };
 }
 
@@ -335,6 +337,66 @@ export function serializeBulletinPost(post: BulletinPostWithMentions): Serialize
     })),
     mentionedUserIds: post.mentionedUserIds?.map((id) => id.toString()),
     mentions: post.mentionRefs,
+    groupId: post.groupId?.toString() ?? null,
+  };
+}
+
+// Group posts have no visibility of their own: the feed query already limits
+// them to groups the viewer belongs to, so they surface as ordinary posts that
+// keep their groupId for group actions and group links.
+function groupPostToFeedPost(post: GroupFeedPost): SerializedBulletinPost {
+  return {
+    _id: post._id,
+    authorId: post.authorId,
+    body: post.body,
+    visibility: "public",
+    photo: post.photo ?? null,
+    createdAt: post.createdAt,
+    author: post.author,
+    reactions: post.reactions,
+    myReaction: post.myReaction,
+    comments: post.comments.map((comment) => ({
+      _id: comment._id,
+      postId: post._id,
+      authorId: comment.authorId,
+      body: comment.body,
+      createdAt:
+        typeof comment.createdAt === "string"
+          ? comment.createdAt
+          : comment.createdAt.toISOString(),
+      author: comment.author,
+      reactions: comment.reactions,
+      myReaction: comment.myReaction,
+      mentions: comment.mentions,
+    })),
+    mentions: [],
+    groupId: post.groupId,
+    groupName: post.groupName,
+  };
+}
+
+// Merges the bulletin posts and the viewer's group posts into a single page,
+// newest first. Both sources are queried with the same cursor, so the cursor
+// returned here stays a valid resume point for the next page.
+export function mergeFeedPage(
+  posts: SerializedBulletinPost[],
+  pageSize: number
+): {
+  posts: SerializedBulletinPost[];
+  nextCursor: { createdAt: string; _id: string } | null;
+} {
+  const sorted = [...posts].sort((a, b) => {
+    const byDate = a.createdAt.localeCompare(b.createdAt);
+    return byDate !== 0 ? -byDate : b._id.localeCompare(a._id);
+  });
+  const page = sorted.slice(0, pageSize);
+  const last = page[page.length - 1];
+  return {
+    posts: page,
+    nextCursor:
+      sorted.length > pageSize && last
+        ? { createdAt: last.createdAt, _id: last._id }
+        : null,
   };
 }
 
@@ -348,17 +410,18 @@ export async function getBulletinFeedPage(
   const parsedCursor = cursor
     ? { createdAt: new Date(cursor.createdAt), _id: new ObjectId(cursor._id) }
     : null;
-  const posts = await getHomeBulletinPosts(userId, parsedCursor, BULLETIN_PAGE_SIZE + 1);
-  const page = posts.slice(0, BULLETIN_PAGE_SIZE);
-  const hasMore = posts.length > BULLETIN_PAGE_SIZE;
-  const nextCursor =
-    hasMore && page.length > 0
-      ? {
-          createdAt: page[page.length - 1].createdAt.toISOString(),
-          _id: page[page.length - 1]._id.toString(),
-        }
-      : null;
-  return { posts: page.map(serializeBulletinPost), nextCursor };
+  const [bulletinPosts, groupPosts] = await Promise.all([
+    getHomeBulletinPosts(userId, parsedCursor, BULLETIN_PAGE_SIZE + 1),
+    getGroupFeedPosts(userId, parsedCursor, BULLETIN_PAGE_SIZE + 1),
+  ]);
+
+  return mergeFeedPage(
+    [
+      ...bulletinPosts.map(serializeBulletinPost),
+      ...groupPosts.map(groupPostToFeedPost),
+    ],
+    BULLETIN_PAGE_SIZE
+  );
 }
 
 export async function getBulletinPostById(

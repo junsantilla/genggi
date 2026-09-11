@@ -748,7 +748,7 @@ select {
 /* Box outer border is inline (`style={{ borderColor }}`) — needs
  * !important to beat it. */
 .dark div.box[style] {
-    border-color: #333 !important;
+    border-color: #222 !important;
 }
 .dark .box-title {
     color: #fff;

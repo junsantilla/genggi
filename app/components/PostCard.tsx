@@ -38,7 +38,9 @@ import YouTubeLinkEmbed, {
 } from "./YouTubeLinkEmbed";
 import BulletinVidEmbed from "./BulletinVidEmbed";
 
-type Post = BulletinPostCard & { groupId?: string };
+// Bulletin and group posts share this shape; a group post carries its groupId,
+// which switches the card over to group actions and group links.
+type Post = BulletinPostCard;
 
 export default function PostCard({
     post,
@@ -82,14 +84,21 @@ export default function PostCard({
     const [reactingCommentId, setReactingCommentId] = useState<string | null>(
         null,
     );
-    const [commentBody, setCommentBody] = useState("");
-    const [commentPending, setCommentPending] = useState(false);
     const isGroup = Boolean(groupId);
-    const commentsVisible = isGroup ? !hideComments : showComments;
+    // Group posts get their own page (`/groups/<id>/posts/<postId>`) just like
+    // bulletin posts, so the card links there instead of opening the thread
+    // in place.
+    const postHref = isGroup
+        ? `/groups/${groupId}/posts/${post._id}`
+        : `/bulletin/${post._id}`;
+    const commentsVisible = !hideComments && showComments;
     const isOwn = currentUserId === post.author._id;
     const countOf = (type: string) =>
         reactions.find((reaction) => reaction.type === type)?.count ?? 0;
-    const canManage = isOwn || currentUsername === "genggengpro";
+    // The site-admin bypass only applies to bulletins: group post actions are
+    // limited to the author (and the group owner), so offering the menu on a
+    // group post here would just fail.
+    const canManage = isOwn || (!isGroup && currentUsername === "genggengpro");
     const commentCountOf = (comment: BulletinCommentCard, type: string) =>
         (comment.reactions ?? []).find((r) => r.type === type)?.count ?? 0;
     const commentTotalReactions = (comment: BulletinCommentCard) =>
@@ -214,12 +223,28 @@ export default function PostCard({
                                 )}
                             </Link>
                             {isGroup ? (
-                                <span className="block text-gray-500 text-[11px]">
-                                    {timeAgo(post.createdAt)}
-                                </span>
+                                <div className="block text-gray-500 text-[11px]">
+                                    <Link
+                                        href={postHref}
+                                        className="no-underline"
+                                    >
+                                        {timeAgo(post.createdAt)}
+                                    </Link>
+                                    {post.groupName && (
+                                        <>
+                                            {" · in "}
+                                            <Link
+                                                href={`/groups/${groupId}`}
+                                                className="font-bold text-[#003399] no-underline hover:underline"
+                                            >
+                                                {post.groupName}
+                                            </Link>
+                                        </>
+                                    )}
+                                </div>
                             ) : (
                                 <Link
-                                    href={`/bulletin/${post._id}`}
+                                    href={postHref}
                                     className="block text-gray-500 text-[11px] no-underline"
                                 >
                                     {timeAgo(post.createdAt)} ·{" "}
@@ -316,14 +341,10 @@ export default function PostCard({
                             post.body &&
                             displayBody.trim() && (
                                 <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
-                                    {isGroup ? (
-                                        displayBody
-                                    ) : (
-                                        <LinkedText
-                                            text={displayBody}
-                                            mentions={post.mentions}
-                                        />
-                                    )}
+                                    <LinkedText
+                                        text={displayBody}
+                                        mentions={post.mentions}
+                                    />
                                 </p>
                             )
                         )}
@@ -332,10 +353,7 @@ export default function PostCard({
                         )}
                     </div>
                     {post.photo && (
-                        <Link
-                            href={`/bulletin/${post._id}`}
-                            className="block mt-1.5"
-                        >
+                        <Link href={postHref} className="block mt-1.5">
                             <img
                                 src={optimizeCloudinaryUrl(post.photo, {
                                     width: 1200,
@@ -409,34 +427,30 @@ export default function PostCard({
                                               .join(" · ")}
                                 </span>
                             )}
-                            {!isGroup && (
-                                <>
-                                    <Link
-                                        href={`/bulletin/${post._id}#comments`}
-                                        className="inline-flex min-h-9 min-w-9 items-center justify-center gap-1 p-1.5 text-[11px] text-gray-500 no-underline hover:bg-[#dbe9f7] hover:text-[#003399]"
-                                        aria-label={`View comments${comments.length > 0 ? ` (${comments.length})` : ""}`}
-                                        title="View comments"
-                                    >
-                                        <MessageCircle
-                                            size={20}
-                                            strokeWidth={2.25}
-                                            aria-hidden="true"
-                                        />
-                                    </Link>
-                                    {comments.length > 0 && (
-                                        <span
-                                            className="text-[11px] text-gray-500 font-bold"
-                                            aria-label={`${comments.length} comments`}
-                                        >
-                                            {comments.length}
-                                        </span>
-                                    )}
-                                </>
+                            <Link
+                                href={`${postHref}#comments`}
+                                className="inline-flex min-h-9 min-w-9 items-center justify-center gap-1 p-1.5 text-[11px] text-gray-500 no-underline hover:bg-[#dbe9f7] hover:text-[#003399]"
+                                aria-label={`View comments${comments.length > 0 ? ` (${comments.length})` : ""}`}
+                                title="View comments"
+                            >
+                                <MessageCircle
+                                    size={20}
+                                    strokeWidth={2.25}
+                                    aria-hidden="true"
+                                />
+                            </Link>
+                            {comments.length > 0 && (
+                                <span
+                                    className="text-[11px] text-gray-500 font-bold"
+                                    aria-label={`${comments.length} comments`}
+                                >
+                                    {comments.length}
+                                </span>
                             )}
                         </div>
                     )}
                     {commentsVisible && (
-                        <div id={!isGroup ? "comments" : undefined}>
+                        <div id="comments">
                             {comments.map((comment) => {
                                 const ownComment =
                                     currentUserId === comment.author._id;
@@ -526,16 +540,12 @@ export default function PostCard({
                                         ) : (
                                             <>
                                                 <div>
-                                                    {isGroup ? (
-                                                        comment.body
-                                                    ) : (
-                                                        <LinkedText
-                                                            text={comment.body}
-                                                            mentions={
-                                                                comment.mentions
-                                                            }
-                                                        />
-                                                    )}
+                                                    <LinkedText
+                                                        text={comment.body}
+                                                        mentions={
+                                                            comment.mentions
+                                                        }
+                                                    />
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
                                                     {!isGroup &&
@@ -689,79 +699,47 @@ export default function PostCard({
                                     </div>
                                 );
                             })}
-                            {isGroup && canInteract ? (
-                                <form
-                                    action={async (formData) => {
-                                        const body = String(
-                                            formData.get("body") || "",
-                                        ).trim();
-                                        if (!body) return;
-                                        setCommentPending(true);
-                                        const result =
-                                            await createGroupCommentAction(
-                                                groupId!,
-                                                post._id,
-                                                formData,
-                                            );
-                                        setCommentPending(false);
-                                        if (result.ok) {
-                                            setCommentBody("");
-                                            setComments((items) => [
-                                                ...items,
-                                                {
-                                                    _id: crypto.randomUUID(),
-                                                    postId: post._id,
-                                                    authorId: currentUserId!,
-                                                    body,
-                                                    createdAt:
-                                                        new Date().toISOString(),
-                                                    author: {
-                                                        _id: currentUserId!,
-                                                        username: "",
-                                                        displayName: "You",
-                                                        photo: null,
-                                                    },
-                                                },
-                                            ]);
-                                        }
-                                    }}
-                                    className="flex gap-1 mt-1.5"
-                                >
-                                    <input
-                                        name="body"
-                                        value={commentBody}
-                                        onChange={(e) =>
-                                            setCommentBody(e.target.value)
-                                        }
-                                        className="input flex-1 text-[11px]"
-                                        placeholder="Write a comment..."
-                                        required
-                                        disabled={commentPending}
-                                    />
-                                    <button
-                                        className="btn text-[11px]"
-                                        disabled={commentPending}
-                                    >
-                                        {commentPending
-                                            ? "Posting…"
-                                            : "Comment"}
-                                    </button>
-                                </form>
-                            ) : (
-                                currentUserId && (
-                                    <BulletinCommentForm
-                                        postId={post._id}
-                                        friends={friends}
-                                        onPosted={(
-                                            comment: SerializedBulletinComment,
-                                        ) =>
-                                            setComments((items) => [
-                                                ...items,
-                                                comment,
-                                            ])
-                                        }
-                                    />
-                                )
+                            {currentUserId && (!isGroup || canInteract) && (
+                                <BulletinCommentForm
+                                    postId={post._id}
+                                    action={
+                                        isGroup
+                                            ? (formData: FormData) =>
+                                                  createGroupCommentAction(
+                                                      groupId!,
+                                                      post._id,
+                                                      formData,
+                                                  )
+                                            : undefined
+                                    }
+                                    optimisticComment={
+                                        isGroup
+                                            ? (
+                                                  body: string,
+                                              ): SerializedBulletinComment => ({
+                                                  _id: crypto.randomUUID(),
+                                                  postId: post._id,
+                                                  authorId: currentUserId!,
+                                                  body,
+                                                  createdAt:
+                                                      new Date().toISOString(),
+                                                  author: {
+                                                      _id: currentUserId!,
+                                                      username: "",
+                                                      displayName: "You",
+                                                      photo: null,
+                                                  },
+                                              })
+                                            : undefined
+                                    }
+                                    friends={friends}
+                                    onPosted={(comment) =>
+                                        setComments((items) => [
+                                            ...items,
+                                            comment,
+                                        ])
+                                    }
+                                />
                             )}
                         </div>
                     )}

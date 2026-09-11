@@ -122,6 +122,9 @@ export interface BulletinPost {
   vidId?: ObjectId | null;
   vidVideoUrl?: string | null;
   vidThumbnailUrl?: string | null;
+  // Set for group posts surfaced in the homepage bulletin feed: the group the
+  // post belongs to, so the card can use group actions and group links.
+  groupId?: ObjectId | null;
 }
 
 // Friend-shaped subset used by the @mention autocomplete in the post composer.
@@ -239,6 +242,10 @@ export interface BulletinPostCard {
   vidId?: string | null;
   vidVideoUrl?: string | null;
   vidThumbnailUrl?: string | null;
+  // Set when this card is a group post shown in the bulletin feed, with the
+  // group's name for the "· in <group>" label.
+  groupId?: string | null;
+  groupName?: string | null;
 }
 
 export interface SerializedBulletinComment {
@@ -269,6 +276,10 @@ export interface SerializedBulletinPost {
   vidId?: string | null;
   vidVideoUrl?: string | null;
   vidThumbnailUrl?: string | null;
+  // Set when this post is a group post shown in the bulletin feed, with the
+  // group's name for the "· in <group>" label.
+  groupId?: string | null;
+  groupName?: string | null;
 }
 
 export interface Session {

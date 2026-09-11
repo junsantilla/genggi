@@ -154,3 +154,82 @@ describe("PostCard bulletin comments", () => {
     });
 });
 
+describe("PostCard group comments", () => {
+    it("links the comment icon to the group post page", () => {
+        render(
+            <PostCard
+                post={post}
+                groupId="group-1"
+                currentUserId="viewer-1"
+            />,
+        );
+
+        // Group posts have their own page, so the icon links there instead of
+        // rendering the thread inline.
+        expect(screen.queryByText("A comment")).not.toBeInTheDocument();
+        expect(
+            screen.getByRole("link", { name: "View comments (1)" }),
+        ).toHaveAttribute("href", "/groups/group-1/posts/post-1#comments");
+        expect(screen.getByLabelText("1 comments")).toHaveTextContent("1");
+    });
+
+    it("labels a group post with its group name", () => {
+        render(
+            <PostCard
+                post={{ ...post, groupId: "group-1", groupName: "Cats" }}
+                groupId="group-1"
+                currentUserId="viewer-1"
+            />,
+        );
+
+        const groupLink = screen.getByRole("link", { name: "Cats" });
+        expect(groupLink).toHaveAttribute("href", "/groups/group-1");
+        expect(screen.getByText(/· in/)).toHaveTextContent("Cats");
+    });
+
+    it("omits the group label when the group name is unknown", () => {
+        render(
+            <PostCard
+                post={post}
+                groupId="group-1"
+                currentUserId="viewer-1"
+            />,
+        );
+
+        expect(screen.queryByText(/· in/)).not.toBeInTheDocument();
+    });
+
+    it("shows the thread when the card is used on the group post page", () => {
+        render(
+            <PostCard
+                post={post}
+                groupId="group-1"
+                currentUserId="viewer-1"
+                canInteract
+                showComments
+            />,
+        );
+
+        expect(screen.getByText("A comment")).toBeInTheDocument();
+        expect(document.getElementById("comments")).toBeInTheDocument();
+    });
+
+    it("keeps the thread hidden when the viewer cannot interact", () => {
+        render(
+            <PostCard
+                post={post}
+                groupId="group-1"
+                currentUserId="viewer-1"
+                canInteract={false}
+                hideComments
+                showComments
+            />,
+        );
+
+        expect(
+            screen.queryByRole("link", { name: "View comments (1)" }),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText("A comment")).not.toBeInTheDocument();
+    });
+});
+

@@ -81,6 +81,9 @@ export default function BulletinFeed({
                     {posts.map((post) => (
                         <PostCard
                             key={post._id}
+                            // Group posts surface here too, for members only;
+                            // the groupId makes the card use group actions.
+                            groupId={post.groupId ?? undefined}
                             post={post}
                             currentUserId={currentUserId}
                             currentUsername={currentUsername}

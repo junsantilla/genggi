@@ -3,15 +3,17 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getGroupById, getGroupMembership, getGroupPosts } from "@/lib/group";
 import { getDb } from "@/lib/db";
+import { displayNameOrUsername } from "@/lib/utils";
 import {
-    removeGroupMemberAction,
     requestGroupJoinAction,
     reviewGroupJoinAction,
 } from "@/app/actions";
 import ActionButton from "@/app/components/ActionButton";
 import Box from "@/app/components/Box";
+import BulletinBox from "@/app/components/BulletinBox";
 import GroupPostForm from "@/app/components/GroupPostForm";
 import GroupPostCard from "@/app/components/GroupPostCard";
+import GroupMemberMenu from "@/app/components/GroupMemberMenu";
 import UserAvatar from "@/app/components/UserAvatar";
 import DeleteGroupButton from "@/app/components/DeleteGroupButton";
 
@@ -77,10 +79,10 @@ export default async function GroupPage({
         <div className="max-w-[960px] w-full mx-auto">
             <div className="">
                 <div className="flex flex-wrap w-full">
-                    <main className="w-full sm:w-2/3 p-2.5 pb-0 sm:pb-2.5 sm:pr-[5px]">
-                        <Box
+                    <main className="w-full sm:w-2/3 pb-0 sm:pb-2.5 sm:pr-[5px]">
+                        <BulletinBox
                             title={`${group.name} (${group.privacy})`}
-                            className="bulletin-board"
+                            className="bulletin-board border border-none"
                         >
                             {!canView ? (
                                 <>
@@ -143,7 +145,7 @@ export default async function GroupPage({
                                             comment.
                                         </p>
                                     )}
-                                    <div className="mt-2">
+                                    <div className="bulletin group">
                                         {posts.length === 0 ? (
                                             <p className="text-gray-500 italic ">
                                                 No posts yet.
@@ -162,9 +164,9 @@ export default async function GroupPage({
                                     </div>
                                 </>
                             )}
-                        </Box>
+                        </BulletinBox>
                     </main>
-                    <aside className="w-full sm:w-1/3 p-2.5 pt-0 sm:pt-2.5 sm:pl-[5px]">
+                    <aside className="w-full sm:w-1/3 pt-0 sm:pl-[5px]">
                         {isOwner && pending.length > 0 && (
                             <Box title="Join requests">
                                 <div className="border border-[#99bbdd] bg-[#fffaf0] p-2">
@@ -218,52 +220,59 @@ export default async function GroupPage({
                         )}
                         <Box title={`Members (${members.length})`}>
                             {members.length === 0 ? (
-                                <p className="text-gray-500 italic ">
+                                <span className="text-gray-500 italic ">
                                     No members yet.
-                                </p>
+                                </span>
                             ) : (
-                                <div className="flex flex-col gap-1">
+                                <div className="divide-y divide-[#d5e2f2]">
                                     {members.map((member) => (
                                         <div
                                             key={member._id.toString()}
-                                            className="flex items-center gap-2 p-1"
+                                            className="flex items-center gap-2 py-1.5 first:pt-0 last:pb-0 text-[11px]"
                                         >
                                             <Link
                                                 href={`/${member.username}`}
-                                                className="flex items-center gap-2 min-w-0 flex-1 no-underline hover:bg-[#f0f6ff]"
+                                                className="shrink-0"
                                             >
                                                 <UserAvatar
                                                     src={member.photo}
-                                                    alt={member.displayName}
-                                                    className="w-8 h-8 object-cover"
+                                                    alt={displayNameOrUsername(
+                                                        member.displayName,
+                                                        member.username,
+                                                    )}
+                                                    className="w-10 h-10 object-cover"
+                                                    cloudinaryWidth={100}
                                                 />
-                                                <span className="min-w-0">
-                                                    <strong className="block text-[#003399] truncate">
-                                                        {member.displayName}
-                                                    </strong>
-                                                    <span className="block text-[10px] text-gray-500 truncate">
-                                                        @{member.username}
-                                                        {member._id.toString() ===
-                                                        group.ownerId.toString()
-                                                            ? " · owner"
-                                                            : ""}
-                                                    </span>
-                                                </span>
                                             </Link>
+                                            <div className="min-w-0 flex-1">
+                                                <Link
+                                                    href={`/${member.username}`}
+                                                    className="text-[#003399] no-underline font-bold break-words"
+                                                >
+                                                    {displayNameOrUsername(
+                                                        member.displayName,
+                                                        member.username,
+                                                    )}
+                                                </Link>
+                                                <div className="text-gray-500">
+                                                    @{member.username}
+                                                    {member._id.toString() ===
+                                                    group.ownerId.toString()
+                                                        ? " · owner"
+                                                        : ""}
+                                                </div>
+                                            </div>
                                             {isOwner &&
                                                 member._id.toString() !==
                                                     group.ownerId.toString() && (
-                                                    <ActionButton
-                                                        action={removeGroupMemberAction.bind(
-                                                            null,
-                                                            id,
-                                                            member._id.toString(),
+                                                    <GroupMemberMenu
+                                                        groupId={id}
+                                                        memberId={member._id.toString()}
+                                                        memberName={displayNameOrUsername(
+                                                            member.displayName,
+                                                            member.username,
                                                         )}
-                                                        className="btn btn-ghost text-[10px] text-[#cc0000]"
-                                                        confirmText={`Remove ${member.displayName} from this group?`}
-                                                    >
-                                                        Remove
-                                                    </ActionButton>
+                                                    />
                                                 )}
                                         </div>
                                     ))}

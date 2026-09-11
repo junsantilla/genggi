@@ -42,9 +42,8 @@ export async function getGroupsForUser(_userId: string): Promise<GroupListItem[]
   }));
 }
 
-export async function getGroupPosts(groupId: ObjectId): Promise<GroupPostCard[]> {
+async function toGroupPostCards(posts: GroupPost[]): Promise<GroupPostCard[]> {
   const db = getDb();
-  const posts = (await db.collection("groupPosts").find({ groupId }).sort({ createdAt: -1 }).limit(100).toArray()) as unknown as GroupPost[];
   const authors = (await db.collection("users").find({ _id: { $in: posts.map((p) => p.authorId) } }).project({ _id: 1, username: 1, displayName: 1, photo: 1 }).toArray()) as unknown as Author[];
   const map = new Map(authors.map((a) => [a._id.toString(), a]));
   const postIds = posts.map((post) => post._id);
@@ -65,4 +64,74 @@ export async function getGroupPosts(groupId: ObjectId): Promise<GroupPostCard[]>
     });
     return [{ ...post, _id: post._id.toString(), groupId: post.groupId.toString(), authorId: post.authorId.toString(), createdAt: post.createdAt.toISOString(), author: { ...author, _id: author._id.toString() }, reactions: [...counts.entries()].map(([type, count]) => ({ type, count })), myReaction, comments: postComments }];
   });
+}
+
+export async function getGroupPosts(groupId: ObjectId): Promise<GroupPostCard[]> {
+  const posts = (await getDb().collection("groupPosts").find({ groupId }).sort({ createdAt: -1 }).limit(100).toArray()) as unknown as GroupPost[];
+  return toGroupPostCards(posts);
+}
+
+// Single post lookup for the dedicated group post page (`/groups/<id>/posts/<postId>`),
+// mirroring the bulletin permalink page.
+export async function getGroupPost(postId: string, groupId: ObjectId): Promise<GroupPostCard | null> {
+  let postOid: ObjectId;
+  try {
+    postOid = new ObjectId(postId);
+  } catch {
+    return null;
+  }
+  const post = (await getDb().collection("groupPosts").findOne({ _id: postOid, groupId })) as unknown as GroupPost | null;
+  if (!post) return null;
+  const [card] = await toGroupPostCards([post]);
+  return card ?? null;
+}
+
+// Feed-shaped group post: the card plus the group's name, so the bulletin feed
+// can label where the post came from.
+export type GroupFeedPost = GroupPostCard & { groupName: string };
+
+async function withGroupNames(cards: GroupPostCard[]): Promise<GroupFeedPost[]> {
+  if (cards.length === 0) return [];
+  const groupIds = [...new Set(cards.map((card) => card.groupId))].map((id) => new ObjectId(id));
+  const groups = (await getDb()
+    .collection("groups")
+    .find({ _id: { $in: groupIds } })
+    .project({ name: 1 })
+    .toArray()) as unknown as { _id: ObjectId; name: string }[];
+  const nameById = new Map(groups.map((group) => [group._id.toString(), group.name]));
+  return cards.map((card) => ({ ...card, groupName: nameById.get(card.groupId) ?? "Group" }));
+}
+
+// Group posts shown in the homepage bulletin feed. Restricted to groups the
+// viewer is an approved member of, so there group posts stay member-only.
+// Paginated with the same (createdAt, _id) cursor as the bulletin feed.
+export async function getGroupFeedPosts(
+  userId: string,
+  cursor: { createdAt: Date; _id: ObjectId } | null,
+  limit: number,
+): Promise<GroupFeedPost[]> {
+  const memberships = (await getDb()
+    .collection("groupMembers")
+    .find({ userId: new ObjectId(userId), status: "approved" })
+    .project({ groupId: 1 })
+    .toArray()) as unknown as { groupId: ObjectId }[];
+  if (memberships.length === 0) return [];
+
+  const query: Record<string, unknown> = {
+    groupId: { $in: memberships.map((membership) => membership.groupId) },
+  };
+  if (cursor) {
+    query.$or = [
+      { createdAt: { $lt: cursor.createdAt } },
+      { createdAt: cursor.createdAt, _id: { $lt: cursor._id } },
+    ];
+  }
+
+  const posts = (await getDb()
+    .collection("groupPosts")
+    .find(query)
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit)
+    .toArray()) as unknown as GroupPost[];
+  return withGroupNames(await toGroupPostCards(posts));
 }

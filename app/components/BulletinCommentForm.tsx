@@ -9,12 +9,25 @@ import type {
 import { useMentionAutocomplete } from "./useMentionAutocomplete";
 import MentionSuggestions from "./MentionSuggestions";
 
+type CommentActionResult = {
+    ok?: boolean;
+    error?: string;
+    comment?: SerializedBulletinComment;
+};
+
 export default function BulletinCommentForm({
     postId,
+    action,
+    optimisticComment,
     onPosted,
     friends,
 }: {
     postId: string;
+    // Group posts reuse this form with their own create action.
+    action?: (formData: FormData) => Promise<CommentActionResult>;
+    // Group comment actions only return `{ ok }`, so the caller provides the
+    // comment to show immediately after a successful submit.
+    optimisticComment?: (body: string) => SerializedBulletinComment;
     onPosted?: (comment: SerializedBulletinComment) => void;
     friends?: MentionFriend[];
 }) {
@@ -44,13 +57,18 @@ export default function BulletinCommentForm({
             action={async (fd: FormData) => {
                 setPending(true);
                 setError("");
-                const res = await createBulletinCommentAction(postId, fd);
+                const submittedBody = String(fd.get("body") || "").trim();
+                const res = action
+                    ? await action(fd)
+                    : await createBulletinCommentAction(postId, fd);
                 setPending(false);
                 if (res && "error" in res && res.error) setError(res.error);
                 else {
                     setBody("");
                     closeMention();
-                    if (res.comment) onPosted?.(res.comment);
+                    const comment =
+                        res.comment ?? optimisticComment?.(submittedBody);
+                    if (comment) onPosted?.(comment);
                 }
             }}
             className="flex flex-wrap items-center gap-1.5 mt-1.5"
