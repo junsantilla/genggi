@@ -1331,7 +1331,12 @@ export async function reactToGroupPostAction(
     groupId: string,
     postId: string,
     type: string,
-): Promise<ActionResult> {
+): Promise<
+    ActionResult & {
+        reactions?: BulletinReactionSummary[];
+        myReaction?: string | null;
+    }
+> {
     const user = await requireUser();
     const group = await getGroupById(groupId);
     if (!group || !(await canAccessGroup(group, user._id.toString())))
@@ -1339,7 +1344,12 @@ export async function reactToGroupPostAction(
     if (!(REACTION_TYPES as readonly string[]).includes(type))
         return { error: "Invalid reaction." };
     const db = getDb();
-    const oid = new ObjectId(postId);
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(postId);
+    } catch {
+        return { error: "Post not found." };
+    }
     const existing = await db
         .collection("groupReactions")
         .findOne({ postId: oid, userId: user._id });
@@ -1359,8 +1369,28 @@ export async function reactToGroupPostAction(
                 type,
                 createdAt: new Date(),
             });
+
+    const reactions = (await db
+        .collection("groupReactions")
+        .find({ postId: oid })
+        .toArray()) as unknown as { type: string; userId: ObjectId }[];
+    const counts = new Map<string, number>();
+    let myReaction: string | null = null;
+    for (const r of reactions) {
+        counts.set(r.type, (counts.get(r.type) ?? 0) + 1);
+        if (r.userId.toString() === user._id.toString()) myReaction = r.type;
+    }
+
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
-    return { ok: true };
+    revalidatePath(`/groups/${groupId}/posts/${postId}`);
+    return {
+        ok: true,
+        reactions: [...counts.entries()]
+            .map(([t, c]) => ({ type: t, count: c }))
+            .sort((a, b) => b.count - a.count),
+        myReaction,
+    };
 }
 
 export async function updateGroupPostAction(
@@ -1386,7 +1416,9 @@ export async function updateGroupPostAction(
         );
     if (!result.matchedCount)
         return { error: "Post not found or you don't own it." };
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
+    revalidatePath(`/groups/${groupId}/posts/${postId}`);
     return { ok: true };
 }
 
@@ -1398,19 +1430,30 @@ export async function deleteGroupPostAction(
     const group = await getGroupById(groupId);
     if (!group) return { error: "Group not found." };
     const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(postId);
+    } catch {
+        return { error: "Post not found." };
+    }
     const post = await db
         .collection("groupPosts")
-        .findOne({ _id: new ObjectId(postId), groupId: group._id });
+        .findOne({ _id: oid, groupId: group._id });
     if (
         !post ||
         (post.authorId.toString() !== user._id.toString() &&
             group.ownerId.toString() !== user._id.toString())
     )
         return { error: "Not allowed." };
+    if (post.photoPublicId) {
+        await destroyImage(post.photoPublicId).catch(() => {});
+    }
     await db.collection("groupPosts").deleteOne({ _id: post._id });
     await db.collection("groupComments").deleteMany({ postId: post._id });
     await db.collection("groupReactions").deleteMany({ postId: post._id });
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
+    revalidatePath(`/groups/${groupId}/posts/${postId}`);
     return { ok: true };
 }
 
@@ -1425,19 +1468,32 @@ export async function updateGroupCommentAction(
         return { error: "Not allowed." };
     const body = String(formData.get("body") || "").trim();
     if (!body) return { error: "Comment cannot be empty." };
-    const result = await getDb()
+    let commentOid: ObjectId;
+    try {
+        commentOid = new ObjectId(commentId);
+    } catch {
+        return { error: "Comment not found." };
+    }
+    const db = getDb();
+    const comment = await db
+        .collection("groupComments")
+        .findOne({ _id: commentOid, groupId: group._id });
+    if (!comment) return { error: "Comment not found." };
+    if (
+        comment.authorId.toString() !== user._id.toString() &&
+        group.ownerId.toString() !== user._id.toString()
+    )
+        return { error: "Not allowed." };
+
+    await db
         .collection("groupComments")
         .updateOne(
-            {
-                _id: new ObjectId(commentId),
-                groupId: group._id,
-                authorId: user._id,
-            },
+            { _id: comment._id },
             { $set: { body } },
         );
-    if (!result.matchedCount)
-        return { error: "Comment not found or you don't own it." };
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
+    revalidatePath(`/groups/${groupId}/posts/${comment.postId.toString()}`);
     return { ok: true };
 }
 
@@ -1463,8 +1519,11 @@ export async function deleteGroupCommentAction(
             group.ownerId.toString() !== user._id.toString())
     )
         return { error: "Not allowed." };
+    const postId = comment.postId.toString();
     await getDb().collection("groupComments").deleteOne({ _id: comment._id });
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
+    revalidatePath(`/groups/${groupId}/posts/${postId}`);
     return { ok: true };
 }
 
@@ -1481,16 +1540,24 @@ export async function createGroupCommentAction(
     if (!body) return { error: "Comment cannot be empty." };
     if (body.length > 500)
         return { error: "Comments must be 500 characters or fewer." };
+    let postOid: ObjectId;
+    try {
+        postOid = new ObjectId(postId);
+    } catch {
+        return { error: "Post not found." };
+    }
     await getDb()
         .collection("groupComments")
         .insertOne({
             groupId: group._id,
-            postId: new ObjectId(postId),
+            postId: postOid,
             authorId: user._id,
             body,
             createdAt: new Date(),
         });
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
+    revalidatePath(`/groups/${groupId}/posts/${postId}`);
     return { ok: true };
 }
 
@@ -1537,6 +1604,7 @@ export async function createGroupPostAction(
             photoPublicId: photo?.public_id ?? null,
             createdAt: new Date(),
         });
+    revalidatePath("/");
     revalidatePath(`/groups/${groupId}`);
     return { ok: true };
 }
@@ -1677,8 +1745,6 @@ export async function updateBulletinPostAction(
     ) as BulletinVisibility;
     const file = formData.get("photo");
     const hasPhoto = file instanceof File && file.size > 0;
-    if (!body && !hasPhoto)
-        return { error: "Add text or a photo to your post." };
     if (body.length > 1000)
         return { error: "Posts must be 1,000 characters or fewer." };
     if (!BULLETIN_VISIBILITIES.includes(visibilityValue))
@@ -1691,18 +1757,22 @@ export async function updateBulletinPostAction(
         return { error: "Post not found." };
     }
 
-    // Recompute mentions on edit so they always match the current body.
-    const mentionedUserIds = await resolveMentionedUserIds(
-        user._id.toString(),
-        body,
-    );
-
     const db = getDb();
     const existingPost = await db
         .collection("bulletinPosts")
         .findOne({ _id: oid, authorId: user._id });
     if (!existingPost)
         return { error: "Post not found or you don't own it." };
+
+    const hasMedia = hasPhoto || Boolean(existingPost.photo) || Boolean(existingPost.vidId);
+    if (!body && !hasMedia)
+        return { error: "Add text or media to your post." };
+
+    // Recompute mentions on edit so they always match the current body.
+    const mentionedUserIds = await resolveMentionedUserIds(
+        user._id.toString(),
+        body,
+    );
 
     // Only notify friends who are newly mentioned by this edit, so saving a
     // post doesn't re-notify people who were already mentioned.
@@ -1727,6 +1797,15 @@ export async function updateBulletinPostAction(
                 },
             },
         );
+
+    // If this bulletin post mirrors a Vid, keep the vid's caption in sync.
+    if (existingPost.vidId) {
+        await db
+            .collection("vids")
+            .updateOne({ _id: existingPost.vidId }, { $set: { caption: body } });
+        revalidatePath("/vids");
+        revalidatePath(`/vids/${existingPost.vidId.toString()}`);
+    }
 
     if (newlyMentioned.length > 0) {
         await Promise.all(
@@ -2060,9 +2139,15 @@ export async function deleteBulletinPostAction(
 ): Promise<ActionResult> {
     const user = await requireUser();
     const db = getDb();
+    let oid: ObjectId;
+    try {
+        oid = new ObjectId(postId);
+    } catch {
+        return { error: "Post not found." };
+    }
     const post = await db
         .collection("bulletinPosts")
-        .findOne({ _id: new ObjectId(postId) });
+        .findOne({ _id: oid });
     if (!post) return { error: "Post not found." };
 
     const isAuthor = post.authorId.toString() === user._id.toString();
@@ -2072,12 +2157,25 @@ export async function deleteBulletinPostAction(
     if (post.photoPublicId) {
         await destroyImage(post.photoPublicId).catch(() => {});
     }
-    await db.collection("bulletinPosts").deleteOne({ _id: post._id });
-    await db.collection("bulletinComments").deleteMany({ postId: post._id });
-    await db
-        .collection("bulletinCommentReactions")
-        .deleteMany({ postId: post._id });
+    const comments = await db
+        .collection("bulletinComments")
+        .find({ postId: post._id }, { projection: { _id: 1 } })
+        .toArray();
+    const commentIds = comments.map((c) => c._id);
+
+    await Promise.all([
+        db.collection("bulletinPosts").deleteOne({ _id: post._id }),
+        db.collection("bulletinReactions").deleteMany({ postId: post._id }),
+        db.collection("bulletinComments").deleteMany({ postId: post._id }),
+        commentIds.length > 0
+            ? db
+                  .collection("bulletinCommentReactions")
+                  .deleteMany({ commentId: { $in: commentIds } })
+            : Promise.resolve(),
+    ]);
+
     revalidatePath("/");
+    revalidatePath(`/bulletin/${postId}`);
     const author = await db.collection("users").findOne({ _id: post.authorId });
     if (author) revalidatePath(`/${author.username}`);
     return { ok: true };
@@ -2517,23 +2615,33 @@ async function deleteAllUserData(db: Db, oid: ObjectId): Promise<void> {
             deleteObject(vid.thumbnailKey).catch(() => {}),
         ]),
         db.collection("vids").deleteMany({ userId: oid }),
+        db.collection("vidLikes").deleteMany(
+            vidIds.length > 0
+                ? { $or: [{ userId: oid }, { vidId: { $in: vidIds } }] }
+                : { userId: oid },
+        ),
+        db.collection("vidReactions").deleteMany(
+            vidIds.length > 0
+                ? { $or: [{ userId: oid }, { vidId: { $in: vidIds } }] }
+                : { userId: oid },
+        ),
+        db.collection("vidComments").deleteMany(
+            vidIds.length > 0
+                ? { $or: [{ authorId: oid }, { vidId: { $in: vidIds } }] }
+                : { authorId: oid },
+        ),
+        db.collection("vidShares").deleteMany(
+            vidIds.length > 0
+                ? { $or: [{ userId: oid }, { vidId: { $in: vidIds } }] }
+                : { userId: oid },
+        ),
+        db.collection("vidViews").deleteMany(
+            vidIds.length > 0
+                ? { $or: [{ viewerKey: oid.toString() }, { vidId: { $in: vidIds } }] }
+                : { viewerKey: oid.toString() },
+        ),
         ...(vidIds.length > 0
             ? [
-                  db.collection("vidLikes").deleteMany({
-                      $or: [{ userId: oid }, { vidId: { $in: vidIds } }],
-                  }),
-                  db.collection("vidComments").deleteMany({
-                      $or: [{ authorId: oid }, { vidId: { $in: vidIds } }],
-                  }),
-                  db.collection("vidViews").deleteMany({
-                      $or: [
-                          { viewerKey: oid.toString() },
-                          { vidId: { $in: vidIds } },
-                      ],
-                  }),
-                  db.collection("vidShares").deleteMany({
-                      $or: [{ userId: oid }, { vidId: { $in: vidIds } }],
-                  }),
                   db
                       .collection("reports")
                       .deleteMany({ type: "vid", reportedId: { $in: vidIds } }),

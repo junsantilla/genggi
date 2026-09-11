@@ -25,12 +25,12 @@ export default function BulletinVidEmbed({
                 className="block max-h-[480px] w-full bg-black"
                 aria-label="Attached video"
             />
-            {/* <Link
+            <Link
                 href={`/vids?v=${vidId}`}
-                className="block bg-[#dbe9f7] px-2 py-1 text-[11px] font-bold text-[#003399] no-underline hover:underline"
+                className="block bg-[#dbe9f7] px-2 py-1 text-[11px] font-bold text-[#003399] no-underline hover:underline dark:bg-[#161616] dark:text-[#f0f0f0]"
             >
-                ▶ Watch on Vids
-            </Link> */}
+                Watch on Vids &raquo;
+            </Link>
         </div>
     );
 }

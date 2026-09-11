@@ -88,8 +88,8 @@ export default async function GroupPostPage({
         <div className="max-w-[960px] w-full mx-auto">
             <div>
                 <BulletinBox
-                    title=" Group Post"
-                    className="bulletin-board border border-none"
+                    title="Group Post"
+                    className="bulletin-board border-none"
                 >
                     <div className="bulletin group">
                         <GroupPostCard
@@ -98,6 +98,7 @@ export default async function GroupPostPage({
                             currentUserId={user._id.toString()}
                             currentUsername={user.username}
                             canInteract={canInteract}
+                            isOwner={isOwner}
                             showComments
                         />
                     </div>
