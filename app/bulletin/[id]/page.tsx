@@ -68,7 +68,7 @@ export default async function BulletinPostPage({
                     posts={[post]}
                     currentUserId={user._id.toString()}
                     currentUsername={user.username}
-                    title=" Bulletin Post"
+                    title="Bulletin Post"
                     showComments
                     friends={friends}
                 />

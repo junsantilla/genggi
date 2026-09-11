@@ -636,11 +636,6 @@ select {
 .border-\[\#d5e2f2\],
 .border-\[\#d6e0f0\],
 .border-\[\#dbe9f7\],
-.border-\[\#2c4d80\],
-.border-\[\#cc99cc\],
-.border-\[\#f0b6d9\],
-.border-\[\#fff\],
-.border-\[\#FFF\],
 .border-gray-200,
 .hover\:border-\[\#6699cc\]:hover,
 .group-\[\.bulletin\]\:border-\[\#99bbdd\],
@@ -941,6 +936,9 @@ select {
 .dark .text-gray-500,
 .dark .text-gray-400 {
     color: #8c8c8c;
+}
+.dark .text-black {
+    color: #e8e8e8;
 }
 /* Border colors need no dark rules: the single rule above already resolves
  * to --line, which flips to #333333 in dark mode by itself. */

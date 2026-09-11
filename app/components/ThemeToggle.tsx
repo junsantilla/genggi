@@ -32,6 +32,7 @@ export default function ThemeToggle({
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             aria-pressed={isDark}
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            suppressHydrationWarning
             className={`${base} ${className}`}
         >
             {isDark ? (

@@ -129,7 +129,7 @@ export default async function VidPage({
 
                 <div className="mx-auto mt-2 max-w-[540px] border border-[#99bbdd] bg-white p-3">
                     {vid.caption ? (
-                        <p className="whitespace-pre-wrap text-[13px] text-black">
+                        <p className="whitespace-pre-wrap text-[13px] text-black dark:text-[#e8e8e8]">
                             {vid.caption}
                         </p>
                     ) : (

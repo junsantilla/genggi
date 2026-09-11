@@ -157,7 +157,9 @@ export default async function GroupPage({
                                                     post={post}
                                                     groupId={id}
                                                     currentUserId={uid}
+                                                    currentUsername={user.username}
                                                     canInteract={canInteract}
+                                                    isOwner={isOwner}
                                                 />
                                             ))
                                         )}

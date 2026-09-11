@@ -52,6 +52,7 @@ export default function PostCard({
     hideComments = false,
     showComments = false,
     friends,
+    isGroupOwner = false,
 }: {
     post: Post;
     groupId?: string;
@@ -64,6 +65,7 @@ export default function PostCard({
     // Friends of the current user, used to power @mentions in the post/comment
     // composers. Group posts don't pass this (group members aren't friends).
     friends?: MentionFriend[];
+    isGroupOwner?: boolean;
 }) {
     const [reactions, setReactions] = useState(post.reactions);
     const [myReaction, setMyReaction] = useState(post.myReaction);
@@ -98,7 +100,10 @@ export default function PostCard({
     // The site-admin bypass only applies to bulletins: group post actions are
     // limited to the author (and the group owner), so offering the menu on a
     // group post here would just fail.
-    const canManage = isOwn || (!isGroup && currentUsername === "genggengpro");
+    const canManage =
+        isOwn ||
+        (!isGroup && currentUsername === "genggengpro") ||
+        (isGroup && isGroupOwner);
     const commentCountOf = (comment: BulletinCommentCard, type: string) =>
         (comment.reactions ?? []).find((r) => r.type === type)?.count ?? 0;
     const commentTotalReactions = (comment: BulletinCommentCard) =>
@@ -296,9 +301,16 @@ export default function PostCard({
                                                 }
                                                 className="block w-full text-left text-[11px] px-2 py-1 text-[#cc0000]"
                                                 confirmText="Delete this post?"
-                                                onSuccess={() =>
-                                                    onPostDeleted?.(post._id)
-                                                }
+                                                onSuccess={() => {
+                                                    setMenuOpen(false);
+                                                    if (onPostDeleted) {
+                                                        onPostDeleted(post._id);
+                                                    } else if (showComments && typeof window !== "undefined") {
+                                                        window.location.href = isGroup
+                                                            ? `/groups/${groupId}`
+                                                            : "/";
+                                                    }
+                                                }}
                                             >
                                                 Delete post
                                             </ActionButton>
@@ -340,7 +352,7 @@ export default function PostCard({
                         ) : (
                             post.body &&
                             displayBody.trim() && (
-                                <p className="whitespace-pre-wrap text-[16px] sm: mt-1 mb-0 break-words">
+                                <p className="whitespace-pre-wrap text-[16px] mt-1 mb-0 break-words">
                                     <LinkedText
                                         text={displayBody}
                                         mentions={post.mentions}
@@ -460,7 +472,11 @@ export default function PostCard({
                                         className="bg-[#DBE9F7] p-2 mt-1.5"
                                     >
                                         <Link
-                                            href={`/${comment.author.username}`}
+                                            href={
+                                                comment.author.username
+                                                    ? `/${comment.author.username}`
+                                                    : "#"
+                                            }
                                             className="text-[#003399] font-bold"
                                         >
                                             {displayNameOrUsername(
@@ -725,8 +741,12 @@ export default function PostCard({
                                                       new Date().toISOString(),
                                                   author: {
                                                       _id: currentUserId!,
-                                                      username: "",
-                                                      displayName: "You",
+                                                      username:
+                                                          currentUsername ?? "",
+                                                      displayName:
+                                                          currentUsername
+                                                              ? `@${currentUsername}`
+                                                              : "You",
                                                       photo: null,
                                                   },
                                               })
