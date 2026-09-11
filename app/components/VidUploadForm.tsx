@@ -27,6 +27,24 @@ function readableUploadError(status: number): string {
     return "Upload failed. Please try again.";
 }
 
+function getEffectiveMimeType(file: File): string {
+    if (file.type && ALLOWED_MIME.test(file.type)) return file.type;
+    const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    switch (ext) {
+        case ".mp4":
+            return "video/mp4";
+        case ".webm":
+            return "video/webm";
+        case ".mov":
+            return "video/quicktime";
+        case ".mkv":
+            return "video/x-matroska";
+        default:
+            return file.type || "";
+    }
+}
+
+
 type Phase =
     | "idle" // no file selected
     | "ready" // file selected, preview ready, can upload
@@ -89,7 +107,8 @@ export default function VidUploadForm() {
             setError("File too large. Maximum size is 100 MB.");
             return;
         }
-        if (!ALLOWED_EXTENSIONS.test(selected.name) || !ALLOWED_MIME.test(selected.type)) {
+        const effectiveMime = getEffectiveMimeType(selected);
+        if (!ALLOWED_EXTENSIONS.test(selected.name) || !ALLOWED_MIME.test(effectiveMime)) {
             setFile(null);
             setFileName("");
             setPhase("idle");
@@ -169,6 +188,7 @@ export default function VidUploadForm() {
         setProgress(0);
         setPhase("uploading");
 
+        const effectiveMime = getEffectiveMimeType(file);
         // 1. Mint a direct-to-R2 upload URL (tiny JSON, Vercel-safe).
         let vidIdFromServer: string;
         let uploadUrl: string;
@@ -176,7 +196,7 @@ export default function VidUploadForm() {
             const res = await fetch("/api/vids/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contentType: file.type, fileSize: file.size }),
+                body: JSON.stringify({ contentType: effectiveMime || file.type, fileSize: file.size }),
             });
             if (!res.ok) {
                 let message = readableUploadError(res.status);
@@ -208,7 +228,7 @@ export default function VidUploadForm() {
             xhr.open("PUT", uploadUrl);
             // Give large uploads on slow connections room to finish.
             xhr.timeout = 10 * 60 * 1000;
-            xhr.setRequestHeader("Content-Type", file.type);
+            xhr.setRequestHeader("Content-Type", effectiveMime || file.type);
 
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
@@ -363,8 +383,7 @@ export default function VidUploadForm() {
     return (
         <div className="mx-auto max-w-[480px]">
             <div className="mb-2 border border-[#99bbdd] bg-[#dbe9f7] p-2 text-[11px] text-[#2c4d80]">
-                📼 Vertical videos up to <b>100 MB</b>. MP4 (H.264) recommended —
-                MOV, WebM, and MKV also work.
+                Vertical videos up to <b>100 MB</b>. MP4 (H.264) or WebM recommended for universal browser playback.
             </div>
 
             {error && (
@@ -385,6 +404,14 @@ export default function VidUploadForm() {
                                 loop
                                 playsInline
                                 onLoadedMetadata={onMetadata}
+                                onError={() => {
+                                    setError("Your browser cannot decode this video format. Please upload an MP4 (H.264) or WebM file.");
+                                    setPhase("idle");
+                                    setFile(null);
+                                    setFileName("");
+                                    if (objectUrl) URL.revokeObjectURL(objectUrl);
+                                    setObjectUrl(null);
+                                }}
                             />
                             <button
                                 type="button"
@@ -450,23 +477,21 @@ export default function VidUploadForm() {
                 aria-label="Caption"
             />
 
-            {phase === "idle" && (
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv"
-                    className="hidden"
-                    onChange={(event) => pickFile(event.target.files?.[0])}
-                    aria-label="Choose a video file"
-                />
-            )}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv"
+                className="hidden"
+                onChange={(event) => pickFile(event.target.files?.[0])}
+                aria-label="Choose a video file"
+            />
 
             {phase !== "idle" && fileName && (
                 <p className="mb-2 truncate text-[11px] text-gray-600">
-                    📎 {fileName}
+                    Selected file: <span className="font-semibold text-[#2c4d80]">{fileName}</span>
                     {metadata
-                        ? ` · ${metadata.duration.toFixed(1)}s · ${metadata.width}×${metadata.height}`
-                        : " · reading metadata..."}
+                        ? ` (${metadata.duration.toFixed(1)}s · ${metadata.width}×${metadata.height})`
+                        : " (reading metadata...)"}
                 </p>
             )}
 

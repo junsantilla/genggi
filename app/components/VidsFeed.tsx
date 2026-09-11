@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { getMoreVidsAction } from "@/app/actions";
 import type { SerializedVid } from "@/lib/types";
 import { displayNameOrUsername } from "@/lib/utils";
-import VidPlayer from "./VidPlayer";
+import VidPlayer, { resetGlobalMuted } from "./VidPlayer";
 import VidCard from "./VidCard";
 
 // The immersive vertical feed: full-height slides with scroll snapping, only
@@ -39,7 +39,12 @@ export default function VidsFeed({
     const loadingRef = useRef(false);
     const watchRef = useRef<{ vidId: string; startedAt: number; reported: boolean } | null>(null);
 
+    useEffect(() => {
+        resetGlobalMuted();
+    }, []);
+
     const videosRef = useRef(videos);
+
     useEffect(() => {
         videosRef.current = videos;
     }, [videos]);

@@ -17,6 +17,7 @@ import UserAvatar from "./UserAvatar";
 // page of comments loads at a time; older ones load as the list is scrolled.
 export default function VidComments({
     vidId,
+    totalCount,
     isLoggedIn,
     currentUserId,
     canModerate,
@@ -24,6 +25,7 @@ export default function VidComments({
     onClose,
 }: {
     vidId: string;
+    totalCount?: number;
     isLoggedIn: boolean;
     currentUserId?: string;
     // True for the vid owner / admins, who may delete any comment.
@@ -32,6 +34,7 @@ export default function VidComments({
     onClose: () => void;
 }) {
     const [comments, setComments] = useState<SerializedVidComment[]>([]);
+    const [count, setCount] = useState(totalCount ?? 0);
     const [more, setMore] = useState(false);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -43,6 +46,12 @@ export default function VidComments({
     const loadingMoreRef = useRef(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => {
+        if (typeof totalCount === "number") {
+            setCount(totalCount);
+        }
+    }, [totalCount]);
+
     const loadFirstPage = useCallback(async () => {
         setLoading(true);
         setError("");
@@ -51,12 +60,15 @@ export default function VidComments({
             setComments(res.comments);
             cursorRef.current = res.nextCursor;
             setMore(res.nextCursor !== null);
+            if (totalCount === undefined) {
+                setCount(res.comments.length);
+            }
         } catch {
             setError("Could not load comments.");
         } finally {
             setLoading(false);
         }
-    }, [vidId]);
+    }, [vidId, totalCount]);
 
     const loadMore = useCallback(async () => {
         if (loadingMoreRef.current || !cursorRef.current) return;
@@ -110,6 +122,7 @@ export default function VidComments({
             }
             if (res.comment) {
                 setComments((prev) => [res.comment!, ...prev]);
+                setCount((c) => c + 1);
                 onCountChange(1);
                 setBody("");
             }
@@ -126,7 +139,7 @@ export default function VidComments({
             <div className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[70dvh] w-full max-w-[640px] flex-col border border-b-0 border-[#6699cc] bg-white">
                 <div className="flex items-center justify-between border-b border-[#99bbdd] bg-[#2c4d80] px-3 py-2">
                     <span className="font-bold text-white text-[13px]">
-                        Comments ({comments.length})
+                        Comments ({count})
                     </span>
                     <button
                         type="button"
@@ -181,6 +194,7 @@ export default function VidComments({
                                                         confirmText="Delete this comment?"
                                                         onSuccess={() => {
                                                             setComments((prev) => prev.filter((c) => c._id !== comment._id));
+                                                            setCount((c) => Math.max(0, c - 1));
                                                             onCountChange(-1);
                                                         }}
                                                     >

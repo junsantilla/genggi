@@ -1,11 +1,13 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
 import dns from "node:dns";
 
-if (process.env.NODE_ENV !== "production") {
-  try {
-    dns.setServers(["8.8.8.8", "1.1.1.1"]);
-  } catch {}
+try {
+  dns.setDefaultResultOrder("ipv4first");
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (e) {
+  console.error("Failed to set DNS servers:", e);
 }
+
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB || "genggeng";
