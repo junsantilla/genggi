@@ -132,6 +132,7 @@ export default function NavBar({
                                 {/* Hidden for now: <NavLink href="/chatboxes">Chatbox</NavLink> */}
                                 <NavLink href="/groups">Groups</NavLink>
                                 <NavLink href="/vids">Vids</NavLink>
+                                <NavLink href="/games">Games</NavLink>
                                 <NavLink href="/search">Search</NavLink>
                                 <NavLink
                                     href="/notifications"

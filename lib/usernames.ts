@@ -8,6 +8,7 @@ export const RESERVED_USERNAMES = [
     "edit",
     "forgot-password",
     "friends",
+    "games",
     "groups",
     "layouts",
     "login",
