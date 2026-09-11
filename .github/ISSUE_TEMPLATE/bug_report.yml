@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a bug or broken behavior in Genggi
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected Area
+      description: Which part of Genggi is affected?
+      options:
+        - "Profiles & Customization"
+        - "Authentication & Accounts"
+        - "Bulletins & Feed"
+        - "Messages & Chat"
+        - "Communities & Groups"
+        - "Guestbook & Testimonials"
+        - "Local Dev / Build / Test (npm run dev, vitest, etc.)"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug. Include error messages if any.
+      placeholder: "When I attempted to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Go to '/...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+      placeholder: "I expected Genggi to..."
+    validations:
+      required: true
+
+  - type: input
+    id: route
+    attributes:
+      label: URL or Route
+      description: "Affected route or page (e.g. /profile/[username], /bulletins, or /login)"
+      placeholder: "/profile/example"
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser / Device / Environment
+      description: "e.g. Chrome 124 on macOS, Safari on iOS 17, or Node.js 20.x on Ubuntu"
+      placeholder: "Chrome 124 on macOS Sonoma"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or Console Errors
+      description: Paste relevant browser console logs, server terminal output, or stack traces.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and confirmed this is not a duplicate
+          required: true
+        - label: I have removed sensitive credentials (passwords, tokens, .env.local secrets) from logs and screenshots
+          required: true

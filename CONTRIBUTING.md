@@ -53,4 +53,8 @@ Keep pull requests focused. Separate unrelated cleanup or formatting changes int
 
 ## Reporting Issues
 
-For bugs, include the route or feature affected, reproduction steps, expected behavior, actual behavior, and relevant browser or server errors. Remove personal information, tokens, passwords, and other sensitive data from reports.
+Use the structured GitHub Issue Forms when opening issues:
+
+- **Bug Reports**: Select the affected area, provide step-by-step reproduction instructions, expected vs. actual behavior, and relevant environment details (browser/OS or Node.js version). Always remove personal information, passwords, tokens, and `.env.local` secrets from logs or screenshots before submitting.
+- **Feature Requests**: Focus on the problem or nostalgic experience you want to improve ("the why") alongside your proposed solution and whether you are willing to contribute the implementation.
+- **Security Vulnerabilities**: For sensitive security issues, report them privately via GitHub Security Advisories rather than opening a public issue.

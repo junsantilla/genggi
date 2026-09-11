@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a new feature, nostalgic customization, or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest an improvement for Genggi!
+
+        Genggi is intentionally focused on the nostalgic social network experience (custom profiles, bulletins, testimonials, communities). Exploring the core motivation here saves time before writing code.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        The **why**, not the **what**. What user experience or workflow are you trying to improve?
+      placeholder: "When customizing my profile or browsing bulletins, I want to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your proposed solution, UI behavior, styling ideas, or how it should work.
+      placeholder: "Add an option to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered other approaches or workarounds?
+      placeholder: "I tried using..."
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Are you willing to contribute the implementation?
+      options:
+        - "Yes, I can submit a pull request"
+        - "Yes, with some guidance"
+        - "No, just sharing an idea"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and confirmed this hasn't already been suggested
+          required: true
