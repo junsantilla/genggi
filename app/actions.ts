@@ -43,6 +43,13 @@ import {
 import { getYouTubeVideoId } from "@/lib/utils";
 import { decodeMultipartTextField } from "@/lib/form-encoding";
 import {
+    recordGameScore,
+    getGameLeaderboard,
+    canSubmitScore,
+    normalizeTetrisScore,
+    normalizePlaySeconds,
+} from "@/lib/games";
+import {
     normalizeUsername,
     validateUsername,
 } from "@/lib/usernames";
@@ -74,6 +81,10 @@ import {
     type SerializedVidComment,
     type VidFeedPage,
     VID_REPORT_CATEGORIES,
+    GAME_IDS,
+    type GameId,
+    type GameLeaderboard,
+    type GameScoreCursor,
 } from "@/lib/types";
 
 type ActionResult = { ok?: boolean; error?: string; photo?: string };
@@ -3119,4 +3130,59 @@ export async function runVidCleanupAction(): Promise<
         return { error: "Not allowed." };
     const removed = await cleanupAbandonedVids();
     return { ok: true, removed };
+}
+
+// ---------------------------------------------------------------- Games
+
+// Records a finished game score. Untrusted input (scores and play time come
+// from the client), so the server re-validates everything and keeps only the
+// player's best score for the leaderboard.
+export async function submitGameScoreAction(
+    gameId: string,
+    score: unknown,
+    playSeconds: unknown,
+): Promise<ActionResult & { isNewBest?: boolean; bestScore?: number }> {
+    const user = await requireUser();
+
+    if (!GAME_IDS.includes(gameId as GameId)) {
+        return { error: "Unknown game." };
+    }
+
+    const bestScore = normalizeTetrisScore(score);
+    if (bestScore === null) {
+        return { error: "Invalid score." };
+    }
+
+    const played = normalizePlaySeconds(playSeconds);
+    if (played === null) {
+        return { error: "Please play for a few seconds before submitting." };
+    }
+
+    const cooldown = await canSubmitScore(user._id.toString());
+    if (!cooldown.allowed) return { error: cooldown.error };
+
+    const result = await recordGameScore(
+        gameId as GameId,
+        user._id.toString(),
+        bestScore,
+    );
+
+    revalidatePath("/games");
+    return {
+        ok: true,
+        isNewBest: result.isNewBest,
+        bestScore: result.bestScore,
+    };
+}
+
+export async function getMoreGameScoresAction(
+    gameId: GameId,
+    cursor: GameScoreCursor | null,
+): Promise<GameLeaderboard> {
+    const user = await getCurrentUser();
+    return getGameLeaderboard(
+        gameId,
+        user?._id.toString() ?? null,
+        cursor,
+    );
 }

@@ -518,4 +518,59 @@ export const VID_REPORT_CATEGORIES = [
   "other",
 ] as const;
 
+// ---------------------------------------------------------------- Games
+
+export const GAME_IDS = ["tetris"] as const;
+export type GameId = (typeof GAME_IDS)[number];
+
+// One document per (gameId, userId); bestScore is the user's all-time best for
+// that game, updated only when a new record is set.
+export interface GameScore {
+  _id: ObjectId;
+  gameId: GameId;
+  userId: ObjectId;
+  bestScore: number;
+  gamesPlayed: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GameScoreAuthorCard {
+  _id: string;
+  username: string;
+  displayName: string;
+  photo: string | null;
+}
+
+export interface SerializedGameScore {
+  _id: string;
+  gameId: GameId;
+  userId: string;
+  bestScore: number;
+  gamesPlayed: number;
+  createdAt: string;
+  updatedAt: string;
+  author: GameScoreAuthorCard;
+}
+
+// Cursor for paginating the leaderboard. Rows sort by bestScore desc, then
+// updatedAt asc (first player to reach a score places higher on ties), then
+// _id asc, mirroring the backing composite index.
+export interface GameScoreCursor {
+  bestScore: number;
+  updatedAt: string;
+  _id: string;
+}
+
+export interface GameLeaderboard {
+  gameId: GameId;
+  scores: SerializedGameScore[];
+  nextCursor: GameScoreCursor | null;
+  // Viewer statistics (null when no one is logged in). myRank is 1-based and
+  // counts every player whose best score ranks above the viewer's.
+  myRank: number | null;
+  myBest: number | null;
+  myGamesPlayed: number | null;
+}
+
 export type VidReportCategory = (typeof VID_REPORT_CATEGORIES)[number];

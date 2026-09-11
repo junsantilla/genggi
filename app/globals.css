@@ -577,6 +577,124 @@ select {
     }
 }
 
+/* Games / Tetris */
+.tetris-board {
+    width: min(260px, 72vw);
+    aspect-ratio: 1 / 2;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #2c4d80;
+    background: #0d1b2e;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.tetris-board .tetris-cell {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+}
+.tetris-cell {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+.tetris-cell--filled {
+    border-color: transparent;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+        inset 0 0 6px rgba(255, 255, 255, 0.35);
+}
+.tetris-cell--preview {
+    background: transparent;
+}
+.tetris-cell[data-type="I"] {
+    background: #00e4e4;
+}
+.tetris-cell[data-type="O"] {
+    background: #e4e400;
+}
+.tetris-cell[data-type="T"] {
+    background: #a555e4;
+}
+.tetris-cell[data-type="S"] {
+    background: #00cc33;
+}
+.tetris-cell[data-type="Z"] {
+    background: #e40000;
+}
+.tetris-cell[data-type="J"] {
+    background: #3366ff;
+}
+.tetris-cell[data-type="L"] {
+    background: #ffa500;
+}
+.tetris-overlay {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    text-align: center;
+    color: #ffffff;
+    background: rgba(13, 27, 46, 0.88);
+}
+.tetris-overlay-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #ffe14d;
+}
+.tetris-overlay p {
+    margin: 0;
+    font-size: 12px;
+    color: #dbe9f7;
+}
+.tetris-overlay-hint {
+    font-size: 11px !important;
+    color: #ff9db8 !important;
+}
+.tetris-panel {
+    border: 1px solid #6699cc;
+    background: #f5f9ff;
+    padding: 6px 10px;
+    text-align: center;
+}
+.tetris-panel-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #2c4d80;
+    text-transform: uppercase;
+}
+.tetris-panel-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #003399;
+}
+.tetris-preview {
+    width: 72px;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #6699cc;
+    background: #0d1b2e;
+}
+.tetris-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+.tetris-controls .btn {
+    min-width: 40px;
+}
+.tetris-caption {
+    margin: 0;
+    font-size: 11px;
+    text-align: center;
+    color: #2c4d80;
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
