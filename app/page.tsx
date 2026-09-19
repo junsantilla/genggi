@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import Landing from "@/app/components/Landing";
 import NewMembers from "@/app/components/NewMembers";
+import SidebarGroups from "@/app/components/SidebarGroups";
 import BulletinFeed from "@/app/components/BulletinFeed";
 import BackToTop from "@/app/components/BackToTop";
 import { getBulletinFeedPage } from "@/lib/bulletin";
@@ -55,6 +56,7 @@ export default async function Home() {
                     </div>
                     <div className="w-full sm:w-1/3 sm:pl-[5px] hidden sm:block">
                         <NewMembers limit={9} excludeId={user._id.toString()} />
+                        <SidebarGroups userId={user._id.toString()} limit={5} />
                     </div>
                 </div>
             </div>

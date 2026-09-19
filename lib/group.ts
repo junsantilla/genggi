@@ -42,6 +42,88 @@ export async function getGroupsForUser(_userId: string): Promise<GroupListItem[]
   }));
 }
 
+export interface SidebarGroupItem extends GroupListItem {
+  isMember: boolean;
+}
+
+// Pure merge: member groups first, then others to fill up to `limit`,
+// deduplicated by _id. Kept separate from the DB query so it is unit-testable.
+export function mergeMemberFirst<T extends { _id: string }>(
+  memberGroups: T[],
+  otherGroups: T[],
+  limit: number,
+): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const group of [...memberGroups, ...otherGroups]) {
+    if (out.length >= limit) break;
+    if (seen.has(group._id)) continue;
+    seen.add(group._id);
+    out.push(group);
+  }
+  return out;
+}
+
+// Sidebar list (max `limit`, default 5): groups the user is an approved member
+// of first (most recently joined), then the newest public groups to fill the
+// remainder. When the user has no memberships, this is just the newest public
+// groups. Private groups only ever appear here via membership.
+export async function getSidebarGroups(userId: string, limit = 5): Promise<SidebarGroupItem[]> {
+  const safeLimit = Math.min(Math.max(Math.floor(limit) || 5, 1), 10);
+  let uid: ObjectId;
+  try {
+    uid = new ObjectId(userId);
+  } catch {
+    return [];
+  }
+  const db = getDb();
+  const memberships = (await db
+    .collection("groupMembers")
+    .find({ userId: uid, status: "approved" })
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
+    .toArray()) as unknown as { groupId: ObjectId }[];
+  const memberIds = [...new Map(memberships.map((m) => [m.groupId.toString(), m.groupId])).values()];
+
+  const toItem = (group: Group, isMember: boolean): SidebarGroupItem => ({
+    _id: group._id.toString(),
+    name: group.name,
+    privacy: group.privacy,
+    photo: group.photo,
+    ownerId: group.ownerId.toString(),
+    createdAt: group.createdAt,
+    isMember,
+  });
+
+  let memberGroups: SidebarGroupItem[] = [];
+  if (memberIds.length > 0) {
+    const docs = (await db
+      .collection("groups")
+      .find({ _id: { $in: memberIds } })
+      .toArray()) as unknown as Group[];
+    // Preserve membership recency (most recently joined first).
+    const order = new Map(memberIds.map((id, i) => [id.toString(), i]));
+    memberGroups = docs
+      .sort((a, b) => (order.get(a._id.toString()) ?? 0) - (order.get(b._id.toString()) ?? 0))
+      .map((group) => toItem(group, true));
+  }
+
+  let otherGroups: SidebarGroupItem[] = [];
+  if (memberGroups.length < safeLimit) {
+    const filter: Record<string, unknown> = { privacy: "public" };
+    if (memberIds.length > 0) filter._id = { $nin: memberIds };
+    const docs = (await db
+      .collection("groups")
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(safeLimit - memberGroups.length)
+      .toArray()) as unknown as Group[];
+    otherGroups = docs.map((group) => toItem(group, false));
+  }
+
+  return mergeMemberFirst(memberGroups, otherGroups, safeLimit);
+}
+
 async function toGroupPostCards(posts: GroupPost[]): Promise<GroupPostCard[]> {
   const db = getDb();
   const authors = (await db.collection("users").find({ _id: { $in: posts.map((p) => p.authorId) } }).project({ _id: 1, username: 1, displayName: 1, photo: 1 }).toArray()) as unknown as Author[];

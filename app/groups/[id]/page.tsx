@@ -14,6 +14,7 @@ import BulletinBox from "@/app/components/BulletinBox";
 import GroupPostForm from "@/app/components/GroupPostForm";
 import GroupPostCard from "@/app/components/GroupPostCard";
 import GroupMemberMenu from "@/app/components/GroupMemberMenu";
+import SidebarGroups from "@/app/components/SidebarGroups";
 import UserAvatar from "@/app/components/UserAvatar";
 import DeleteGroupButton from "@/app/components/DeleteGroupButton";
 
@@ -279,6 +280,7 @@ export default async function GroupPage({
                                 </div>
                             )}
                         </Box>
+                        <SidebarGroups userId={uid} limit={5} />
                         <Box title="About this group">
                             <p className=" text-gray-600">
                                 {group.privacy === "private"
